@@ -17,8 +17,9 @@ export class UserService {
 
   static async createUser(userData: {
     username: string
-    password: string
     email: string
+    password: string
+    roles: string[]
   }): Promise<User> {
     const response = await api.post("", userData)
     return response.data
@@ -27,21 +28,21 @@ export class UserService {
   static async updateUser(
     userId: number,
     userData: {
-      username: string
+      username?: string
+      email?: string
+      roles?: string[]
     },
   ): Promise<User> {
     const response = await api.put(`/${userId}`, userData)
     return response.data
   }
 
-  static async updateUserRoles(userId: number, roles: string[]): Promise<User> {
-    const response = await api.post(`/${userId}/roles`, {
-      roles,
-    })
-    return response.data
-  }
-
   static async deleteUser(userId: number): Promise<void> {
     await api.delete(`/${userId}`)
+  }
+
+  static async updateUserRoles(userId: number, roles: string[]): Promise<User> {
+    const response = await api.post(`/${userId}/roles`, { roles })
+    return response.data
   }
 }

@@ -12,7 +12,7 @@ export class AuthService {
     return response.data
   }
 
-  static async register(username: string, password: string, email?: string): Promise<{ token: string }> {
+  static async register(username: string, password: string, email: string): Promise<{ token: string }> {
     const response = await api.post("/register", {
       username,
       password,
@@ -25,8 +25,8 @@ export class AuthService {
     try {
       await api.post("/logout")
     } catch (error) {
-      // Even if the API call fails, we should still clear local storage
-      console.warn("Logout API call failed, but continuing with local cleanup:", error)
+      // Continue with logout even if API call fails
+      console.warn("Logout API call failed:", error)
     }
   }
 }
