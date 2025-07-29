@@ -16,7 +16,7 @@ type AuthContextType = {
   user: User | null
   login: (username: string, password: string) => Promise<boolean>
   register: (username: string, password: string, email?: string) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   isLoading: boolean
   error: string | null
 }
@@ -128,10 +128,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
-    setUser(null)
-    clearUserInfoFromLocalStorage()
-    router.push("/login")
+  const logout = async (): Promise<void> => {
+    try {
+      setIsLoading(true)
+
+      // Call the logout API endpoint
+      await AuthService.logout()
+    } catch (error) {
+      console.error("Logout API call failed:", error)
+      // Continue with logout even if API call fails
+    } finally {
+      // Clear user state and localStorage
+      setUser(null)
+      clearUserInfoFromLocalStorage()
+      setError(null)
+      setIsLoading(false)
+
+      // Redirect to login page
+      router.push("/login")
+    }
   }
 
   return (

@@ -20,4 +20,13 @@ export class AuthService {
     })
     return response.data
   }
+
+  static async logout(): Promise<void> {
+    try {
+      await api.post("/logout")
+    } catch (error) {
+      // Even if the API call fails, we should still clear local storage
+      console.warn("Logout API call failed, but continuing with local cleanup:", error)
+    }
+  }
 }

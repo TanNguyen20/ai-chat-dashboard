@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Sidebar,
   SidebarContent,
@@ -33,11 +34,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
-import { Trash2, Edit, Plus, LogOut, Users, UserPlus, Home, Settings, BarChart3, Shield } from "lucide-react"
+import { Trash2, Edit, Plus, LogOut, Users, UserPlus, Home, Settings, BarChart3, Shield, UserCog } from "lucide-react"
 import { UserService } from "@/services/user"
+import { RoleService } from "@/services/role"
 import type { User } from "@/types/user"
-
-// Remove the local User type definition since we're importing it from types
+import type { Role } from "@/types/role"
+import { LogoutConfirmation } from "@/components/logout-confirmation"
 
 // Navigation items for the sidebar
 const navigationItems = [
@@ -73,8 +75,24 @@ const navigationItems = [
   },
 ]
 
-function AppSidebar() {
+function AppSidebar({
+  showLogoutDialog,
+  setShowLogoutDialog,
+}: { showLogoutDialog: boolean; setShowLogoutDialog: (show: boolean) => void }) {
   const { user: currentUser, logout } = useAuth()
+
+  // Helper function to get user's highest role for display
+  const getUserDisplayRole = (user: User | null) => {
+    if (!user || !user.roles || user.roles.size === 0) return "USER"
+
+    const rolesArray = Array.from(user.roles)
+    if (rolesArray.some((role) => role.name === "ROLE_SUPER_ADMIN")) return "SUPER_ADMIN"
+    if (rolesArray.some((role) => role.name === "ROLE_ADMIN")) return "ADMIN"
+    if (rolesArray.some((role) => role.name === "ROLE_OWNER")) return "OWNER"
+    return "USER"
+  }
+
+  const displayRole = getUserDisplayRole(currentUser)
 
   return (
     <Sidebar>
@@ -118,14 +136,23 @@ function AppSidebar() {
                 <Users className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{currentUser?.name}</span>
+                <span className="truncate font-semibold">{currentUser?.username}</span>
                 <span className="truncate text-xs text-sidebar-foreground/70">
-                  <Badge variant={currentUser?.role === "admin" ? "default" : "secondary"} className="text-xs">
-                    {currentUser?.role}
+                  <Badge
+                    variant={displayRole === "SUPER_ADMIN" || displayRole === "ADMIN" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {displayRole}
                   </Badge>
                 </span>
               </div>
-              <Button variant="ghost" size="sm" onClick={logout} className="ml-auto size-8 p-0" title="Logout">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowLogoutDialog(true)}
+                className="ml-auto size-8 p-0"
+                title="Logout"
+              >
                 <LogOut className="size-4" />
               </Button>
             </div>
@@ -137,34 +164,68 @@ function AppSidebar() {
 }
 
 export default function DashboardPage() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, logout, isLoading } = useAuth()
   const [users, setUsers] = useState<User[]>([])
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [roleEditingUser, setRoleEditingUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({ name: "", email: "", role: "user" as "admin" | "user" })
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
 
-  // Replace the mock data useEffect with:
+  // Check if current user is super admin
+  const isSuperAdmin =
+    currentUser?.roles && Array.from(currentUser.roles).some((role) => role.name === "ROLE_SUPER_ADMIN")
+
+  // Helper function to get user's display roles
+  const getUserDisplayRoles = (user: User) => {
+    if (!user.roles || user.roles.size === 0) return ["USER"]
+    return Array.from(user.roles).map((role) => role.name.replace("ROLE_", ""))
+  }
+
+  const handleLogout = async () => {
+    setShowLogoutDialog(false)
+    await logout()
+  }
+
+  // Helper function to count users by role type
+  const countUsersByRoleType = (roleType: string) => {
+    return users.filter((user) => {
+      if (!user.roles || user.roles.size === 0) return roleType === "USER"
+      const rolesArray = Array.from(user.roles)
+      return rolesArray.some((role) => role.name.includes(roleType))
+    }).length
+  }
+
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch users
         const fetchedUsers = await UserService.getAllUser()
-        // Convert Set<Role> to array for easier handling in UI
         const usersWithArrayRoles = fetchedUsers.map((user) => ({
           ...user,
           roles: Array.from(user.roles),
         }))
         setUsers(usersWithArrayRoles)
+
+        // Fetch available roles if user is super admin
+        if (isSuperAdmin) {
+          const roles = await RoleService.getAllRole()
+          setAvailableRoles(roles)
+        }
       } catch (error) {
-        console.error("Failed to fetch users:", error)
-        setError("Failed to load users")
+        console.error("Failed to fetch data:", error)
+        setError("Failed to load data")
       }
     }
 
-    fetchUsers()
-  }, [])
+    fetchData()
+  }, [isSuperAdmin])
 
   const handleAddUser = async () => {
     if (!formData.name || !formData.email) {
@@ -175,7 +236,7 @@ export default function DashboardPage() {
     try {
       const newUser = await UserService.createUser({
         username: formData.name,
-        password: "defaultPassword123", // You might want to add a password field
+        password: "defaultPassword123",
         email: formData.email,
       })
 
@@ -204,7 +265,6 @@ export default function DashboardPage() {
     try {
       const updatedUser = await UserService.updateUser(editingUser.id, {
         username: formData.name,
-        // Add other fields as needed based on your API
       })
 
       const userWithArrayRoles = {
@@ -221,6 +281,32 @@ export default function DashboardPage() {
     } catch (error: any) {
       console.error("Failed to update user:", error)
       setError(error.response?.data?.message || "Failed to update user")
+    }
+  }
+
+  const handleUpdateUserRoles = async () => {
+    if (!roleEditingUser) {
+      setError("No user selected for role update")
+      return
+    }
+
+    try {
+      const updatedUser = await UserService.updateUserRoles(roleEditingUser.id, selectedRoles)
+
+      const userWithArrayRoles = {
+        ...updatedUser,
+        roles: Array.from(updatedUser.roles),
+      }
+
+      setUsers(users.map((u) => (u.id === roleEditingUser.id ? userWithArrayRoles : u)))
+      setIsRoleDialogOpen(false)
+      setRoleEditingUser(null)
+      setSelectedRoles([])
+      setSuccess("User roles updated successfully")
+      setError("")
+    } catch (error: any) {
+      console.error("Failed to update user roles:", error)
+      setError(error.response?.data?.message || "Failed to update user roles")
     }
   }
 
@@ -243,8 +329,16 @@ export default function DashboardPage() {
 
   const openEditDialog = (user: User) => {
     setEditingUser(user)
-    setFormData({ name: user.username, email: user.email, role: "user" })
+    setFormData({ name: user.username, email: user.email || "", role: "user" })
     setIsEditDialogOpen(true)
+    setError("")
+  }
+
+  const openRoleDialog = (user: User) => {
+    setRoleEditingUser(user)
+    const currentRoles = user.roles ? Array.from(user.roles).map((role) => role.name) : []
+    setSelectedRoles(currentRoles)
+    setIsRoleDialogOpen(true)
     setError("")
   }
 
@@ -254,13 +348,21 @@ export default function DashboardPage() {
     setError("")
   }
 
+  const handleRoleToggle = (roleName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRoles([...selectedRoles, roleName])
+    } else {
+      setSelectedRoles(selectedRoles.filter((role) => role !== roleName))
+    }
+  }
+
   if (!currentUser) {
     return <div>Loading...</div>
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar showLogoutDialog={showLogoutDialog} setShowLogoutDialog={setShowLogoutDialog} />
       <SidebarInset>
         {/* Header */}
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -292,9 +394,7 @@ export default function DashboardPage() {
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {users.filter((u) => u.roles && u.roles.some((role) => role.name.includes("ADMIN"))).length}
-                </div>
+                <div className="text-2xl font-bold">{countUsersByRoleType("ADMIN")}</div>
               </CardContent>
             </Card>
 
@@ -304,9 +404,7 @@ export default function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {users.filter((u) => !u.roles || u.roles.every((role) => !role.name.includes("ADMIN"))).length}
-                </div>
+                <div className="text-2xl font-bold">{countUsersByRoleType("USER")}</div>
               </CardContent>
             </Card>
           </div>
@@ -369,23 +467,6 @@ export default function DashboardPage() {
                           placeholder="Enter email address"
                         />
                       </div>
-                      {/*
-                      <div className="space-y-2">
-                        <Label htmlFor="add-role">Role</Label>
-                        <Select
-                          value={formData.role}
-                          onValueChange={(value: "admin" | "user") => setFormData({ ...formData, role: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      */}
                       <div className="flex justify-end space-x-2">
                         <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                           Cancel
@@ -403,8 +484,8 @@ export default function DashboardPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -412,23 +493,24 @@ export default function DashboardPage() {
                   {users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.email || "N/A"}</TableCell>
                       <TableCell>
-                        {user.roles && user.roles.length > 0 ? (
-                          user.roles.map((role, index) => (
+                        <div className="flex flex-wrap gap-1">
+                          {getUserDisplayRoles(user).map((role, index) => (
                             <Badge
-                              key={role.id}
-                              variant={role.name.includes("ADMIN") ? "default" : "secondary"}
-                              className={index > 0 ? "ml-1" : ""}
+                              key={index}
+                              variant={role.includes("ADMIN") || role === "SUPER_ADMIN" ? "default" : "secondary"}
                             >
-                              {role.name.replace("ROLE_", "")}
+                              {role}
                             </Badge>
-                          ))
-                        ) : (
-                          <Badge variant="secondary">USER</Badge>
-                        )}
+                          ))}
+                        </div>
                       </TableCell>
-                      <TableCell>{user.createdAt}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.isEnabled ? "default" : "destructive"}>
+                          {user.isEnabled ? "Active" : "Disabled"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
                           <Button
@@ -440,6 +522,17 @@ export default function DashboardPage() {
                             <Edit className="h-3 w-3" />
                             <span>Edit</span>
                           </Button>
+                          {isSuperAdmin && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openRoleDialog(user)}
+                              className="flex items-center space-x-1"
+                            >
+                              <UserCog className="h-3 w-3" />
+                              <span>Roles</span>
+                            </Button>
+                          )}
                           <Button
                             variant="destructive"
                             size="sm"
@@ -464,7 +557,7 @@ export default function DashboardPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit User</DialogTitle>
-                <DialogDescription>Update user information and role</DialogDescription>
+                <DialogDescription>Update user information</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 {error && (
@@ -489,25 +582,9 @@ export default function DashboardPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="Enter email address"
+                    disabled
                   />
                 </div>
-                {/*
-                <div className="space-y-2">
-                  <Label htmlFor="edit-role">Role</Label>
-                  <Select
-                    value={formData.role}
-                    onValueChange={(value: "admin" | "user") => setFormData({ ...formData, role: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                */}
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                     Cancel
@@ -517,7 +594,57 @@ export default function DashboardPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Role Management Dialog */}
+          {isSuperAdmin && (
+            <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Manage User Roles</DialogTitle>
+                  <DialogDescription>Update roles for {roleEditingUser?.username}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="space-y-3">
+                    <Label>Available Roles</Label>
+                    <div className="space-y-2">
+                      {availableRoles.map((role) => (
+                        <div key={role.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`role-${role.id}`}
+                            checked={selectedRoles.includes(role.name)}
+                            onCheckedChange={(checked) => handleRoleToggle(role.name, checked as boolean)}
+                          />
+                          <Label htmlFor={`role-${role.id}`} className="text-sm font-normal">
+                            <Badge variant={role.name.includes("ADMIN") ? "default" : "secondary"}>
+                              {role.name.replace("ROLE_", "")}
+                            </Badge>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdateUserRoles}>Update Roles</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </main>
+        <LogoutConfirmation
+          isOpen={showLogoutDialog}
+          onClose={() => setShowLogoutDialog(false)}
+          onConfirm={handleLogout}
+          isLoading={isLoading}
+        />
       </SidebarInset>
     </SidebarProvider>
   )

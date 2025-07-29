@@ -10,22 +10,38 @@ export class UserService {
     return response.data
   }
 
-  static async createUser(userData: { username: string; password: string; email?: string }): Promise<User> {
+  static async getCurrentUser(): Promise<User> {
+    const response = await api.get("/me")
+    return response.data
+  }
+
+  static async createUser(userData: {
+    username: string
+    password: string
+    email: string
+  }): Promise<User> {
     const response = await api.post("", userData)
     return response.data
   }
 
-  static async updateUser(userId: number, userData: Partial<User>): Promise<User> {
+  static async updateUser(
+    userId: number,
+    userData: {
+      username: string
+    },
+  ): Promise<User> {
     const response = await api.put(`/${userId}`, userData)
+    return response.data
+  }
+
+  static async updateUserRoles(userId: number, roles: string[]): Promise<User> {
+    const response = await api.post(`/${userId}/roles`, {
+      roles,
+    })
     return response.data
   }
 
   static async deleteUser(userId: number): Promise<void> {
     await api.delete(`/${userId}`)
-  }
-
-  static async getCurrentUser(): Promise<User> {
-    const response = await api.get("/me")
-    return response.data
   }
 }
