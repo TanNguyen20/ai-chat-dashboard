@@ -15,6 +15,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -41,6 +51,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import {
   Plus,
@@ -55,10 +66,15 @@ import {
   Globe,
   Palette,
   Calendar,
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  Loader2,
 } from "lucide-react"
 import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
 import { LogoutConfirmation } from "@/components/logout-confirmation"
 import { getHighestRole } from "@/utils/commons"
+import { toast } from "@/hooks/use-toast"
 
 const navigationItems = [
   {
@@ -205,6 +221,15 @@ export default function ChatbotPage() {
     allowedHost: "",
     themeColor: "blue",
   })
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean
+    chatbot: Chatbot | null
+    isDeleting: boolean
+  }>({
+    isOpen: false,
+    chatbot: null,
+    isDeleting: false,
+  })
 
   useEffect(() => {
     fetchChatbots()
@@ -237,9 +262,67 @@ export default function ChatbotPage() {
       setSuccess("Chatbot created successfully")
       setError("")
       fetchChatbots()
+      toast({
+        title: "Success",
+        description: "Chatbot created successfully",
+      })
     } catch (error: any) {
       console.error("Failed to create chatbot:", error)
       setError(error.response?.data?.message || "Failed to create chatbot")
+      toast({
+        title: "Error",
+        description: "Failed to create chatbot",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteChatbot = async () => {
+    if (!deleteDialog.chatbot) return
+
+    try {
+      setDeleteDialog((prev) => ({ ...prev, isDeleting: true }))
+      await ChatbotService.deleteChatbot(deleteDialog.chatbot.id)
+
+      // Remove the deleted chatbot from the list
+      setChatbots((prev) => prev.filter((bot) => bot.id !== deleteDialog.chatbot?.id))
+
+      setDeleteDialog({ isOpen: false, chatbot: null, isDeleting: false })
+      setSuccess("Chatbot deleted successfully")
+      setError("")
+
+      toast({
+        title: "Success",
+        description: `Chatbot "${deleteDialog.chatbot.name}" has been deleted`,
+      })
+    } catch (error: any) {
+      console.error("Failed to delete chatbot:", error)
+      setError(error.response?.data?.message || "Failed to delete chatbot")
+      setDeleteDialog((prev) => ({ ...prev, isDeleting: false }))
+
+      toast({
+        title: "Error",
+        description: "Failed to delete chatbot",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const openDeleteDialog = (chatbot: Chatbot) => {
+    setDeleteDialog({
+      isOpen: true,
+      chatbot,
+      isDeleting: false,
+    })
+  }
+
+  const closeDeleteDialog = () => {
+    if (!deleteDialog.isDeleting) {
+      setDeleteDialog({
+        isOpen: false,
+        chatbot: null,
+        isDeleting: false,
+      })
     }
   }
 
@@ -279,9 +362,11 @@ export default function ChatbotPage() {
   }
 
   if (!currentUser) {
-    return <div className="flex items-center justify-center min-h-screen">
+    return (
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Loading...</div>
       </div>
+    )
   }
 
   return (
@@ -465,7 +550,29 @@ export default function ChatbotPage() {
                             <div className={`w-3 h-3 rounded-full ${getThemeColorClass(chatbot.themeColor)}`} />
                             {chatbot.name}
                           </CardTitle>
-                          <Badge variant="secondary">Active</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">Active</Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600"
+                                  onClick={() => openDeleteDialog(chatbot)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -494,6 +601,39 @@ export default function ChatbotPage() {
             </CardContent>
           </Card>
         </main>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialog.isOpen} onOpenChange={closeDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Chatbot</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{deleteDialog.chatbot?.name}"? This action cannot be undone and will
+                permanently remove the chatbot and all its configurations.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteDialog.isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteChatbot}
+                disabled={deleteDialog.isDeleting}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              >
+                {deleteDialog.isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <LogoutConfirmation
           isOpen={showLogoutDialog}
