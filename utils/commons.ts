@@ -1,56 +1,43 @@
-import type { User } from "@/types/user"
-import type { Role } from "@/types/role"
+import type { User, UserInfoLocalStorage } from "@/types/user"
 
-export const saveUserInfoIntoLocalStorage = (user: User): void => {
+export function saveUserInfoIntoLocalStorage(userInfo: UserInfoLocalStorage): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("user", JSON.stringify(user))
+    localStorage.setItem("userInfo", JSON.stringify(userInfo))
   }
 }
 
-export const getUserInfoFromLocalStorage = (): User | null => {
+export function getUserInfoFromLocalStorage(): UserInfoLocalStorage | null {
   if (typeof window !== "undefined") {
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      try {
-        return JSON.parse(userStr)
-      } catch (error) {
-        console.error("Error parsing user from localStorage:", error)
-        return null
-      }
-    }
+    const userInfo = localStorage.getItem("userInfo")
+    return userInfo ? JSON.parse(userInfo) : null
   }
   return null
 }
 
-export const removeUserInfoFromLocalStorage = (): void => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("user")
+export function hasRole(user: User, roleName: string): boolean {
+  return Array.from(user.roles).some((role) => role.name === roleName)
+}
+
+export function getHighestRole(user: User): string {
+  const roles = Array.from(user.roles)
+
+  if (roles.some((role) => role.name === "ROLE_SUPER_ADMIN")) {
+    return "Super Admin"
   }
+  if (roles.some((role) => role.name === "ROLE_ADMIN")) {
+    return "Admin"
+  }
+  if (roles.some((role) => role.name === "ROLE_USER")) {
+    return "User"
+  }
+
+  return "User"
 }
 
-export const hasRole = (user: User, roleName: string): boolean => {
-  if (!user || !user.roles) return false
-
-  const rolesArray = Array.from(user.roles)
-  return rolesArray.some((role: Role) => role.name === roleName)
-}
-
-export const formatRoleName = (roleName: string): string => {
+export function formatRoleName(roleName: string): string {
   return roleName
     .replace("ROLE_", "")
-    .replace(/_/g, " ")
+    .replace("_", " ")
     .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
-}
-
-export const getHighestRole = (user: User): string => {
-  if (!user || !user.roles || user.roles.size === 0) return "USER"
-
-  const rolesArray = Array.from(user.roles)
-  if (rolesArray.some((role: Role) => role.name === "ROLE_SUPER_ADMIN")) return "SUPER_ADMIN"
-  if (rolesArray.some((role: Role) => role.name === "ROLE_ADMIN")) return "ADMIN"
-  if (rolesArray.some((role: Role) => role.name === "ROLE_OWNER")) return "OWNER"
-  return "USER"
+    .replace(/\b\w/g, (l) => l.toUpperCase())
 }

@@ -13,48 +13,26 @@ import {
 import { Loader2 } from "lucide-react"
 
 interface LogoutConfirmationProps {
-  open?: boolean
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  onClose?: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: () => void
-  loading?: boolean
-  isLoading?: boolean
+  loading: boolean
 }
 
-export function LogoutConfirmation({
-  open,
-  isOpen,
-  onOpenChange,
-  onClose,
-  onConfirm,
-  loading,
-  isLoading,
-}: LogoutConfirmationProps) {
-  const isDialogOpen = open ?? isOpen ?? false
-  const isProcessing = loading ?? isLoading ?? false
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (onOpenChange) {
-      onOpenChange(newOpen)
-    } else if (onClose && !newOpen) {
-      onClose()
-    }
-  }
-
+export function LogoutConfirmation({ open, onOpenChange, onConfirm, loading }: LogoutConfirmationProps) {
   return (
-    <AlertDialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to log out? You will need to sign in again to access your account.
+            You will be signed out of your account and redirected to the login page.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={isProcessing}>
-            {isProcessing ? (
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} disabled={loading}>
+            {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Logging out...
