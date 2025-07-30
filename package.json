@@ -37,6 +37,7 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
+    "@superset-ui/embedded-sdk": "0.2.0",
     "autoprefixer": "^10.4.20",
     "axios": "latest",
     "class-variance-authority": "^0.7.1",
