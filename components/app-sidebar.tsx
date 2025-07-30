@@ -24,8 +24,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User } from "lucide-react"
+import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3 } from "lucide-react"
 import { hasRole, getHighestRole } from "@/utils/commons"
+import Link from "next/link"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   showLogoutDialog: boolean
@@ -44,6 +45,12 @@ const navigationItems = [
     url: "/chatbot",
     icon: Bot,
     roles: ["ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: BarChart3,
+    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
   },
   {
     title: "Users",
@@ -108,10 +115,10 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
               {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
