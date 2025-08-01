@@ -21,22 +21,22 @@ const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/chatbot`)
 export class ChatbotService {
   static async createChatbot(data: ChatbotRequest): Promise<Chatbot> {
     const response = await api.post("", data)
-    return response.data
+    return response
   }
 
   static async getChatbotList(): Promise<Chatbot[]> {
     const response = await api.get("/config-info")
-    return response.data
+    return response
   }
 
   static async getChatbotById(id: number): Promise<Chatbot> {
     const response = await api.get(`/${id}`)
-    return response.data
+    return response
   }
 
   static async updateChatbot(id: number, data: Partial<ChatbotRequest>): Promise<Chatbot> {
     const response = await api.put(`/${id}`, data)
-    return response.data
+    return response
   }
 
   static async deleteChatbot(id: number): Promise<void> {

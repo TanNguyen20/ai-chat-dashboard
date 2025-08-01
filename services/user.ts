@@ -7,12 +7,12 @@ const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/users`)
 export class UserService {
   static async getAllUser(): Promise<Array<User>> {
     const response = await api.get("")
-    return response.data
+    return response
   }
 
   static async getCurrentUser(): Promise<User> {
     const response = await api.get("/me")
-    return response.data
+    return response
   }
 
   static async createUser(userData: {
@@ -22,7 +22,7 @@ export class UserService {
     roles: string[]
   }): Promise<User> {
     const response = await api.post("", userData)
-    return response.data
+    return response
   }
 
   static async updateUser(
@@ -34,7 +34,7 @@ export class UserService {
     },
   ): Promise<User> {
     const response = await api.put(`/${userId}`, userData)
-    return response.data
+    return response
   }
 
   static async deleteUser(userId: number): Promise<void> {
@@ -43,6 +43,6 @@ export class UserService {
 
   static async updateUserRoles(userId: number, roles: string[]): Promise<User> {
     const response = await api.post(`/${userId}/roles`, { roles })
-    return response.data
+    return response
   }
 }

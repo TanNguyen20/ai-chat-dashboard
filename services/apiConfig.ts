@@ -1,13 +1,14 @@
+import { TypedAxiosInstance } from "@/types/axios";
 import { getUserInfoFromLocalStorage } from "@/utils/commons"
-import axios, { type AxiosInstance } from "axios"
+import axios from "axios"
 
 class AxiosClient {
-  private static instances: Map<string, AxiosInstance> = new Map()
-  private static interceptorsAttached: Set<string> = new Set()
+  private static readonly instances: Map<string, TypedAxiosInstance> = new Map()
+  private static readonly interceptorsAttached: Set<string> = new Set()
 
-  private constructor() {}
+  private constructor() { }
 
-  public static getInstance(baseURL: string): AxiosInstance {
+  public static getInstance(baseURL: string): TypedAxiosInstance  {
     if (!AxiosClient.instances.has(baseURL)) {
       const instance = axios.create({
         baseURL: baseURL,
@@ -15,14 +16,14 @@ class AxiosClient {
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      }) as TypedAxiosInstance;
       AxiosClient.instances.set(baseURL, instance)
     }
 
     const instance = AxiosClient.instances.get(baseURL)!
 
-    // Attach interceptor only once per instance
     if (!AxiosClient.interceptorsAttached.has(baseURL)) {
+      // Request Interceptor
       instance.interceptors.request.use((config) => {
         const userInfo = getUserInfoFromLocalStorage()
         if (userInfo?.token) {
@@ -33,11 +34,34 @@ class AxiosClient {
         }
         return config
       })
+
+      // Response Interceptor
+      instance.interceptors.response.use(
+        (response) => {
+          if (
+            response?.data &&
+            "result" in response.data &&
+            "status" in response.data &&
+            "code" in response.data
+          ) {
+            return response.data.result
+          }
+          return response.data
+        },
+        (error) => {
+          if (error.response?.data?.message) {
+            return Promise.reject(new Error(error.response.data.message))
+          }
+          return Promise.reject(error)
+        }
+      )
+
       AxiosClient.interceptorsAttached.add(baseURL)
     }
 
     return instance
   }
+
 }
 
 export default AxiosClient
