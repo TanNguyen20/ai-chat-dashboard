@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3 } from "lucide-react"
+import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3, Settings2Icon } from "lucide-react"
 import { hasRole, getHighestRole } from "@/utils/commons"
 import Link from "next/link"
 
@@ -50,6 +50,12 @@ const navigationItems = [
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
+    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    title: "Analytics Config",
+    url: "/analytics-config",
+    icon: Settings2Icon,
     roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
   },
   {

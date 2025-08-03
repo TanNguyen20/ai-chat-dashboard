@@ -51,6 +51,10 @@ import { AnalyticsService } from "@/services/analytics"
 import type { AnalyticsDashboard, CreateAnalyticsDashboard } from "@/types/analytics"
 import { useAuth } from "@/components/auth-provider"
 import { hasRole } from "@/utils/commons"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AnalyticsConfigService } from "@/services/analyticsConfig"
+import type { AnalyticsConfig } from "@/types/analyticsConfig"
 
 export default function AnalyticsListPage() {
   const router = useRouter()
@@ -61,12 +65,14 @@ export default function AnalyticsListPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [analyticsConfigs, setAnalyticsConfigs] = useState<AnalyticsConfig[]>([])
 
   // Create dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState<CreateAnalyticsDashboard>({
     dashboardId: "",
+    analyticsConfigId: 0,
     dashboardHost: "",
     dashboardTitle: "",
     roles: [],
@@ -96,6 +102,15 @@ export default function AnalyticsListPage() {
     }
   }
 
+  const fetchAnalyticsConfigs = async () => {
+    try {
+      const data = await AnalyticsConfigService.getAllAnalyticsConfig()
+      setAnalyticsConfigs(data)
+    } catch (error) {
+      console.error("Failed to fetch analytics configs:", error)
+    }
+  }
+
   useEffect(() => {
     if (!hasAccess) {
       setError("Access denied. You need appropriate privileges to view analytics.")
@@ -103,6 +118,7 @@ export default function AnalyticsListPage() {
       return
     }
     fetchDashboards()
+    fetchAnalyticsConfigs()
   }, [hasAccess])
 
   useEffect(() => {
@@ -124,7 +140,7 @@ export default function AnalyticsListPage() {
 
   const handleCreateAnalytics = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.dashboardId || !formData.dashboardHost || !formData.dashboardTitle) {
+    if (!formData.dashboardId || !formData.dashboardHost || !formData.dashboardTitle || !formData.analyticsConfigId) {
       return
     }
 
@@ -136,6 +152,7 @@ export default function AnalyticsListPage() {
       // Reset form
       setFormData({
         dashboardId: "",
+        analyticsConfigId: 0,
         dashboardHost: "",
         dashboardTitle: "",
         roles: [],
@@ -259,6 +276,7 @@ export default function AnalyticsListPage() {
           <p className="text-muted-foreground">Manage and monitor your analytics dashboards</p>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Button onClick={fetchDashboards} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -303,13 +321,24 @@ export default function AnalyticsListPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="dashboardHost">Dashboard Host</Label>
-                    <Input
-                      id="dashboardHost"
+                    <Select
                       value={formData.dashboardHost}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, dashboardHost: e.target.value }))}
-                      placeholder="https://your-superset-instance.com"
-                      required
-                    />
+                      onValueChange={(value) => setFormData((prev) => ({ ...prev, 
+                        dashboardHost: value, 
+                        analyticsConfigId:  analyticsConfigs.find((config) => config.hostname === value)?.id || 0
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a dashboard host" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {analyticsConfigs.map((config) => (
+                          <SelectItem key={config.id} value={config.hostname}>
+                            {config.hostname}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">

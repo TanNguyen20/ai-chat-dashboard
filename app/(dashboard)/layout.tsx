@@ -23,6 +23,7 @@ const breadcrumbMap: Record<string, { title: string; href?: string }[]> = {
   "/chatbot": [{ title: "Dashboard", href: "/dashboard" }, { title: "Chatbot" }],
   "/users": [{ title: "Dashboard", href: "/dashboard" }, { title: "Users" }],
   "/analytics": [{ title: "Dashboard", href: "/dashboard" }, { title: "Analytics" }],
+  "/analytics-config": [{ title: "Dashboard", href: "/dashboard" }, { title: "Analytics Config" }],
   "/roles": [{ title: "Dashboard", href: "/dashboard" }, { title: "Roles" }],
   "/settings": [{ title: "Dashboard", href: "/dashboard" }, { title: "Settings" }],
 }

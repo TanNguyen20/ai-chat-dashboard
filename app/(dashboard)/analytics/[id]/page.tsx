@@ -56,6 +56,7 @@ const analyticsData = {
 interface SupersetConfig {
   supersetDomain: string
   dashboardId: string
+  analyticsConfigId: number
   hideTitle: boolean
   hideTab: boolean
   hideChartControls: boolean
@@ -84,6 +85,7 @@ export default function AnalyticsDetailPage() {
   const [config, setConfig] = useState<SupersetConfig>({
     supersetDomain: "http://localhost:8088",
     dashboardId: "",
+    analyticsConfigId: 0,
     hideTitle: true,
     hideTab: true,
     hideChartControls: false,
@@ -122,6 +124,7 @@ export default function AnalyticsDetailPage() {
         ...prev,
         supersetDomain: data.dashboardHost,
         dashboardId: data.dashboardId,
+        analyticsConfigId: data.analyticsConfigId,
       }))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch analytics dashboard"
@@ -140,7 +143,7 @@ export default function AnalyticsDetailPage() {
   const fetchGuestTokenFromBackend = async (): Promise<string> => {
     try {
       setConnectionStatus("connecting")
-      const response = await SupersetService.getGuestToken()
+      const response = await SupersetService.getGuestToken(config.dashboardId, config.analyticsConfigId)
       setConnectionStatus("connected")
       console.log("Successfully fetched guest token from Superset backend")
       return Promise.resolve(response.token)
@@ -199,7 +202,7 @@ export default function AnalyticsDetailPage() {
       const iframe = document.querySelector("iframe")
       if (iframe) {
         iframe.style.width = "100%"
-        iframe.style.minHeight = "100vh"
+        iframe.style.height = "-webkit-fill-available"
       }
       setDashboardLoaded(true)
       setConnectionStatus("connected")
@@ -626,9 +629,7 @@ export default function AnalyticsDetailPage() {
                   )}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2">
-                  Advanced analytics and visualizations powered by Apache Superset v0.2.0
-                  <br />
-                  Connected to: <code className="bg-muted px-1 py-0.5 rounded text-xs">{config.supersetDomain}</code>
+                  Advanced analytics and visualizations, Connected to: <code className="bg-muted px-1 py-0.5 rounded text-xs">{config.supersetDomain}</code>
                   <Button variant="ghost" size="sm" asChild>
                     <a href={config.supersetDomain} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3 w-3" />
