@@ -69,7 +69,7 @@ const navigationItems = [
     title: "Roles",
     url: "/roles",
     icon: Shield,
-    roles: [Role.SUPER_ADMIN],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Settings",
