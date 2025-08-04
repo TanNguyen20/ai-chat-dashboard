@@ -8,6 +8,7 @@ import { AuthService } from "@/services/auth"
 import { UserService } from "@/services/user"
 import { saveUserInfoIntoLocalStorage, getUserInfoFromLocalStorage } from "@/utils/commons"
 import type { User, UserInfoLocalStorage } from "@/types/user"
+import { toast } from "sonner"
 
 interface AuthContextType {
   user: User | null
@@ -59,13 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (username: string, password: string, email: string) => {
     try {
-      const response = await AuthService.register(username, password, email)
-      const userInfo: UserInfoLocalStorage = { token: response.token }
-      saveUserInfoIntoLocalStorage(userInfo)
+      await AuthService.register(username, password, email)
 
-      const currentUser = await UserService.getCurrentUser()
-      setUser(currentUser)
-      router.push("/dashboard")
+      toast.success("User registered successfully")
+      router.push("/login")
     } catch (error) {
       throw error
     }

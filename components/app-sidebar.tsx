@@ -27,6 +27,7 @@ import {
 import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3, Settings2Icon } from "lucide-react"
 import { hasRole, getHighestRole } from "@/utils/commons"
 import Link from "next/link"
+import { Role } from "@/const/role"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   showLogoutDialog: boolean
@@ -38,43 +39,43 @@ const navigationItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Chatbot",
     url: "/chatbot",
     icon: Bot,
-    roles: ["ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
-    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Analytics Config",
     url: "/analytics-config",
     icon: Settings2Icon,
-    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Users",
     url: "/users",
     icon: Users,
-    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Roles",
     url: "/roles",
     icon: Shield,
-    roles: ["ROLE_SUPER_ADMIN"],
+    roles: [Role.SUPER_ADMIN],
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
-    roles: ["ROLE_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
   },
 ]
 

@@ -1,3 +1,4 @@
+import { Role } from "@/const/role"
 import type { User, UserInfoLocalStorage } from "@/types/user"
 
 export function saveUserInfoIntoLocalStorage(userInfo: UserInfoLocalStorage): void {
@@ -14,24 +15,27 @@ export function getUserInfoFromLocalStorage(): UserInfoLocalStorage | null {
   return null
 }
 
-export function hasRole(user: User, roleName: string): boolean {
+export function hasRole(user: User, roleName: Role): boolean {
   return Array.from(user.roles).some((role) => role.name === roleName)
 }
 
 export function getHighestRole(user: User): string {
   const roles = Array.from(user.roles)
 
-  if (roles.some((role) => role.name === "ROLE_SUPER_ADMIN")) {
+  if (roles.some((role) => role.name === Role.SUPER_ADMIN)) {
     return "Super Admin"
   }
-  if (roles.some((role) => role.name === "ROLE_ADMIN")) {
+  if (roles.some((role) => role.name === Role.ADMIN)) {
     return "Admin"
   }
-  if (roles.some((role) => role.name === "ROLE_USER")) {
+  if (roles.some((role) => role.name === Role.OWNER)) {
+    return "Admin"
+  }
+  if (roles.some((role) => role.name === Role.USER)) {
     return "User"
   }
 
-  return "User"
+  return "Anonymous"
 }
 
 export function formatRoleName(roleName: string): string {

@@ -55,6 +55,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AnalyticsConfigService } from "@/services/analyticsConfig"
 import type { AnalyticsConfig } from "@/types/analyticsConfig"
+import { Role } from "@/const/role"
 
 export default function AnalyticsListPage() {
   const router = useRouter()
@@ -85,7 +86,7 @@ export default function AnalyticsListPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   // Check if user has access to analytics
-  const hasAccess = hasRole(user!, "ROLE_USER")
+  const hasAccess = hasRole(user!, Role.USER)
 
   const fetchDashboards = async () => {
     try {

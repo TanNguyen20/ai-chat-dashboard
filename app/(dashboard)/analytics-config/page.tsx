@@ -49,6 +49,7 @@ import type { AnalyticsConfig, CreateAnalyticsConfig, UpdateAnalyticsConfig } fr
 import { useAuth } from "@/components/auth-provider"
 import { hasRole } from "@/utils/commons"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Role } from "@/const/role"
 
 export default function AnalyticsConfigPage() {
   const { user } = useAuth()
@@ -84,7 +85,7 @@ export default function AnalyticsConfigPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   // Check if user has access to analytics config
-  const hasAccess = hasRole(user!, "ROLE_ADMIN")
+  const hasAccess = hasRole(user!, Role.ADMIN)
 
   const fetchConfigs = async () => {
     try {

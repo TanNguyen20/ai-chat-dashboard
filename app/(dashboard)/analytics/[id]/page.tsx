@@ -33,6 +33,7 @@ import { AnalyticsService } from "@/services/analytics"
 import { hasRole } from "@/utils/commons"
 import type { AnalyticsDashboard } from "@/types/analytics"
 import { useToast } from "@/hooks/use-toast"
+import { Role } from "@/const/role"
 
 // Mock analytics data
 const analyticsData = {
@@ -100,7 +101,7 @@ export default function AnalyticsDetailPage() {
   })
 
   // Check if user has access to analytics
-  const hasAccess = hasRole(user!, "ROLE_USER")
+  const hasAccess = hasRole(user!, Role.USER)
 
   useEffect(() => {
     if (!hasAccess) {

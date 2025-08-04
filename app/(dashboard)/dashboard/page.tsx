@@ -6,6 +6,7 @@ import { UserService } from "@/services/user"
 import { RoleService } from "@/services/role"
 import type { User } from "@/types/user"
 import type { Role } from "@/types/role"
+import { Role as EnumRole } from "@/const/role"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,11 +51,13 @@ export default function DashboardPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [newUser, setNewUser] = useState<NewUser>({
     username: "",
     email: "",
     password: "",
-    roles: ["ROLE_USER"],
+    roles: [EnumRole.USER],
   })
   const [editUser, setEditUser] = useState<EditUser>({
     id: 0,
@@ -100,7 +103,7 @@ export default function DashboardPage() {
   const handleAddUser = async () => {
     try {
       await UserService.createUser(newUser)
-      setNewUser({ username: "", email: "", password: "", roles: ["ROLE_USER"] })
+      setNewUser({ username: "", email: "", password: "", roles: [EnumRole.USER] })
       setIsAddDialogOpen(false)
       fetchUsers()
       toast({
@@ -186,6 +189,20 @@ export default function DashboardPage() {
     }
   }
 
+  const confirmDeleteUser = (userDeleting: User) => {
+    if (user?.id === userDeleting?.id) {
+      toast({
+        title: "Error",
+        description: "You cannot delete your own account",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUserToDelete(userDeleting)
+    setIsDeleteDialogOpen(true)
+  }
+
   const openEditDialog = (user: User) => {
     setEditUser({
       id: user.id,
@@ -227,7 +244,7 @@ export default function DashboardPage() {
   }
 
   const { totalUsers, adminUsers, regularUsers } = getStats()
-  const isSuperAdmin = user && hasRole(user, "ROLE_SUPER_ADMIN")
+  const isSuperAdmin = user && hasRole(user, EnumRole.SUPER_ADMIN)
 
   if (loading) {
     return (
@@ -378,7 +395,7 @@ export default function DashboardPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteUser(userData.id)}
+                        onClick={() => confirmDeleteUser(userData)}
                         disabled={userData.id === user?.id}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -391,6 +408,36 @@ export default function DashboardPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete user dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{userToDelete?.username}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (userToDelete) {
+                  handleDeleteUser(userToDelete.id)
+                  setIsDeleteDialogOpen(false)
+                  setUserToDelete(null)
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
