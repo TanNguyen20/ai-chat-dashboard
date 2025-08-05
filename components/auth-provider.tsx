@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const currentUser = await UserService.getCurrentUser()
       setUser(currentUser)
-      router.push("/dashboard")
+      router.push("/")
     } catch (error) {
       throw error
     }

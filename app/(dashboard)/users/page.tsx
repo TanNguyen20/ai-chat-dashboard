@@ -42,7 +42,7 @@ interface EditUser {
   roles: string[]
 }
 
-export default function DashboardPage() {
+export default function UsersPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])

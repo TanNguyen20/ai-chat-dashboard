@@ -51,7 +51,7 @@ const navigationItems = [
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
   },
   {
     title: "Analytics Config",

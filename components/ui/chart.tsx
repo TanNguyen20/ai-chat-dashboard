@@ -22,6 +22,8 @@ type ChartContextProps = {
   config: ChartConfig
 }
 
+type Payload = Array<{dataKey: string, value: string, color: string, name: string, fill: string, payload: Payload}>
+
 const ChartContext = React.createContext<ChartContextProps | null>(null)
 
 function useChart() {
@@ -110,7 +112,9 @@ const ChartTooltipContent = React.forwardRef<
       hideIndicator?: boolean
       indicator?: "line" | "dot" | "dashed"
       nameKey?: string
-      labelKey?: string
+      labelKey?: string,
+      payload?: Payload,
+      label?: string
     }
 >(
   (
@@ -261,9 +265,10 @@ const ChartLegend = RechartsPrimitive.Legend
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    Pick<RechartsPrimitive.LegendProps, "verticalAlign"> & {
       hideIcon?: boolean
-      nameKey?: string
+      nameKey?: string,
+      payload?: Payload
     }
 >(
   (
