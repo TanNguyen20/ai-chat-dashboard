@@ -228,7 +228,6 @@ export default function RolesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Button onClick={fetchRoles} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh

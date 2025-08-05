@@ -252,7 +252,6 @@ export default function AnalyticsConfigPage() {
           <p className="text-muted-foreground">Manage analytics server configurations and credentials</p>
         </div>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Button onClick={fetchConfigs} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
