@@ -50,6 +50,9 @@ class AxiosClient {
           return response.data
         },
         (error) => {
+          console.log("=======================")
+          console.log(error.response.data)
+          console.log("=======================")
           if (error.response.data.code === "400") {
             redirect("/error/not-found")
           }
