@@ -53,7 +53,7 @@ class AxiosClient {
           console.log("=======================")
           console.log(error.response.data)
           console.log("=======================")
-          if (error.response.data.code === "400") {
+          if (error.response.data.code === "404") {
             redirect("/error/not-found")
           }
           if (error.response.data.code === "401") {
