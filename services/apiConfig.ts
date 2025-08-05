@@ -1,4 +1,5 @@
 import { TypedAxiosInstance } from "@/types/axios";
+import { redirect } from 'next/navigation'
 import { getUserInfoFromLocalStorage } from "@/utils/commons"
 import axios from "axios"
 
@@ -49,6 +50,22 @@ class AxiosClient {
           return response.data
         },
         (error) => {
+          if (error.response.data.code === "400") {
+            redirect("/error/not-found")
+          }
+          if (error.response.data.code === "401") {
+            redirect("/error/unauthenticated")
+          }
+          if (error.response.data.code === "403") {
+            redirect("/error/unauthorized")
+          }
+          if (error.response.data.code === "500") {
+            redirect("/error/internal-server-error")
+          }
+          if (error.response.data.code === "503") {
+            redirect("/error/service-unavailable")
+          }
+          
           if (error.response?.data?.message) {
             return Promise.reject(new Error(error.response.data.message))
           }
