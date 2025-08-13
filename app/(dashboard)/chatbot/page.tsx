@@ -41,6 +41,7 @@ const themeColors = [
   { value: "pink", label: "Pink", color: "bg-pink-500" },
   { value: "indigo", label: "Indigo", color: "bg-indigo-500" },
   { value: "teal", label: "Teal", color: "bg-teal-500" },
+  { value: "lightyellow", label: "Light Yellow", color: "bg-yellow-200" },
 ]
 
 export default function ChatbotPage() {
@@ -176,6 +177,7 @@ export default function ChatbotPage() {
       pink: "bg-pink-500",
       indigo: "bg-indigo-500",
       teal: "bg-teal-500",
+      lightyellow: "bg-yellow-200",
     }
     return colorMap[color] || "bg-blue-500"
   }
@@ -188,6 +190,11 @@ export default function ChatbotPage() {
       hour: "2-digit",
       minute: "2-digit",
     })
+  }
+
+  const maskApiKey = (apiKey: string) => {
+    if (!apiKey) return ""
+    return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
   }
 
   if (!currentUser) {
@@ -391,6 +398,10 @@ export default function ChatbotPage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Palette className="h-4 w-4" />
                       <span className="capitalize">{chatbot.themeColor}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Bot className="h-4 w-4" />
+                      <span className="font-mono text-xs">{maskApiKey(chatbot.apiKey)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
