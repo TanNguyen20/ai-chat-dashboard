@@ -28,7 +28,20 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Bot, MessageSquare, Globe, Palette, Calendar, MoreHorizontal, Trash2, Edit, Loader2 } from "lucide-react"
+import {
+  Plus,
+  Bot,
+  MessageSquare,
+  Globe,
+  Palette,
+  Calendar,
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  Loader2,
+  Copy,
+  Check,
+} from "lucide-react"
 import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
 import { toast } from "@/hooks/use-toast"
 
@@ -51,6 +64,7 @@ export default function ChatbotPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [copiedApiKeys, setCopiedApiKeys] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState<ChatbotRequest>({
     name: "",
     allowedHost: "",
@@ -119,7 +133,6 @@ export default function ChatbotPage() {
       setDeleteDialog((prev) => ({ ...prev, isDeleting: true }))
       await ChatbotService.deleteChatbot(deleteDialog.chatbot.id)
 
-      // Remove the deleted chatbot from the list
       setChatbots((prev) => prev.filter((bot) => bot.id !== deleteDialog.chatbot?.id))
 
       setDeleteDialog({ isOpen: false, chatbot: null, isDeleting: false })
@@ -197,6 +210,31 @@ export default function ChatbotPage() {
     return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
   }
 
+  const copyApiKey = async (apiKey: string, chatbotId: string) => {
+    try {
+      await navigator.clipboard.writeText(apiKey)
+      setCopiedApiKeys((prev) => new Set(prev).add(chatbotId))
+      toast({
+        title: "Copied!",
+        description: "API key copied to clipboard",
+      })
+
+      setTimeout(() => {
+        setCopiedApiKeys((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(chatbotId)
+          return newSet
+        })
+      }, 2000)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy API key",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -207,7 +245,6 @@ export default function ChatbotPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4">
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -248,7 +285,6 @@ export default function ChatbotPage() {
         </Card>
       </div>
 
-      {/* Alerts */}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -261,7 +297,6 @@ export default function ChatbotPage() {
         </Alert>
       )}
 
-      {/* Chatbot Management */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -402,6 +437,18 @@ export default function ChatbotPage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Bot className="h-4 w-4" />
                       <span className="font-mono text-xs">{maskApiKey(chatbot.apiKey)}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-muted"
+                        onClick={() => copyApiKey(chatbot.apiKey, chatbot.id)}
+                      >
+                        {copiedApiKeys.has(chatbot.id) ? (
+                          <Check className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
@@ -420,7 +467,6 @@ export default function ChatbotPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialog.isOpen} onOpenChange={closeDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
