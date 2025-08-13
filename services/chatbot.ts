@@ -30,17 +30,17 @@ export class ChatbotService {
     return response
   }
 
-  static async getChatbotById(id: number): Promise<Chatbot> {
+  static async getChatbotById(id: string): Promise<Chatbot> {
     const response = await api.get(`/${id}`)
     return response
   }
 
-  static async updateChatbot(id: number, data: Partial<ChatbotRequest>): Promise<Chatbot> {
+  static async updateChatbot(id: string, data: Partial<ChatbotRequest>): Promise<Chatbot> {
     const response = await api.put(`/${id}`, data)
     return response
   }
 
-  static async deleteChatbot(id: number): Promise<void> {
+  static async deleteChatbot(id: string): Promise<void> {
     await api.delete(`/${id}`)
   }
 }
