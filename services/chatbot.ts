@@ -8,6 +8,7 @@ export interface Chatbot {
   themeColor: string
   createdAt: string
   updatedAt: string
+  apiKey: string
 }
 
 export interface ChatbotRequest {
