@@ -2,7 +2,7 @@ import AxiosClient from "./apiConfig"
 import { BASE_URL } from "@/const/api"
 
 export interface Chatbot {
-  id: number
+  id: string
   name: string
   allowedHost: string
   themeColor: string
