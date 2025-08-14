@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { useEffect } from "react"
 import { Role } from "@/const/role"
-import { getHighestRole } "@utils/commons"
+import { getHighestRole } from "@utils/commons"
 
 const services = [
   {
