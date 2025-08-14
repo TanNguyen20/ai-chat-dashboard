@@ -46,12 +46,12 @@ import {
   ExternalLink,
   Users,
   Shield,
+  Edit,
 } from "lucide-react"
 import { AnalyticsService } from "@/services/analytics"
 import type { AnalyticsDashboard, CreateAnalyticsDashboard } from "@/types/analytics"
 import { useAuth } from "@/components/auth-provider"
 import { hasRole } from "@/utils/commons"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AnalyticsConfigService } from "@/services/analyticsConfig"
 import type { AnalyticsConfig } from "@/types/analyticsConfig"
@@ -81,6 +81,21 @@ export default function AnalyticsListPage() {
   })
   const [newRole, setNewRole] = useState("")
   const [newUser, setNewUser] = useState("")
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editingDashboard, setEditingDashboard] = useState<AnalyticsDashboard | null>(null)
+  const [editFormData, setEditFormData] = useState<CreateAnalyticsDashboard>({
+    dashboardId: "",
+    analyticsConfigId: 0,
+    dashboardHost: "",
+    dashboardTitle: "",
+    roles: [],
+    users: [],
+  })
+  const [editNewRole, setEditNewRole] = useState("")
+  const [editNewUser, setEditNewUser] = useState("")
 
   // Delete state
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -168,6 +183,57 @@ export default function AnalyticsListPage() {
     }
   }
 
+  const handleEditDashboard = (dashboard: AnalyticsDashboard) => {
+    setEditingDashboard(dashboard)
+    setEditFormData({
+      dashboardId: dashboard.dashboardId,
+      analyticsConfigId: dashboard.analyticsConfigId,
+      dashboardHost: dashboard.dashboardHost,
+      dashboardTitle: dashboard.dashboardTitle,
+      roles: [...dashboard.roles],
+      users: [...dashboard.users],
+    })
+    setEditDialogOpen(true)
+    setEditNewRole("")
+    setEditNewUser("")
+  }
+
+  const handleUpdateDashboard = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (
+      !editingDashboard ||
+      !editFormData.dashboardId ||
+      !editFormData.dashboardHost ||
+      !editFormData.dashboardTitle ||
+      !editFormData.analyticsConfigId
+    ) {
+      return
+    }
+
+    setIsEditing(true)
+    try {
+      await AnalyticsService.updateAnalyticsDashboard(editingDashboard.id, editFormData)
+      fetchDashboards()
+      setEditDialogOpen(false)
+      setEditingDashboard(null)
+      // Reset form
+      setEditFormData({
+        dashboardId: "",
+        analyticsConfigId: 0,
+        dashboardHost: "",
+        dashboardTitle: "",
+        roles: [],
+        users: [],
+      })
+      setEditNewRole("")
+      setEditNewUser("")
+    } catch (error) {
+      console.error("Failed to update analytics dashboard:", error)
+    } finally {
+      setIsEditing(false)
+    }
+  }
+
   const handleDeleteAnalytics = async (id: number) => {
     setDeletingId(id)
     try {
@@ -213,6 +279,40 @@ export default function AnalyticsListPage() {
 
   const removeUser = (user: string) => {
     setFormData((prev) => ({
+      ...prev,
+      users: prev.users.filter((u) => u !== user),
+    }))
+  }
+
+  const addEditRole = () => {
+    if (editNewRole.trim() && !editFormData.roles.includes(editNewRole.trim())) {
+      setEditFormData((prev) => ({
+        ...prev,
+        roles: [...prev.roles, editNewRole.trim()],
+      }))
+      setEditNewRole("")
+    }
+  }
+
+  const removeEditRole = (role: string) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      roles: prev.roles.filter((r) => r !== role),
+    }))
+  }
+
+  const addEditUser = () => {
+    if (editNewUser.trim() && !editFormData.users.includes(editNewUser.trim())) {
+      setEditFormData((prev) => ({
+        ...prev,
+        users: [...prev.users, editNewUser.trim()],
+      }))
+      setEditNewUser("")
+    }
+  }
+
+  const removeEditUser = (user: string) => {
+    setEditFormData((prev) => ({
       ...prev,
       users: prev.users.filter((u) => u !== user),
     }))
@@ -323,10 +423,13 @@ export default function AnalyticsListPage() {
                     <Label htmlFor="dashboardHost">Dashboard Host</Label>
                     <Select
                       value={formData.dashboardHost}
-                      onValueChange={(value) => setFormData((prev) => ({ ...prev, 
-                        dashboardHost: value, 
-                        analyticsConfigId:  analyticsConfigs.find((config) => config.hostname === value)?.id || 0
-                      }))}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          dashboardHost: value,
+                          analyticsConfigId: analyticsConfigs.find((config) => config.hostname === value)?.id || 0,
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a dashboard host" />
@@ -515,6 +618,16 @@ export default function AnalyticsListPage() {
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditDashboard(dashboard)
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -599,6 +712,122 @@ export default function AnalyticsListPage() {
           )}
         </>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Analytics Dashboard</DialogTitle>
+            <DialogDescription>Update the analytics dashboard configuration.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateDashboard} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-dashboardTitle">Dashboard Title</Label>
+                <Input
+                  id="edit-dashboardTitle"
+                  value={editFormData.dashboardTitle}
+                  onChange={(e) => setEditFormData((prev) => ({ ...prev, dashboardTitle: e.target.value }))}
+                  placeholder="Enter dashboard title"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-dashboardId">Dashboard ID</Label>
+                <Input
+                  id="edit-dashboardId"
+                  value={editFormData.dashboardId}
+                  onChange={(e) => setEditFormData((prev) => ({ ...prev, dashboardId: e.target.value }))}
+                  placeholder="e.g., 74c5a97f-71fc-4330-96a0-7af644a70f83"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-dashboardHost">Dashboard Host</Label>
+                <Select
+                  value={editFormData.dashboardHost}
+                  onValueChange={(value) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      dashboardHost: value,
+                      analyticsConfigId: analyticsConfigs.find((config) => config.hostname === value)?.id || 0,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a dashboard host" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {analyticsConfigs.map((config) => (
+                      <SelectItem key={config.id} value={config.hostname}>
+                        {config.hostname}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Roles</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={editNewRole}
+                    onChange={(e) => setEditNewRole(e.target.value)}
+                    placeholder="Add role (e.g., ROLE_ADMIN)"
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addEditRole())}
+                  />
+                  <Button type="button" onClick={addEditRole} variant="outline">
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {editFormData.roles.map((role) => (
+                    <Badge key={role} variant="secondary" className="flex items-center gap-1">
+                      {role}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => removeEditRole(role)} />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Users</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={editNewUser}
+                    onChange={(e) => setEditNewUser(e.target.value)}
+                    placeholder="Add user"
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addEditUser())}
+                  />
+                  <Button type="button" onClick={addEditUser} variant="outline">
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {editFormData.users.map((user) => (
+                    <Badge key={user} variant="outline" className="flex items-center gap-1">
+                      {user}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => removeEditUser(user)} />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isEditing}>
+                {isEditing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update Dashboard
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
