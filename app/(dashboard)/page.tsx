@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { useEffect } from "react"
 import { Role } from "@/const/role"
+import { getHighestRole } "@utils/commons"
 
 const services = [
   {
@@ -80,26 +81,7 @@ export default function DashboardPage() {
     const userRoles = Array.from(user.roles).map((role) => role.name)
     return requiredRoles.some((requiredRole) => userRoles.includes(requiredRole))
   }
-
-  const getPrimaryRoleName = () => {
-    if (!user?.roles || user.roles.size === 0) return "User"
-    const rolesArray = Array.from(user.roles)
-    const primaryRole = rolesArray[0]?.name
-
-    switch (primaryRole) {
-      case Role.SUPER_ADMIN:
-        return "Super Admin"
-      case Role.ADMIN:
-        return "Admin"
-      case Role.OWNER:
-        return "Owner"
-      case Role.USER:
-        return "User"
-      default:
-        return "User"
-    }
-  }
-
+  
   const availableServices = services.filter((service) => hasRequiredRole(service.requiredRoles))
 
   return (
@@ -151,7 +133,7 @@ export default function DashboardPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{getPrimaryRoleName()}</div>
+            <div className="text-2xl font-bold">{getHighestRole()}</div>
             <p className="text-xs text-muted-foreground">Current access level</p>
           </CardContent>
         </Card>
