@@ -334,19 +334,21 @@ export default function AnalyticsListPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
             <Skeleton className="h-8 w-48 mb-2" />
             <Skeleton className="h-4 w-96" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 shrink-0" />
         </div>
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-10 flex-1 max-w-sm" />
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+          <Skeleton className="h-10 w-full sm:flex-1" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -371,12 +373,16 @@ export default function AnalyticsListPage() {
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboards</h1>
-          <p className="text-muted-foreground">Manage and monitor your analytics dashboards</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight truncate" title="Analytics Dashboards">
+            Analytics Dashboards
+          </h1>
+          <p className="text-muted-foreground truncate" title="Manage and monitor your analytics dashboards">
+            Manage and monitor your analytics dashboards
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button onClick={fetchDashboards} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -385,7 +391,7 @@ export default function AnalyticsListPage() {
           {/* Create Analytics Dialog */}
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Analytics Dashboard
               </Button>
@@ -405,6 +411,7 @@ export default function AnalyticsListPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, dashboardTitle: e.target.value }))}
                       placeholder="Enter dashboard title"
                       required
+                      className="w-full"
                     />
                   </div>
 
@@ -416,6 +423,7 @@ export default function AnalyticsListPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, dashboardId: e.target.value }))}
                       placeholder="e.g., 74c5a97f-71fc-4330-96a0-7af644a70f83"
                       required
+                      className="w-full"
                     />
                   </div>
 
@@ -451,7 +459,13 @@ export default function AnalyticsListPage() {
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
                         placeholder="Add role (e.g., ROLE_ADMIN)"
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addRole())}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addRole()
+                          }
+                        }}
+                        className="w-full"
                       />
                       <Button type="button" onClick={addRole} variant="outline">
                         Add
@@ -474,7 +488,13 @@ export default function AnalyticsListPage() {
                         value={newUser}
                         onChange={(e) => setNewUser(e.target.value)}
                         placeholder="Add user"
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addUser())}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addUser()
+                          }
+                        }}
+                        className="w-full"
                       />
                       <Button type="button" onClick={addUser} variant="outline">
                         Add
@@ -507,14 +527,14 @@ export default function AnalyticsListPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+        <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search dashboards..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -539,7 +559,7 @@ export default function AnalyticsListPage() {
       {!error && (
         <>
           {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Dashboards</CardTitle>
@@ -595,19 +615,21 @@ export default function AnalyticsListPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+            <div className={viewMode === "grid" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
               {filteredDashboards.map((dashboard) => (
                 <Card key={dashboard.id} className="hover:shadow-md transition-shadow cursor-pointer group">
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1" onClick={() => handleNavigateToDetail(dashboard.id)}>
-                        <CardTitle className="text-lg flex items-center gap-2 group-hover:text-primary transition-colors">
-                          <BarChart3 className="h-5 w-5" />
-                          {dashboard.dashboardTitle}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1" onClick={() => handleNavigateToDetail(dashboard.id)}>
+                        <CardTitle className="text-lg flex items-center gap-2 group-hover:text-primary transition-colors truncate">
+                          <BarChart3 className="h-5 w-5 shrink-0" />
+                          <span className="truncate" title={dashboard.dashboardTitle}>{dashboard.dashboardTitle}</span>
                         </CardTitle>
-                        <CardDescription className="mt-1">ID: {dashboard.dashboardId}</CardDescription>
+                        <CardDescription className="mt-1 truncate" title={`ID: ${dashboard.dashboardId}`}>
+                          ID: {dashboard.dashboardId}
+                        </CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 shrink-0">
                         <Button variant="ghost" size="sm" asChild onClick={(e) => e.stopPropagation()}>
                           <a
                             href={dashboard.dashboardHost}
@@ -667,9 +689,9 @@ export default function AnalyticsListPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent onClick={() => handleNavigateToDetail(dashboard.id)}>
+                  <CardContent onClick={() => handleNavigateToDetail(dashboard.id)} className="min-w-0">
                     <div className="space-y-3">
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground truncate" title={`Host: ${dashboard.dashboardHost}`}>
                         <strong>Host:</strong> {dashboard.dashboardHost}
                       </div>
 
@@ -730,6 +752,7 @@ export default function AnalyticsListPage() {
                   onChange={(e) => setEditFormData((prev) => ({ ...prev, dashboardTitle: e.target.value }))}
                   placeholder="Enter dashboard title"
                   required
+                  className="w-full"
                 />
               </div>
 
@@ -741,6 +764,7 @@ export default function AnalyticsListPage() {
                   onChange={(e) => setEditFormData((prev) => ({ ...prev, dashboardId: e.target.value }))}
                   placeholder="e.g., 74c5a97f-71fc-4330-96a0-7af644a70f83"
                   required
+                  className="w-full"
                 />
               </div>
 
@@ -776,7 +800,13 @@ export default function AnalyticsListPage() {
                     value={editNewRole}
                     onChange={(e) => setEditNewRole(e.target.value)}
                     placeholder="Add role (e.g., ROLE_ADMIN)"
-                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addEditRole())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        addEditRole()
+                      }
+                    }}
+                    className="w-full"
                   />
                   <Button type="button" onClick={addEditRole} variant="outline">
                     Add
@@ -799,7 +829,13 @@ export default function AnalyticsListPage() {
                     value={editNewUser}
                     onChange={(e) => setEditNewUser(e.target.value)}
                     placeholder="Add user"
-                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addEditUser())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        addEditUser()
+                      }
+                    }}
+                    className="w-full"
                   />
                   <Button type="button" onClick={addEditUser} variant="outline">
                     Add

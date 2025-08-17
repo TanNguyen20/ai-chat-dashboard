@@ -49,7 +49,7 @@ import type { Role, CreateRole } from "@/types/role"
 import { Role as EnumRole } from "@/const/role"
 import { useAuth } from "@/components/auth-provider"
 import { hasRole } from "@/utils/commons"
-import { ThemeToggle } from "@/components/theme-toggle"
+// import { ThemeToggle } from "@/components/theme-toggle" // (unused)
 
 export default function RolesPage() {
   const { user } = useAuth()
@@ -164,7 +164,7 @@ export default function RolesPage() {
 
   if (!canView) {
     return (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-4 sm:p-6 max-w-7xl mx-auto">
         <div className="flex flex-1 items-center justify-center">
           <Alert variant="destructive" className="max-w-md">
             <AlertCircle className="h-4 w-4" />
@@ -177,20 +177,27 @@ export default function RolesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="flex flex-col gap-4 p-4 sm:p-6 max-w-7xl mx-auto">
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
             <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-96" />
+            {/* prevent overflow on mobile */}
+            <Skeleton className="h-4 w-full sm:w-96" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 self-end sm:self-auto" />
         </div>
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-10 flex-1 max-w-sm" />
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
+
+        {/* Search skeleton */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
+          <Skeleton className="h-10 w-full sm:max-w-sm" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-10 w-10" />
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -213,11 +220,11 @@ export default function RolesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight truncate">Role Management</h1>
           <p className="text-muted-foreground">
             Manage system roles and permissions
             {!canCreateDelete && (
@@ -227,8 +234,10 @@ export default function RolesPage() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={fetchRoles} variant="outline" size="sm">
+
+        {/* Actions */}
+        <div className="flex w-full sm:w-auto items-center gap-2 flex-wrap sm:flex-nowrap justify-end sm:justify-normal">
+          <Button onClick={fetchRoles} variant="outline" size="sm" className="w-full sm:w-auto">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -237,7 +246,7 @@ export default function RolesPage() {
           {canCreateDelete && (
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Role
                 </Button>
@@ -274,11 +283,11 @@ export default function RolesPage() {
                     <p className="text-xs text-muted-foreground">Optional description to explain the role's purpose</p>
                   </div>
 
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)} className="w-full sm:w-auto">
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isCreating}>
+                    <Button type="submit" disabled={isCreating} className="w-full sm:w-auto">
                       {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Create Role
                     </Button>
@@ -291,9 +300,9 @@ export default function RolesPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search roles..."
             value={searchQuery}
@@ -301,11 +310,11 @@ export default function RolesPage() {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
+        <div className="flex gap-2">
+          <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")} aria-label="Grid view">
             <Grid3X3 className="h-4 w-4" />
           </Button>
-          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
+          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")} aria-label="List view">
             <List className="h-4 w-4" />
           </Button>
         </div>
@@ -323,7 +332,7 @@ export default function RolesPage() {
       {!error && (
         <>
           {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Roles</CardTitle>
@@ -379,15 +388,17 @@ export default function RolesPage() {
               {filteredRoles.map((role) => (
                 <Card key={role.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Shield className="h-5 w-5" />
-                          {role.name}
+                    <div className="flex items-start justify-between gap-2">
+                      {/* text block */}
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg flex items-center gap-2 min-w-0">
+                          <Shield className="h-5 w-5 shrink-0" />
+                          <span className="truncate">{role.name}</span>
                         </CardTitle>
-                        <CardDescription className="mt-1">Role ID: {role.id}</CardDescription>
+                        <CardDescription className="mt-1 truncate">Role ID: {role.id}</CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      {/* actions */}
+                      <div className="flex items-center gap-2 shrink-0">
                         <Badge variant={role.name.startsWith("ROLE_") ? "default" : "secondary"} className="text-xs">
                           {role.name.startsWith("ROLE_") ? "System" : "Custom"}
                         </Badge>
@@ -435,7 +446,7 @@ export default function RolesPage() {
                       {role.description && (
                         <div className="text-sm">
                           <strong>Description:</strong>
-                          <p className="text-muted-foreground mt-1">{role.description}</p>
+                          <p className="text-muted-foreground mt-1 break-words">{role.description}</p>
                         </div>
                       )}
 

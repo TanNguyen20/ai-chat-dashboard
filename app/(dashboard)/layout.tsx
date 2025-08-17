@@ -17,15 +17,16 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
+import Link from "next/link"
 
 const breadcrumbMap: Record<string, { title: string; href?: string }[]> = {
-  "/dashboard": [{ title: "Dashboard", href: "/dashboard" }, { title: "Overview" }],
-  "/chatbot": [{ title: "Dashboard", href: "/dashboard" }, { title: "Chatbot" }],
-  "/users": [{ title: "Dashboard", href: "/dashboard" }, { title: "Users" }],
-  "/analytics": [{ title: "Dashboard", href: "/dashboard" }, { title: "Analytics" }],
-  "/analytics-config": [{ title: "Dashboard", href: "/dashboard" }, { title: "Analytics Config" }],
-  "/roles": [{ title: "Dashboard", href: "/dashboard" }, { title: "Roles" }],
-  "/settings": [{ title: "Dashboard", href: "/dashboard" }, { title: "Settings" }],
+  "/": [{ title: "Dashboard", href: "/" }, { title: "Overview" }],
+  "/chatbot": [{ title: "Dashboard", href: "/" }, { title: "Chatbot" }],
+  "/users": [{ title: "Dashboard", href: "/" }, { title: "Users" }],
+  "/analytics": [{ title: "Dashboard", href: "/" }, { title: "Analytics" }],
+  "/analytics-config": [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }],
+  "/roles": [{ title: "Dashboard", href: "/" }, { title: "Roles" }],
+  "/settings": [{ title: "Dashboard", href: "/" }, { title: "Settings" }],
 }
 
 export default function DashboardLayout({
@@ -58,7 +59,7 @@ export default function DashboardLayout({
   }
 
   const getBreadcrumbs = () => {
-    return breadcrumbMap[pathname] || [{ title: "Dashboard", href: "/dashboard" }, { title: "Page" }]
+    return breadcrumbMap[pathname] || [{ title: "Dashboard", href: "/" }, { title: "Page" }]
   }
 
   if (isLoading) {
@@ -90,7 +91,7 @@ export default function DashboardLayout({
                     {index > 0 && <BreadcrumbSeparator className="hidden md:block" />}
                     <BreadcrumbItem className={index === 0 ? "hidden md:block" : ""}>
                       {crumb.href ? (
-                        <BreadcrumbLink href={crumb.href}>{crumb.title}</BreadcrumbLink>
+                        <Link href={crumb.href}>{crumb.title}</Link>
                       ) : (
                         <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
                       )}

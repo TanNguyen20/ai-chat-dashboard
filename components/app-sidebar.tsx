@@ -100,7 +100,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/dashboard">
+              <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <LayoutDashboard className="size-4" />
                 </div>
@@ -108,7 +108,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
                   <span className="truncate font-semibold">Admin Dashboard</span>
                   <span className="truncate text-xs">Management System</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -48,7 +48,6 @@ import { AnalyticsConfigService } from "@/services/analyticsConfig"
 import type { AnalyticsConfig, CreateAnalyticsConfig, UpdateAnalyticsConfig } from "@/types/analyticsConfig"
 import { useAuth } from "@/components/auth-provider"
 import { hasRole } from "@/utils/commons"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Role } from "@/const/role"
 
 export default function AnalyticsConfigPage() {
@@ -197,7 +196,7 @@ export default function AnalyticsConfigPage() {
 
   if (!hasAccess) {
     return (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-4 overflow-x-hidden">
         <div className="flex flex-1 items-center justify-center">
           <Alert variant="destructive" className="max-w-md">
             <AlertCircle className="h-4 w-4" />
@@ -212,18 +211,18 @@ export default function AnalyticsConfigPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="flex flex-col gap-4 p-4 overflow-x-hidden">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="w-full sm:w-auto">
             <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-96" />
+            <Skeleton className="h-4 w-full sm:w-96" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-full sm:w-32" />
         </div>
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-10 flex-1 max-w-sm" />
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
+        <div className="flex items-center gap-4 mb-6 flex-wrap">
+          <Skeleton className="h-10 w-full sm:flex-1 sm:max-w-sm" />
+          <Skeleton className="h-10 w-full sm:w-24" />
+          <Skeleton className="h-10 w-full sm:w-24" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -244,15 +243,15 @@ export default function AnalyticsConfigPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics Configuration</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight break-words">Analytics Configuration</h1>
           <p className="text-muted-foreground">Manage analytics server configurations and credentials</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={fetchConfigs} variant="outline" size="sm">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button onClick={fetchConfigs} variant="outline" size="sm" className="w-full sm:w-auto">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -260,7 +259,7 @@ export default function AnalyticsConfigPage() {
           {/* Create Config Dialog */}
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Configuration
               </Button>
@@ -332,21 +331,31 @@ export default function AnalyticsConfigPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search configurations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={() => setViewMode("grid")}
+          >
             <Grid3X3 className="h-4 w-4" />
           </Button>
-          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={() => setViewMode("list")}
+          >
             <List className="h-4 w-4" />
           </Button>
         </div>
@@ -425,8 +434,8 @@ export default function AnalyticsConfigPage() {
                 <Card key={config.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg flex items-center gap-2 break-words">
                           <Server className="h-5 w-5" />
                           Configuration #{config.id}
                         </CardTitle>

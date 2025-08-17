@@ -106,16 +106,9 @@ export default function UsersPage() {
       setNewUser({ username: "", email: "", password: "", roles: [EnumRole.USER] })
       setIsAddDialogOpen(false)
       fetchUsers()
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      })
+      toast({ title: "Success", description: "User created successfully" })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create user",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to create user", variant: "destructive" })
     }
   }
 
@@ -128,118 +121,81 @@ export default function UsersPage() {
       })
       setIsEditDialogOpen(false)
       fetchUsers()
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      })
+      toast({ title: "Success", description: "User updated successfully" })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to update user", variant: "destructive" })
     }
   }
 
   const handleDeleteUser = async (userId: number) => {
     if (user?.id === userId) {
-      toast({
-        title: "Error",
-        description: "You cannot delete your own account",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "You cannot delete your own account", variant: "destructive" })
       return
     }
-
     try {
       await UserService.deleteUser(userId)
       fetchUsers()
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      })
+      toast({ title: "Success", description: "User deleted successfully" })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to delete user", variant: "destructive" })
     }
   }
 
   const handleUpdateUserRoles = async () => {
     if (!selectedUser) return
-
     try {
       await UserService.updateUserRoles(selectedUser.id, selectedRoles)
       setIsRoleDialogOpen(false)
       setSelectedUser(null)
       setSelectedRoles([])
       fetchUsers()
-      toast({
-        title: "Success",
-        description: "User roles updated successfully",
-      })
+      toast({ title: "Success", description: "User roles updated successfully" })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user roles",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to update user roles", variant: "destructive" })
     }
   }
 
   const confirmDeleteUser = (userDeleting: User) => {
     if (user?.id === userDeleting?.id) {
-      toast({
-        title: "Error",
-        description: "You cannot delete your own account",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "You cannot delete your own account", variant: "destructive" })
       return
     }
-
     setUserToDelete(userDeleting)
     setIsDeleteDialogOpen(true)
   }
 
-  const openEditDialog = (user: User) => {
+  const openEditDialog = (u: User) => {
     setEditUser({
-      id: user.id,
-      username: user.username,
-      email: user.username, // Assuming email is same as username for now
-      roles: Array.from(user.roles).map((role) => role.name),
+      id: u.id,
+      username: u.username,
+      email: u.username, // Assuming email is same as username for now
+      roles: Array.from(u.roles).map((role) => role.name),
     })
     setIsEditDialogOpen(true)
   }
 
-  const openRoleDialog = (user: User) => {
-    setSelectedUser(user)
-    setSelectedRoles(Array.from(user.roles).map((role) => role.name))
+  const openRoleDialog = (u: User) => {
+    setSelectedUser(u)
+    setSelectedRoles(Array.from(u.roles).map((role) => role.name))
     setIsRoleDialogOpen(true)
   }
 
   const handleRoleChange = (roleName: string, checked: boolean) => {
-    if (checked) {
-      setSelectedRoles((prev) => [...prev, roleName])
-    } else {
-      setSelectedRoles((prev) => prev.filter((role) => role !== roleName))
-    }
+    if (checked) setSelectedRoles((prev) => [...prev, roleName])
+    else setSelectedRoles((prev) => prev.filter((r) => r !== roleName))
   }
 
-  const getUserRoleBadges = (userRoles: Set<Role>) => {
-    return Array.from(userRoles).map((role) => (
+  const getUserRoleBadges = (userRoles: Set<Role>) =>
+    Array.from(userRoles).map((role) => (
       <Badge key={role.id} variant={role.name.includes("ADMIN") ? "default" : "secondary"} className="text-xs">
         {formatRoleName(role.name)}
       </Badge>
     ))
-  }
 
   const getStats = () => {
     const totalUsers = users.length
-    const adminUsers = users.filter((user) => Array.from(user.roles).some((role) => role.name.includes("ADMIN"))).length
+    const adminUsers = users.filter((u) => Array.from(u.roles).some((r) => r.name.includes("ADMIN"))).length
     const regularUsers = totalUsers - adminUsers
-
     return { totalUsers, adminUsers, regularUsers }
   }
 
@@ -255,8 +211,8 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      {/* Stats Cards */}
+    <div className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -290,51 +246,58 @@ export default function UsersPage() {
       {/* User Management */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>User Management</CardTitle>
+          {/* Flex-wrap header like your working code */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="break-words">User Management</CardTitle>
               <CardDescription>Manage users and their permissions</CardDescription>
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
                   Add User
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>Add New User</DialogTitle>
                   <DialogDescription>Create a new user account with specified roles.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
+                  <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
                     <Input
                       id="username"
                       value={newUser.username}
                       onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                      placeholder="john.doe"
+                      required
                     />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       value={newUser.email}
                       onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                      placeholder="john@company.com"
+                      required
                     />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <Input
                       id="password"
                       type="password"
                       value={newUser.password}
                       onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                      placeholder="••••••••"
+                      required
                     />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
                     <Select
                       value={newUser.roles[0]}
@@ -354,64 +317,113 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                   <Button onClick={handleAddUser}>Create User</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Roles</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((userData) => (
-                <TableRow key={userData.id}>
-                  <TableCell className="font-medium">{userData.username}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={userData.isEnabled ? "default" : "destructive"}>
-                      {userData.isEnabled ? "Active" : "Disabled"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
+
+        {/* Content */}
+        <CardContent className="space-y-4">
+          {/* Mobile: stacked cards (no table) */}
+          <div className="grid gap-3 sm:hidden">
+            {users.map((u) => (
+              <Card key={u.id} className="hover:shadow-sm transition-shadow">
+                <CardContent className="py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold break-words">{u.username}</div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {getUserRoleBadges(u.roles)}
+                      </div>
+                      <div className="mt-2">
+                        <Badge variant={u.isEnabled ? "default" : "destructive"}>
+                          {u.isEnabled ? "Active" : "Disabled"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       {isSuperAdmin && (
-                        <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
+                        <Button variant="outline" size="icon" onClick={() => openRoleDialog(u)}>
                           <UserCog className="h-4 w-4" />
                         </Button>
                       )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        onClick={() => confirmDeleteUser(userData)}
-                        disabled={userData.id === user?.id}
+                        size="icon"
+                        onClick={() => confirmDeleteUser(u)}
+                        disabled={u.id === user?.id}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop/Tablet: table */}
+          <div className="hidden sm:block">
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((userData) => (
+                    <TableRow key={userData.id}>
+                      <TableCell className="font-medium break-words">{userData.username}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={userData.isEnabled ? "default" : "destructive"}>
+                          {userData.isEnabled ? "Active" : "Disabled"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {isSuperAdmin && (
+                            <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
+                              <UserCog className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => confirmDeleteUser(userData)}
+                            disabled={userData.id === user?.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Delete user dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
             <DialogDescription>
@@ -420,9 +432,7 @@ export default function UsersPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -441,31 +451,34 @@ export default function UsersPage() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information and roles.</DialogDescription>
+            <DialogDescription>Update user information.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="edit-username">Username</Label>
               <Input
                 id="edit-username"
                 value={editUser.username}
                 onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
+                required
               />
             </div>
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="edit-email">Email</Label>
               <Input
                 id="edit-email"
                 type="email"
                 value={editUser.email}
                 onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                required
               />
             </div>
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleEditUser}>Update User</Button>
           </DialogFooter>
         </DialogContent>
@@ -473,7 +486,7 @@ export default function UsersPage() {
 
       {/* Role Management Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Manage User Roles</DialogTitle>
             <DialogDescription>Select roles for {selectedUser?.username}</DialogDescription>
@@ -495,6 +508,7 @@ export default function UsersPage() {
             ))}
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleUpdateUserRoles}>Update Roles</Button>
           </DialogFooter>
         </DialogContent>
