@@ -48,7 +48,7 @@ const navigationItems = [
 export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: AppSidebarProps) {
   const { user } = useAuth()
   const pathname = usePathname()
-  const { isMobile, setOpen } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   const filteredNavItems = navigationItems.filter((item) => item.roles.some((role) => user && hasRole(user, role)))
 
@@ -63,7 +63,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
 
   // helper to close on mobile after navigating
   const handleNavClick = () => {
-    if (isMobile) setOpen(false)
+    if (isMobile) setOpenMobile(false)
   }
 
   return (
