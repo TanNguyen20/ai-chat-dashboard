@@ -320,9 +320,9 @@ export default function AnalyticsListPage() {
 
   if (!hasAccess) {
     return (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-3 sm:p-4">
         <div className="flex flex-1 items-center justify-center">
-          <Alert variant="destructive" className="max-w-md">
+          <Alert variant="destructive" className="max-w-md mx-auto">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>Access denied. You need appropriate privileges to view analytics.</AlertDescription>
           </Alert>
@@ -333,32 +333,35 @@ export default function AnalyticsListPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="min-w-0">
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-96" />
+      <div className="flex flex-col gap-4 p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-7 w-48 sm:h-8" />
+            <Skeleton className="h-4 w-full max-w-sm sm:max-w-md" />
           </div>
-          <Skeleton className="h-10 w-32 shrink-0" />
+          <div className="flex gap-2 sm:shrink-0">
+            <Skeleton className="h-9 w-20 sm:h-10" />
+            <Skeleton className="h-9 flex-1 sm:h-10 sm:w-40 sm:flex-none" />
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Skeleton className="h-10 w-full sm:flex-1" />
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
+          <div className="flex gap-2 justify-center sm:justify-start">
+            <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-10 w-10" />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
+              <CardHeader className="pb-3">
+                <Skeleton className="h-5 w-3/4 sm:h-6" />
                 <Skeleton className="h-4 w-1/2" />
               </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3 mb-4" />
-                <div className="flex gap-2">
+              <CardContent className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+                <div className="flex flex-wrap gap-2">
                   <Skeleton className="h-6 w-16" />
                   <Skeleton className="h-6 w-20" />
                 </div>
@@ -371,40 +374,48 @@ export default function AnalyticsListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-3 sm:p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight truncate" title="Analytics Dashboards">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl" title="Analytics Dashboards">
             Analytics Dashboards
           </h1>
-          <p className="text-muted-foreground truncate" title="Manage and monitor your analytics dashboards">
+          <p
+            className="text-sm text-muted-foreground sm:text-base"
+            title="Manage and monitor your analytics dashboards"
+          >
             Manage and monitor your analytics dashboards
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button onClick={fetchDashboards} variant="outline" size="sm">
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <Button onClick={fetchDashboards} variant="outline" size="sm" className="flex-1 sm:flex-none bg-transparent">
             <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
+            <span className="sm:inline">Refresh</span>
           </Button>
 
           {/* Create Analytics Dialog */}
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" className="flex-1 sm:flex-none">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Analytics Dashboard
+                <span className="hidden xs:inline sm:inline">Add Dashboard</span>
+                <span className="xs:hidden sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Create Analytics Dashboard</DialogTitle>
-                <DialogDescription>Add a new analytics dashboard to your collection.</DialogDescription>
+            <DialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
+              <DialogHeader className="space-y-2">
+                <DialogTitle className="text-lg sm:text-xl">Create Analytics Dashboard</DialogTitle>
+                <DialogDescription className="text-sm">
+                  Add a new analytics dashboard to your collection.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateAnalytics} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dashboardTitle">Dashboard Title</Label>
+                    <Label htmlFor="dashboardTitle" className="text-sm font-medium">
+                      Dashboard Title
+                    </Label>
                     <Input
                       id="dashboardTitle"
                       value={formData.dashboardTitle}
@@ -416,19 +427,23 @@ export default function AnalyticsListPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dashboardId">Dashboard ID</Label>
+                    <Label htmlFor="dashboardId" className="text-sm font-medium">
+                      Dashboard ID
+                    </Label>
                     <Input
                       id="dashboardId"
                       value={formData.dashboardId}
                       onChange={(e) => setFormData((prev) => ({ ...prev, dashboardId: e.target.value }))}
                       placeholder="e.g., 74c5a97f-71fc-4330-96a0-7af644a70f83"
                       required
-                      className="w-full"
+                      className="w-full text-sm"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dashboardHost">Dashboard Host</Label>
+                    <Label htmlFor="dashboardHost" className="text-sm font-medium">
+                      Dashboard Host
+                    </Label>
                     <Select
                       value={formData.dashboardHost}
                       onValueChange={(value) =>
@@ -439,7 +454,7 @@ export default function AnalyticsListPage() {
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a dashboard host" />
                       </SelectTrigger>
                       <SelectContent>
@@ -453,8 +468,8 @@ export default function AnalyticsListPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Roles</Label>
-                    <div className="flex gap-2">
+                    <Label className="text-sm font-medium">Roles</Label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
@@ -465,25 +480,30 @@ export default function AnalyticsListPage() {
                             addRole()
                           }
                         }}
-                        className="w-full"
+                        className="flex-1 text-sm"
                       />
-                      <Button type="button" onClick={addRole} variant="outline">
+                      <Button
+                        type="button"
+                        onClick={addRole}
+                        variant="outline"
+                        className="w-full sm:w-auto bg-transparent"
+                      >
                         Add
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.roles.map((role) => (
-                        <Badge key={role} variant="secondary" className="flex items-center gap-1">
-                          {role}
-                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeRole(role)} />
+                        <Badge key={role} variant="secondary" className="flex items-center gap-1 text-xs">
+                          <span className="truncate max-w-[120px]">{role}</span>
+                          <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => removeRole(role)} />
                         </Badge>
                       ))}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Users</Label>
-                    <div className="flex gap-2">
+                    <Label className="text-sm font-medium">Users</Label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         value={newUser}
                         onChange={(e) => setNewUser(e.target.value)}
@@ -494,28 +514,38 @@ export default function AnalyticsListPage() {
                             addUser()
                           }
                         }}
-                        className="w-full"
+                        className="flex-1 text-sm"
                       />
-                      <Button type="button" onClick={addUser} variant="outline">
+                      <Button
+                        type="button"
+                        onClick={addUser}
+                        variant="outline"
+                        className="w-full sm:w-auto bg-transparent"
+                      >
                         Add
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.users.map((user) => (
-                        <Badge key={user} variant="outline" className="flex items-center gap-1">
-                          {user}
-                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeUser(user)} />
+                        <Badge key={user} variant="outline" className="flex items-center gap-1 text-xs">
+                          <span className="truncate max-w-[120px]">{user}</span>
+                          <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => removeUser(user)} />
                         </Badge>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCreateDialogOpen(false)}
+                    className="w-full sm:w-auto"
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isCreating}>
+                  <Button type="submit" disabled={isCreating} className="w-full sm:w-auto">
                     {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Dashboard
                   </Button>
@@ -527,8 +557,8 @@ export default function AnalyticsListPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
-        <div className="relative w-full sm:flex-1 min-w-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search dashboards..."
@@ -537,12 +567,24 @@ export default function AnalyticsListPage() {
             className="pl-10 w-full"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
+        <div className="flex items-center gap-2 justify-center sm:justify-start">
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+            className="flex-1 sm:flex-none"
+          >
             <Grid3X3 className="h-4 w-4" />
+            <span className="ml-2 sm:hidden">Grid</span>
           </Button>
-          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="flex-1 sm:flex-none"
+          >
             <List className="h-4 w-4" />
+            <span className="ml-2 sm:hidden">List</span>
           </Button>
         </div>
       </div>
@@ -551,7 +593,7 @@ export default function AnalyticsListPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="text-sm">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -559,14 +601,14 @@ export default function AnalyticsListPage() {
       {!error && (
         <>
           {/* Stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Dashboards</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboards.length}</div>
+                <div className="text-xl font-bold sm:text-2xl">{dashboards.length}</div>
               </CardContent>
             </Card>
             <Card>
@@ -575,16 +617,18 @@ export default function AnalyticsListPage() {
                 <Filter className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{filteredDashboards.length}</div>
+                <div className="text-xl font-bold sm:text-2xl">{filteredDashboards.length}</div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="sm:col-span-2 lg:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Unique Hosts</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{new Set(dashboards.map((d) => d.dashboardHost)).size}</div>
+                <div className="text-xl font-bold sm:text-2xl">
+                  {new Set(dashboards.map((d) => d.dashboardHost)).size}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -592,12 +636,12 @@ export default function AnalyticsListPage() {
           {/* Dashboard Grid/List */}
           {filteredDashboards.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <BarChart3 className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
+              <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+                <BarChart3 className="h-12 w-12 text-muted-foreground mb-3 sm:h-16 sm:w-16 sm:mb-4" />
+                <h3 className="text-base font-semibold mb-2 sm:text-lg">
                   {searchQuery ? "No dashboards found" : "No analytics dashboards"}
                 </h3>
-                <p className="text-sm text-muted-foreground text-center mb-4">
+                <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
                   {searchQuery
                     ? "Try adjusting your search criteria"
                     : "Get started by creating your first analytics dashboard"}
@@ -605,7 +649,7 @@ export default function AnalyticsListPage() {
                 {!searchQuery && (
                   <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button>
+                      <Button className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Analytics Dashboard
                       </Button>
@@ -615,29 +659,47 @@ export default function AnalyticsListPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === "grid" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+            /* Improved mobile card layout */
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4"
+                  : "space-y-3 sm:space-y-4"
+              }
+            >
               {filteredDashboards.map((dashboard) => (
                 <Card key={dashboard.id} className="hover:shadow-md transition-shadow cursor-pointer group">
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1" onClick={() => handleNavigateToDetail(dashboard.id)}>
-                        <CardTitle className="text-lg flex items-center gap-2 group-hover:text-primary transition-colors truncate">
-                          <BarChart3 className="h-5 w-5 shrink-0" />
-                          <span className="truncate" title={dashboard.dashboardTitle}>{dashboard.dashboardTitle}</span>
+                        <CardTitle className="text-base flex items-center gap-2 group-hover:text-primary transition-colors sm:text-lg">
+                          <BarChart3 className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                          <span className="truncate" title={dashboard.dashboardTitle}>
+                            {dashboard.dashboardTitle}
+                          </span>
                         </CardTitle>
-                        <CardDescription className="mt-1 truncate" title={`ID: ${dashboard.dashboardId}`}>
+                        <CardDescription
+                          className="mt-1 text-xs truncate sm:text-sm"
+                          title={`ID: ${dashboard.dashboardId}`}
+                        >
                           ID: {dashboard.dashboardId}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <Button variant="ghost" size="sm" asChild onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                        >
                           <a
                             href={dashboard.dashboardHost}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1"
+                            className="flex items-center justify-center"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
                           </a>
                         </Button>
                         <Button
@@ -647,37 +709,40 @@ export default function AnalyticsListPage() {
                             e.stopPropagation()
                             handleEditDashboard(dashboard)
                           }}
+                          className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 sm:h-9 sm:w-9"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {deletingId === dashboard.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
                               ) : (
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               )}
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-md sm:mx-auto sm:w-full">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Analytics Dashboard</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-base sm:text-lg">
+                                Delete Analytics Dashboard
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-sm">
                                 Are you sure you want to delete "{dashboard.dashboardTitle}"? This action cannot be
                                 undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogFooter className="flex flex-col gap-2 sm:flex-row">
+                              <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleDeleteAnalytics(dashboard.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
                                 disabled={deletingId === dashboard.id}
                               >
                                 {deletingId === dashboard.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -689,44 +754,45 @@ export default function AnalyticsListPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent onClick={() => handleNavigateToDetail(dashboard.id)} className="min-w-0">
-                    <div className="space-y-3">
-                      <div className="text-sm text-muted-foreground truncate" title={`Host: ${dashboard.dashboardHost}`}>
-                        <strong>Host:</strong> {dashboard.dashboardHost}
-                      </div>
-
-                      {dashboard.roles.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <Shield className="h-4 w-4" />
-                            Roles
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {dashboard.roles.map((role) => (
-                              <Badge key={role} variant="secondary" className="text-xs">
-                                {role}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {dashboard.users.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <Users className="h-4 w-4" />
-                            Users
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {dashboard.users.map((user) => (
-                              <Badge key={user} variant="outline" className="text-xs">
-                                {user}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                  <CardContent onClick={() => handleNavigateToDetail(dashboard.id)} className="min-w-0 space-y-3">
+                    <div
+                      className="text-xs text-muted-foreground truncate sm:text-sm"
+                      title={`Host: ${dashboard.dashboardHost}`}
+                    >
+                      <strong>Host:</strong> {dashboard.dashboardHost}
                     </div>
+
+                    {dashboard.roles.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
+                          <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+                          Roles
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {dashboard.roles.map((role) => (
+                            <Badge key={role} variant="secondary" className="text-xs">
+                              {role}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {dashboard.users.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                          Users
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {dashboard.users.map((user) => (
+                            <Badge key={user} variant="outline" className="text-xs">
+                              {user}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -737,15 +803,17 @@ export default function AnalyticsListPage() {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Analytics Dashboard</DialogTitle>
-            <DialogDescription>Update the analytics dashboard configuration.</DialogDescription>
+        <DialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-lg sm:text-xl">Edit Analytics Dashboard</DialogTitle>
+            <DialogDescription className="text-sm">Update the analytics dashboard configuration.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateDashboard} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-dashboardTitle">Dashboard Title</Label>
+                <Label htmlFor="edit-dashboardTitle" className="text-sm font-medium">
+                  Dashboard Title
+                </Label>
                 <Input
                   id="edit-dashboardTitle"
                   value={editFormData.dashboardTitle}
@@ -757,19 +825,23 @@ export default function AnalyticsListPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-dashboardId">Dashboard ID</Label>
+                <Label htmlFor="edit-dashboardId" className="text-sm font-medium">
+                  Dashboard ID
+                </Label>
                 <Input
                   id="edit-dashboardId"
                   value={editFormData.dashboardId}
                   onChange={(e) => setEditFormData((prev) => ({ ...prev, dashboardId: e.target.value }))}
                   placeholder="e.g., 74c5a97f-71fc-4330-96a0-7af644a70f83"
                   required
-                  className="w-full"
+                  className="w-full text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-dashboardHost">Dashboard Host</Label>
+                <Label htmlFor="edit-dashboardHost" className="text-sm font-medium">
+                  Dashboard Host
+                </Label>
                 <Select
                   value={editFormData.dashboardHost}
                   onValueChange={(value) =>
@@ -780,7 +852,7 @@ export default function AnalyticsListPage() {
                     }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a dashboard host" />
                   </SelectTrigger>
                   <SelectContent>
@@ -794,8 +866,8 @@ export default function AnalyticsListPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Roles</Label>
-                <div className="flex gap-2">
+                <Label className="text-sm font-medium">Roles</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     value={editNewRole}
                     onChange={(e) => setEditNewRole(e.target.value)}
@@ -806,25 +878,30 @@ export default function AnalyticsListPage() {
                         addEditRole()
                       }
                     }}
-                    className="w-full"
+                    className="flex-1 text-sm"
                   />
-                  <Button type="button" onClick={addEditRole} variant="outline">
+                  <Button
+                    type="button"
+                    onClick={addEditRole}
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent"
+                  >
                     Add
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {editFormData.roles.map((role) => (
-                    <Badge key={role} variant="secondary" className="flex items-center gap-1">
-                      {role}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => removeEditRole(role)} />
+                    <Badge key={role} variant="secondary" className="flex items-center gap-1 text-xs">
+                      <span className="truncate max-w-[120px]">{role}</span>
+                      <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => removeEditRole(role)} />
                     </Badge>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Users</Label>
-                <div className="flex gap-2">
+                <Label className="text-sm font-medium">Users</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     value={editNewUser}
                     onChange={(e) => setEditNewUser(e.target.value)}
@@ -835,28 +912,38 @@ export default function AnalyticsListPage() {
                         addEditUser()
                       }
                     }}
-                    className="w-full"
+                    className="flex-1 text-sm"
                   />
-                  <Button type="button" onClick={addEditUser} variant="outline">
+                  <Button
+                    type="button"
+                    onClick={addEditUser}
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent"
+                  >
                     Add
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {editFormData.users.map((user) => (
-                    <Badge key={user} variant="outline" className="flex items-center gap-1">
-                      {user}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => removeEditUser(user)} />
+                    <Badge key={user} variant="outline" className="flex items-center gap-1 text-xs">
+                      <span className="truncate max-w-[120px]">{user}</span>
+                      <X className="h-3 w-3 cursor-pointer shrink-0" onClick={() => removeEditUser(user)} />
                     </Badge>
                   ))}
                 </div>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isEditing}>
+              <Button type="submit" disabled={isEditing} className="w-full sm:w-auto">
                 {isEditing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Dashboard
               </Button>
