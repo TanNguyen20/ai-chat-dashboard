@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar, // ⬅️ add this
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -35,53 +36,19 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 const navigationItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: LayoutDashboard,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Chatbot",
-    url: "/chatbot",
-    icon: Bot,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Analytics Config",
-    url: "/analytics-config",
-    icon: Settings2Icon,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Users",
-    url: "/users",
-    icon: Users,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Roles",
-    url: "/roles",
-    icon: Shield,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-  },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Chatbot", url: "/chatbot", icon: Bot, roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Analytics", url: "/analytics", icon: BarChart3, roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Analytics Config", url: "/analytics-config", icon: Settings2Icon, roles: [Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Users", url: "/users", icon: Users, roles: [Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Roles", url: "/roles", icon: Shield, roles: [Role.ADMIN, Role.SUPER_ADMIN] },
+  { title: "Settings", url: "/settings", icon: Settings, roles: [Role.ADMIN, Role.SUPER_ADMIN] },
 ]
 
 export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: AppSidebarProps) {
   const { user } = useAuth()
   const pathname = usePathname()
+  const { isMobile, setOpen } = useSidebar()
 
   const filteredNavItems = navigationItems.filter((item) => item.roles.some((role) => user && hasRole(user, role)))
 
@@ -94,13 +61,18 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
       .slice(0, 2)
   }
 
+  // helper to close on mobile after navigating
+  const handleNavClick = () => {
+    if (isMobile) setOpen(false)
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
+              <Link href="/" onClick={handleNavClick}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <LayoutDashboard className="size-4" />
                 </div>
@@ -122,7 +94,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
               {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={handleNavClick}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
                     </Link>
