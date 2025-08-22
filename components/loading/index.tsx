@@ -1,7 +1,7 @@
 import "./index.css"
 
 export default function Loading() {
-  return <div class="loader">Loading
+  return <div className="loader">Loading
     <span></span>
   </div>
 }
