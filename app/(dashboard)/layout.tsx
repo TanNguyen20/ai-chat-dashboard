@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { AppSidebar } from "@/components/app-sidebar"
+import Loading from "@/components/loading"
 import { LogoutConfirmation } from "@/components/logout-confirmation"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import {
@@ -65,7 +66,7 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+        <Loading/>
       </div>
     )
   }
