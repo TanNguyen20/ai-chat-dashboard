@@ -63,8 +63,8 @@
 
 /* 🌙 Dark mode override (Shadcn/Tailwind uses .dark class) */
 .dark .loader {
-  --loader-primary: #orange;
-  --loader-secondary: #yellow;
+  --loader-primary: orange;
+  --loader-secondary: yellow;
 }
 
 @keyframes animateC {
