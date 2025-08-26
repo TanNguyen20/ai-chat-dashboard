@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/hooks/use-toast"
 import { Plus, Edit, Trash2, Users, UserCheck, UserX, UserCog } from "lucide-react"
 import { hasRole, formatRoleName } from "@/utils/commons"
@@ -204,8 +205,101 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+      <div className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+        {/* Stats Skeleton */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* User Management Skeleton */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Mobile skeleton cards */}
+            <div className="grid gap-3 sm:hidden">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <Skeleton className="h-5 w-24 mb-2" />
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-5 w-12" />
+                        </div>
+                        <Skeleton className="h-5 w-14" />
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop table skeleton */}
+            <div className="hidden sm:block">
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Roles</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Skeleton className="h-5 w-16" />
+                            <Skeleton className="h-5 w-12" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-14" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-8" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -317,7 +411,9 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
                   <Button onClick={handleAddUser}>Create User</Button>
                 </DialogFooter>
               </DialogContent>
@@ -335,9 +431,7 @@ export default function UsersPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="font-semibold break-words">{u.username}</div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {getUserRoleBadges(u.roles)}
-                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
                       <div className="mt-2">
                         <Badge variant={u.isEnabled ? "default" : "destructive"}>
                           {u.isEnabled ? "Active" : "Disabled"}
@@ -427,12 +521,14 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">{userToDelete?.username}</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="font-semibold">{userToDelete?.username}</span>? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -478,7 +574,9 @@ export default function UsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleEditUser}>Update User</Button>
           </DialogFooter>
         </DialogContent>
@@ -508,7 +606,9 @@ export default function UsersPage() {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleUpdateUserRoles}>Update Roles</Button>
           </DialogFooter>
         </DialogContent>

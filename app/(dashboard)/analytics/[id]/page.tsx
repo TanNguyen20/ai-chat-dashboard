@@ -266,14 +266,14 @@ export default function AnalyticsDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
           <Skeleton className="h-10 w-10" />
-          <div>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-96" />
+          <div className="flex-1">
+            <Skeleton className="h-6 w-32 mb-2 sm:h-8 sm:w-48" />
+            <Skeleton className="h-4 w-full max-w-sm sm:max-w-md" />
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -292,7 +292,7 @@ export default function AnalyticsDetailPage() {
             <Skeleton className="h-6 w-40" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-[300px] sm:h-[400px] w-full" />
           </CardContent>
         </Card>
       </div>
@@ -302,19 +302,19 @@ export default function AnalyticsDetailPage() {
   if (error) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={() => router.back()}>
+        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
+          <Button variant="outline" onClick={() => router.back()} size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">Error loading dashboard</p>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics Dashboard</h1>
+            <p className="text-sm text-muted-foreground sm:text-base">Error loading dashboard</p>
           </div>
         </div>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="text-sm">{error}</AlertDescription>
         </Alert>
       </div>
     )
@@ -323,22 +323,28 @@ export default function AnalyticsDetailPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => router.back()}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Button variant="outline" onClick={() => router.back()} size="sm" className="w-fit">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">{dashboard?.dashboardTitle}</h1>
-              <p className="text-muted-foreground">Monitor your system performance and user engagement metrics</p>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline">ID: {dashboard?.dashboardId}</Badge>
-                <Badge variant="secondary">Host: {dashboard?.dashboardHost}</Badge>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl truncate">{dashboard?.dashboardTitle}</h1>
+              <p className="text-sm text-muted-foreground sm:text-base">
+                Monitor your system performance and user engagement metrics
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <Badge variant="outline" className="text-xs">
+                  ID: {dashboard?.dashboardId}
+                </Badge>
+                <Badge variant="secondary" className="text-xs truncate max-w-[200px]">
+                  Host: {dashboard?.dashboardHost}
+                </Badge>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-xs">
               <Activity className="mr-1 h-3 w-3" />
               Live Data
@@ -363,11 +369,11 @@ export default function AnalyticsDetailPage() {
             )}
             <Button onClick={() => setIsConfiguring(!isConfiguring)} variant="outline" size="sm">
               <Settings className="mr-2 h-4 w-4" />
-              Configure
+              <span className="hidden sm:inline">Configure</span>
             </Button>
             <Button onClick={refreshDashboard} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
           </div>
         </div>
@@ -376,19 +382,19 @@ export default function AnalyticsDetailPage() {
         {dashboard && (
           <Card>
             <CardHeader>
-              <CardTitle>Dashboard Information</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Dashboard Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Dashboard ID</Label>
-                  <p className="text-sm text-muted-foreground">{dashboard.dashboardId}</p>
+                  <p className="text-sm text-muted-foreground break-all">{dashboard.dashboardId}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Host</Label>
-                  <p className="text-sm text-muted-foreground">{dashboard.dashboardHost}</p>
+                  <p className="text-sm text-muted-foreground break-all">{dashboard.dashboardHost}</p>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <Label className="text-sm font-medium">Roles</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {dashboard.roles.map((role) => (
@@ -398,7 +404,7 @@ export default function AnalyticsDetailPage() {
                     ))}
                   </div>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <Label className="text-sm font-medium">Users</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {dashboard.users.map((user) => (
@@ -417,31 +423,39 @@ export default function AnalyticsDetailPage() {
         {isConfiguring && (
           <Card>
             <CardHeader>
-              <CardTitle>Superset Configuration</CardTitle>
-              <CardDescription>Configure your Superset instance and dashboard settings</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Superset Configuration</CardTitle>
+              <CardDescription className="text-sm">
+                Configure your Superset instance and dashboard settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Basic Configuration */}
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Basic Settings</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="supersetDomain">Superset Domain</Label>
+                    <Label htmlFor="supersetDomain" className="text-sm">
+                      Superset Domain
+                    </Label>
                     <Input
                       id="supersetDomain"
                       value={config.supersetDomain}
                       onChange={(e) => setConfig((prev) => ({ ...prev, supersetDomain: e.target.value }))}
                       placeholder="http://localhost:8080"
+                      className="text-sm"
                     />
                     <p className="text-xs text-muted-foreground">Your Superset backend URL</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="dashboardId">Dashboard ID</Label>
+                    <Label htmlFor="dashboardId" className="text-sm">
+                      Dashboard ID
+                    </Label>
                     <Input
                       id="dashboardId"
                       value={config.dashboardId}
                       onChange={(e) => setConfig((prev) => ({ ...prev, dashboardId: e.target.value }))}
                       placeholder="abc123"
+                      className="text-sm"
                     />
                     <p className="text-xs text-muted-foreground">The ID from Superset embedding UI</p>
                   </div>
@@ -451,14 +465,16 @@ export default function AnalyticsDetailPage() {
               {/* UI Configuration */}
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Dashboard UI Configuration</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="hideTitle"
                       checked={config.hideTitle}
                       onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, hideTitle: checked }))}
                     />
-                    <Label htmlFor="hideTitle">Hide Title</Label>
+                    <Label htmlFor="hideTitle" className="text-sm">
+                      Hide Title
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -466,7 +482,9 @@ export default function AnalyticsDetailPage() {
                       checked={config.hideTab}
                       onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, hideTab: checked }))}
                     />
-                    <Label htmlFor="hideTab">Hide Tab</Label>
+                    <Label htmlFor="hideTab" className="text-sm">
+                      Hide Tab
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -474,7 +492,9 @@ export default function AnalyticsDetailPage() {
                       checked={config.hideChartControls}
                       onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, hideChartControls: checked }))}
                     />
-                    <Label htmlFor="hideChartControls">Hide Chart Controls</Label>
+                    <Label htmlFor="hideChartControls" className="text-sm">
+                      Hide Chart Controls
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -482,15 +502,19 @@ export default function AnalyticsDetailPage() {
                       checked={config.filtersVisible}
                       onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, filtersVisible: checked }))}
                     />
-                    <Label htmlFor="filtersVisible">Filters Visible</Label>
+                    <Label htmlFor="filtersVisible" className="text-sm">
+                      Filters Visible
+                    </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 sm:col-span-2">
                     <Switch
                       id="filtersExpanded"
                       checked={config.filtersExpanded}
                       onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, filtersExpanded: checked }))}
                     />
-                    <Label htmlFor="filtersExpanded">Filters Expanded</Label>
+                    <Label htmlFor="filtersExpanded" className="text-sm">
+                      Filters Expanded
+                    </Label>
                   </div>
                 </div>
               </div>
@@ -500,7 +524,7 @@ export default function AnalyticsDetailPage() {
                 <h4 className="text-sm font-medium">URL Parameters</h4>
                 <div className="space-y-2">
                   {Object.entries(config.urlParams).map(([key, value]) => (
-                    <div key={key} className="flex gap-2">
+                    <div key={key} className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         placeholder="Parameter name"
                         value={key}
@@ -511,13 +535,20 @@ export default function AnalyticsDetailPage() {
                           newUrlParams[newKey] = value
                           setConfig((prev) => ({ ...prev, urlParams: newUrlParams }))
                         }}
+                        className="text-sm"
                       />
                       <Input
                         placeholder="Parameter value"
                         value={value}
                         onChange={(e) => updateUrlParam(key, e.target.value)}
+                        className="text-sm"
                       />
-                      <Button variant="outline" size="sm" onClick={() => removeUrlParam(key)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeUrlParam(key)}
+                        className="w-full sm:w-auto"
+                      >
                         Remove
                       </Button>
                     </div>
@@ -526,6 +557,7 @@ export default function AnalyticsDetailPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => updateUrlParam(`param${Object.keys(config.urlParams).length + 1}`, "")}
+                    className="w-full sm:w-auto"
                   >
                     Add Parameter
                   </Button>
@@ -536,12 +568,15 @@ export default function AnalyticsDetailPage() {
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Advanced Settings</h4>
                 <div className="space-y-2">
-                  <Label htmlFor="referrerPolicy">Referrer Policy</Label>
+                  <Label htmlFor="referrerPolicy" className="text-sm">
+                    Referrer Policy
+                  </Label>
                   <Input
                     id="referrerPolicy"
                     value={config.referrerPolicy}
                     onChange={(e) => setConfig((prev) => ({ ...prev, referrerPolicy: e.target.value }))}
                     placeholder="same-origin"
+                    className="text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
                     Iframe referrer policy (e.g., same-origin, no-referrer, etc.)
@@ -556,15 +591,14 @@ export default function AnalyticsDetailPage() {
           </Card>
         )}
 
-        {/* Overview Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.overview.totalUsers.toLocaleString()}</div>
+              <div className="text-xl font-bold sm:text-2xl">{analyticsData.overview.totalUsers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline mr-1 h-3 w-3" />
                 +12% from last month
@@ -577,7 +611,7 @@ export default function AnalyticsDetailPage() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.overview.activeUsers.toLocaleString()}</div>
+              <div className="text-xl font-bold sm:text-2xl">{analyticsData.overview.activeUsers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline mr-1 h-3 w-3" />
                 +8% from last month
@@ -590,7 +624,7 @@ export default function AnalyticsDetailPage() {
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.overview.totalChats.toLocaleString()}</div>
+              <div className="text-xl font-bold sm:text-2xl">{analyticsData.overview.totalChats.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline mr-1 h-3 w-3" />
                 +23% from last month
@@ -603,7 +637,7 @@ export default function AnalyticsDetailPage() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.overview.avgResponseTime}</div>
+              <div className="text-xl font-bold sm:text-2xl">{analyticsData.overview.avgResponseTime}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline mr-1 h-3 w-3" />
                 -5% from last month
@@ -614,64 +648,79 @@ export default function AnalyticsDetailPage() {
 
         {/* Tabs for different analytics views */}
         <Tabs defaultValue="superset" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="superset">Superset Dashboard</TabsTrigger>
-            <TabsTrigger value="overview">System Overview</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+            <TabsTrigger value="superset" className="text-xs sm:text-sm">
+              Superset Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">
+              System Overview
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="text-xs sm:text-sm">
+              Performance
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="superset" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Embedded Superset Dashboard
-                  {connectionStatus === "connecting" && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
-                  )}
+                <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center text-lg sm:text-xl">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Embedded Superset Dashboard
+                    {connectionStatus === "connecting" && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    )}
+                  </div>
                 </CardTitle>
-                <CardDescription className="flex items-center gap-2">
-                  Advanced analytics and visualizations, Connected to: <code className="bg-muted px-1 py-0.5 rounded text-xs">{config.supersetDomain}</code>
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href={config.supersetDomain} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </Button>
+                <CardDescription className="flex flex-col gap-2 sm:flex-row sm:items-center text-sm">
+                  <span>Advanced analytics and visualizations, Connected to:</span>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs break-all">{config.supersetDomain}</code>
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={config.supersetDomain} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  </div>
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {error ? (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription className="text-sm">{error}</AlertDescription>
                   </Alert>
                 ) : (
                   <div className="space-y-4">
                     <div
-                      className="w-full h-[600px] border rounded-lg bg-background"
-                      style={{ minHeight: "600px", display: !dashboardLoaded ? "block" : "none" }}
+                      className="w-full h-[400px] sm:h-[500px] lg:h-[600px] border rounded-lg bg-background"
+                      style={{ minHeight: "400px", display: !dashboardLoaded ? "block" : "none" }}
                     >
                       {!dashboardLoaded && !error && (
-                        <div className="flex flex-col items-center justify-center h-full gap-4">
+                        <div className="flex flex-col items-center justify-center h-full gap-4 p-4">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          <p className="text-sm text-muted-foreground">Loading Superset dashboard...</p>
-                          <p className="text-xs text-muted-foreground">Connecting to: {config.supersetDomain}</p>
-                          <p className="text-xs text-muted-foreground">Dashboard ID: {config.dashboardId}</p>
+                          <p className="text-sm text-muted-foreground text-center">Loading Superset dashboard...</p>
+                          <p className="text-xs text-muted-foreground text-center break-all">
+                            Connecting to: {config.supersetDomain}
+                          </p>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Dashboard ID: {config.dashboardId}
+                          </p>
                           <div className="text-xs text-muted-foreground text-center">
-                            <p>Configuration:</p>
-                            <ul className="list-disc list-inside mt-1 space-y-1">
-                              <li>Hide Title: {config.hideTitle ? "Yes" : "No"}</li>
-                              <li>Hide Tab: {config.hideTab ? "Yes" : "No"}</li>
-                              <li>Filters Visible: {config.filtersVisible ? "Yes" : "No"}</li>
-                              <li>Filters Expanded: {config.filtersExpanded ? "Yes" : "No"}</li>
-                            </ul>
+                            <p className="font-medium mb-2">Configuration:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-left">
+                              <div>Hide Title: {config.hideTitle ? "Yes" : "No"}</div>
+                              <div>Hide Tab: {config.hideTab ? "Yes" : "No"}</div>
+                              <div>Filters Visible: {config.filtersVisible ? "Yes" : "No"}</div>
+                              <div>Filters Expanded: {config.filtersExpanded ? "Yes" : "No"}</div>
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
                     <div
                       id="superset-container"
-                      className="w-full h-[600px] border rounded-lg bg-background"
-                      style={{ minHeight: "600px", display: dashboardLoaded ? "block" : "none" }}
+                      className="w-full h-[400px] sm:h-[500px] lg:h-[600px] border rounded-lg bg-background"
+                      style={{ minHeight: "400px", display: dashboardLoaded ? "block" : "none" }}
                     ></div>
                   </div>
                 )}
@@ -681,14 +730,14 @@ export default function AnalyticsDetailPage() {
           <TabsContent value="overview" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>System Overview</CardTitle>
-                <CardDescription>High-level metrics and system health indicators</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">System Overview</CardTitle>
+                <CardDescription className="text-sm">High-level metrics and system health indicators</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px] flex items-center justify-center border rounded-lg bg-muted/10">
-                  <div className="text-center">
-                    <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold">System Overview Charts</h3>
+                <div className="h-[300px] sm:h-[400px] flex items-center justify-center border rounded-lg bg-muted/10">
+                  <div className="text-center p-4">
+                    <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-base sm:text-lg font-semibold">System Overview Charts</h3>
                     <p className="text-sm text-muted-foreground">Custom charts and metrics would be displayed here</p>
                   </div>
                 </div>
@@ -698,14 +747,16 @@ export default function AnalyticsDetailPage() {
           <TabsContent value="performance" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-                <CardDescription>Detailed performance analytics and system monitoring</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Performance Metrics</CardTitle>
+                <CardDescription className="text-sm">
+                  Detailed performance analytics and system monitoring
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px] flex items-center justify-center border rounded-lg bg-muted/10">
-                  <div className="text-center">
-                    <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold">Performance Dashboard</h3>
+                <div className="h-[300px] sm:h-[400px] flex items-center justify-center border rounded-lg bg-muted/10">
+                  <div className="text-center p-4">
+                    <Activity className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-base sm:text-lg font-semibold">Performance Dashboard</h3>
                     <p className="text-sm text-muted-foreground">Real-time performance metrics and monitoring data</p>
                   </div>
                 </div>

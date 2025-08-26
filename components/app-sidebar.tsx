@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar, // ⬅️ add this
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -103,6 +104,7 @@ export const navigationItems = [
 export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: AppSidebarProps) {
   const { user } = useAuth()
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   const filteredNavItems = navigationItems.filter((item) => item.roles.some((role) => user && hasRole(user, role)))
 
@@ -115,13 +117,18 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
       .slice(0, 2)
   }
 
+  // helper to close on mobile after navigating
+  const handleNavClick = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
+              <Link href="/" onClick={handleNavClick}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <LayoutDashboard className="size-4" />
                 </div>
@@ -143,7 +150,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
               {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={handleNavClick}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
                     </Link>
