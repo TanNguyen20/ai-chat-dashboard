@@ -225,8 +225,8 @@ export default function CrawlingPage() {
   const isRunning = crawlingStatus.status === "running"
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
+    <div className="bg-background">
+      <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4">
         {/* Improved responsive header with improved spacing */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Web Crawling Dashboard</h1>
