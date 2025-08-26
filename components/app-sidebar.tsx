@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3, Settings2Icon } from "lucide-react"
+import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3, Settings2Icon, Pickaxe, Database } from "lucide-react"
 import { hasRole, getHighestRole } from "@/utils/commons"
 import Link from "next/link"
 import { Role } from "@/const/role"
@@ -34,48 +34,69 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   setShowLogoutDialog: (show: boolean) => void
 }
 
-const navigationItems = [
+export const navigationItems = [
   {
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
     roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Overview" }]
   },
   {
     title: "Chatbot",
     url: "/chatbot",
     icon: Bot,
     roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Chatbot" }]
   },
   {
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
     roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }]
   },
   {
     title: "Analytics Config",
     url: "/analytics-config",
     icon: Settings2Icon,
     roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }]
   },
   {
     title: "Users",
     url: "/users",
     icon: Users,
     roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }]
   },
   {
     title: "Roles",
     url: "/roles",
     icon: Shield,
     roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Roles" }]
+  },
+  {
+    title: "Crawled Data",
+    url: "/crawled-data",
+    icon: Database,
+    roles: [Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawled Data" }]
+  },
+  {
+    title: "Crawl System",
+    url: "/crawling",
+    icon: Pickaxe,
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawl System" }]
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
     roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Settings" }]
   },
 ]
 

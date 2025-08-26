@@ -4,13 +4,12 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar, navigationItems } from "@/components/app-sidebar"
 import { LogoutConfirmation } from "@/components/logout-confirmation"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -18,16 +17,6 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
-
-const breadcrumbMap: Record<string, { title: string; href?: string }[]> = {
-  "/": [{ title: "Dashboard", href: "/" }, { title: "Overview" }],
-  "/chatbot": [{ title: "Dashboard", href: "/" }, { title: "Chatbot" }],
-  "/users": [{ title: "Dashboard", href: "/" }, { title: "Users" }],
-  "/analytics": [{ title: "Dashboard", href: "/" }, { title: "Analytics" }],
-  "/analytics-config": [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }],
-  "/roles": [{ title: "Dashboard", href: "/" }, { title: "Roles" }],
-  "/settings": [{ title: "Dashboard", href: "/" }, { title: "Settings" }],
-}
 
 export default function DashboardLayout({
   children,
@@ -59,7 +48,7 @@ export default function DashboardLayout({
   }
 
   const getBreadcrumbs = () => {
-    return breadcrumbMap[pathname] || [{ title: "Dashboard", href: "/" }, { title: "Page" }]
+    return navigationItems.find((item) => item.url === pathname)?.breadcrumb || [{ title: "Dashboard", href: "/" }, { title: "Page" }]
   }
 
   if (isLoading) {
