@@ -1,51 +1,54 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Play, Square, Users, Clock, User, Phone, MapPin, GraduationCap, Calendar } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { AlertCircle, Play, Square, Users, Clock, User, Phone, MapPin, GraduationCap, Calendar } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BASE_URL } from "@/const/api";
+
+type CrawlState = "idle" | "running" | "completed" | "error";
 
 interface CrawledUser {
-  mssv: string // Student ID
-  ho_ten?: string // Full name
-  gioi_tinh?: string // Gender
-  ngay_vao_truong?: string // School entry date
-  lop_hoc?: string // Class
-  co_so?: string // Campus
-  bac_dao_tao?: string // Education level
-  loai_hinh_dao_tao?: string // Education type
-  khoa?: string // Faculty
-  nganh?: string // Major
-  chuyen_nganh?: string // Specialization
-  khoa_hoc?: string // Academic year
-  noi_cap?: string // Place of issue
-  ngay_sinh?: string // Birth date
-  so_cmnd?: string // ID number
-  doi_tuong?: string // Target group
-  ngay_vao_doan?: string // Union entry date
-  dien_thoai?: string // Phone
-  dia_chi_lien_he?: string // Contact address
-  noi_sinh?: string // Place of birth
-  ho_khau_thuong_tru?: string // Permanent address
-  email_dnc?: string // DNC email
-  mat_khau_email_dnc?: string // DNC email password
-  ma_ho_so?: string // Profile code
-  timestamp: string // When crawled
-  status: string // Crawling status
+  mssv: string;
+  ho_ten?: string;
+  gioi_tinh?: string;
+  ngay_vao_truong?: string;
+  lop_hoc?: string;
+  co_so?: string;
+  bac_dao_tao?: string;
+  loai_hinh_dao_tao?: string;
+  khoa?: string;
+  nganh?: string;
+  chuyen_nganh?: string;
+  khoa_hoc?: string;
+  noi_cap?: string;
+  ngay_sinh?: string;
+  so_cmnd?: string;
+  doi_tuong?: string;
+  ngay_vao_doan?: string;
+  dien_thoai?: string;
+  dia_chi_lien_he?: string;
+  noi_sinh?: string;
+  ho_khau_thuong_tru?: string;
+  email_dnc?: string;
+  mat_khau_email_dnc?: string;
+  ma_ho_so?: string;
+  timestamp: string;
+  status: string;
 }
 
 interface CrawlingStatus {
-  status: "idle" | "running" | "completed" | "error"
-  currentUserId?: number
-  totalUsers?: number
-  processedUsers?: number
-  message?: string
+  status: CrawlState;
+  currentUserId?: number;
+  totalUsers?: number;
+  processedUsers?: number;
+  message?: string;
 }
 
 export default function CrawlingPage() {
@@ -55,179 +58,135 @@ export default function CrawlingPage() {
     password: "",
     startUserId: "",
     endUserId: "",
-  })
+  });
 
-  const [crawlingStatus, setCrawlingStatus] = useState<CrawlingStatus>({ status: "idle" })
-  const [crawledUsers, setCrawledUsers] = useState<CrawledUser[]>([])
-  const [error, setError] = useState<string | null>(null)
-
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const [crawlingStatus, setCrawlingStatus] = useState<CrawlingStatus>({ status: "idle" });
+  const [crawledUsers, setCrawledUsers] = useState<CrawledUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const isFormValid =
+    !!formData.url && !!formData.username && !!formData.password && !!formData.startUserId && !!formData.endUserId;
+
+  const isRunning = crawlingStatus.status === "running";
 
   const startCrawling = async () => {
+    if (!isFormValid || isRunning) return;
+
+    setError(null);
+    setCrawledUsers([]);
+    setCrawlingStatus({ status: "running", processedUsers: 0 });
+
     try {
-      setError(null)
-      setCrawledUsers([])
-      setCrawlingStatus({ status: "running", processedUsers: 0 })
-
-      console.log("[v0] Starting crawling request with data:", formData)
-
-      // Send initial request to FastAPI backend
-      const response = await fetch("/api/start-crawling", {
+      const res = await fetch(`${BASE_URL.CRAWL_SERVICE}/api/start-crawling`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
-      console.log("[v0] Response status:", response.status)
-      console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()))
-
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
-
-        // Try to parse JSON error response, fallback to text if it fails
-        try {
-          const contentType = response.headers.get("content-type")
-          if (contentType && contentType.includes("application/json")) {
-            const errorData = await response.json()
-            errorMessage = errorData.message || errorMessage
-          } else {
-            const textResponse = await response.text()
-            console.log("[v0] Non-JSON response:", textResponse.substring(0, 200))
-            errorMessage =
-              "Backend service unavailable. Please check if FASTAPI_BACKEND_URL is configured and the FastAPI service is running."
-          }
-        } catch (parseError) {
-          console.log("[v0] Failed to parse error response:", parseError)
-          errorMessage =
-            "Backend service unavailable. Please check if FASTAPI_BACKEND_URL is configured and the FastAPI service is running."
-        }
-
-        setError(errorMessage)
-        setCrawlingStatus({ status: "error" })
-        return
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const msg = payload?.detail || payload?.message || `Backend error (HTTP ${res.status})`;
+        throw new Error(msg);
       }
 
-      let responseData
-      try {
-        responseData = await response.json()
-        console.log("[v0] Success response data:", responseData)
-      } catch (jsonError) {
-        console.log("[v0] Failed to parse success response as JSON:", jsonError)
-        setError("Invalid response format from backend")
-        setCrawlingStatus({ status: "error" })
-        return
-      }
-
-      // Start Server-Sent Events connection
-      startSSEConnection()
-    } catch (err) {
-      console.log("[v0] Network or other error:", err)
-      setError("Failed to connect to backend. Please check your network connection.")
-      setCrawlingStatus({ status: "error" })
+      // Kick off SSE stream
+      startSSE();
+    } catch (e: any) {
+      setError(e?.message || "Failed to reach backend");
+      setCrawlingStatus({ status: "error" });
     }
-  }
+  };
 
-  const startSSEConnection = () => {
-    // Close existing connection if any
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-    }
+  const startSSE = () => {
+    // Close old connection
+    if (eventSourceRef.current) eventSourceRef.current.close();
 
-    // Create new SSE connection
-    eventSourceRef.current = new EventSource("/api/crawling-events")
+    const es = new EventSource(`${BASE_URL.CRAWL_SERVICE}/api/crawling-events`);
+    eventSourceRef.current = es;
 
-    eventSourceRef.current.onmessage = (event) => {
+    es.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
+        const data = JSON.parse(event.data);
 
         if (data.type === "user_crawled") {
+          const u = data.user as Partial<CrawledUser>;
           setCrawledUsers((prev) => [
             ...prev,
             {
-              ...data.user, // Spread all the user fields from backend
+              ...u,
+              mssv: String(u.mssv || ""),
               timestamp: new Date().toLocaleTimeString(),
-              status: data.user.status || "success",
-            },
-          ])
+              status: String(u.status || "success"),
+            } as CrawledUser,
+          ]);
 
-          // Update status
           setCrawlingStatus((prev) => ({
             ...prev,
-            currentUserId: data.user.mssv ? Number.parseInt(data.user.mssv) : undefined,
+            currentUserId: u.mssv ? Number.parseInt(String(u.mssv)) : prev.currentUserId,
             processedUsers: (prev.processedUsers || 0) + 1,
-          }))
-        } else if (data.type === "completed") {
-          // Crawling completed
+          }));
+        }
+
+        if (data.type === "status") {
+          setCrawlingStatus((prev) => ({
+            ...prev,
+            totalUsers: data.totalUsers ?? prev.totalUsers,
+            message: data.message ?? prev.message,
+          }));
+        }
+
+        if (data.type === "completed") {
           setCrawlingStatus({
             status: "completed",
-            message: data.message,
             totalUsers: data.totalUsers,
             processedUsers: data.processedUsers,
-          })
-
-          // Close SSE connection
-          if (eventSourceRef.current) {
-            eventSourceRef.current.close()
-            eventSourceRef.current = null
-          }
-        } else if (data.type === "error") {
-          setError(data.message)
-          setCrawlingStatus({ status: "error" })
-
-          // Close SSE connection
-          if (eventSourceRef.current) {
-            eventSourceRef.current.close()
-            eventSourceRef.current = null
-          }
+            message: data.message,
+          });
+          es.close();
+          eventSourceRef.current = null;
         }
-      } catch (err) {
-        console.error("Error parsing SSE data:", err)
-      }
-    }
 
-    eventSourceRef.current.onerror = (error) => {
-      console.error("SSE connection error:", error)
-      setError("Lost connection to server")
-      setCrawlingStatus({ status: "error" })
-
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-        eventSourceRef.current = null
+        if (data.type === "error") {
+          setError(data.message || "Unknown error");
+          setCrawlingStatus({ status: "error" });
+          es.close();
+          eventSourceRef.current = null;
+        }
+      } catch {
+        // Ignore malformed messages
       }
-    }
-  }
+    };
+
+    es.onerror = () => {
+      setError("Lost connection to server");
+      setCrawlingStatus({ status: "error" });
+      es.close();
+      eventSourceRef.current = null;
+    };
+  };
 
   const stopCrawling = () => {
     if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-      eventSourceRef.current = null
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
     }
-    setCrawlingStatus({ status: "idle" })
-  }
+    setCrawlingStatus({ status: "idle" });
+  };
 
-  // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-      }
-    }
-  }, [])
-
-  const isFormValid =
-    formData.url && formData.username && formData.password && formData.startUserId && formData.endUserId
-  const isRunning = crawlingStatus.status === "running"
+      if (eventSourceRef.current) eventSourceRef.current.close();
+    };
+  }, []);
 
   return (
     <div className="bg-background">
       <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4">
-        {/* Improved responsive header with improved spacing */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Web Crawling Dashboard</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
@@ -244,9 +203,7 @@ export default function CrawlingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="url" className="text-sm font-medium">
-                  Target URL
-                </Label>
+                <Label htmlFor="url" className="text-sm font-medium">Target URL</Label>
                 <Input
                   id="url"
                   placeholder="https://example.com"
@@ -259,9 +216,7 @@ export default function CrawlingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium">
-                    Username
-                  </Label>
+                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <Input
                     id="username"
                     placeholder="Enter username"
@@ -272,9 +227,7 @@ export default function CrawlingPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -289,13 +242,11 @@ export default function CrawlingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startUserId" className="text-sm font-medium">
-                    Start User ID
-                  </Label>
+                  <Label htmlFor="startUserId" className="text-sm font-medium">Start User ID</Label>
                   <Input
                     id="startUserId"
                     type="number"
-                    placeholder="1"
+                    placeholder="250000"
                     value={formData.startUserId}
                     onChange={(e) => handleInputChange("startUserId", e.target.value)}
                     disabled={isRunning}
@@ -303,13 +254,11 @@ export default function CrawlingPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endUserId" className="text-sm font-medium">
-                    End User ID
-                  </Label>
+                  <Label htmlFor="endUserId" className="text-sm font-medium">End User ID</Label>
                   <Input
                     id="endUserId"
                     type="number"
-                    placeholder="100"
+                    placeholder="260000"
                     value={formData.endUserId}
                     onChange={(e) => handleInputChange("endUserId", e.target.value)}
                     disabled={isRunning}
@@ -319,13 +268,13 @@ export default function CrawlingPage() {
               </div>
 
               {error && (
-                <Alert variant="destructive" className="mt-4">
+                <Alert variant="destructive" className="mt-2">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button onClick={startCrawling} disabled={!isFormValid || isRunning} className="flex-1 min-h-[44px]">
                   <Play className="w-4 h-4 mr-2" />
                   {isRunning ? "Running..." : "Start Crawling"}
@@ -359,10 +308,10 @@ export default function CrawlingPage() {
                       crawlingStatus.status === "running"
                         ? "default"
                         : crawlingStatus.status === "completed"
-                          ? "secondary"
-                          : crawlingStatus.status === "error"
-                            ? "destructive"
-                            : "outline"
+                        ? "secondary"
+                        : crawlingStatus.status === "error"
+                        ? "destructive"
+                        : "outline"
                     }
                     className="text-xs"
                   >
@@ -370,21 +319,19 @@ export default function CrawlingPage() {
                   </Badge>
                 </div>
 
-                {crawlingStatus.currentUserId && (
+                {typeof crawlingStatus.currentUserId === "number" && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Current User ID:</span>
                     <span className="text-sm font-mono">{crawlingStatus.currentUserId}</span>
                   </div>
                 )}
 
-                {crawlingStatus.processedUsers !== undefined && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Processed:</span>
-                    <span className="text-sm font-mono">{crawlingStatus.processedUsers} users</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Processed:</span>
+                  <span className="text-sm font-mono">{crawlingStatus.processedUsers ?? 0} users</span>
+                </div>
 
-                {crawlingStatus.totalUsers && (
+                {typeof crawlingStatus.totalUsers === "number" && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Total:</span>
                     <span className="text-sm font-mono">{crawlingStatus.totalUsers} users</span>
@@ -594,5 +541,5 @@ export default function CrawlingPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
