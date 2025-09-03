@@ -211,7 +211,7 @@ export default function AnalyticsConfigPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4 overflow-x-hidden">
+      <div className="flex flex-col gap-4 p-3 sm:p-4 overflow-x-hidden">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="w-full sm:w-auto">
             <Skeleton className="h-8 w-48 mb-2" />
