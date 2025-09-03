@@ -244,7 +244,7 @@ export default function ChatbotPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4">
+    <div className="flex-1 space-y-4 p-3 sm:p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
