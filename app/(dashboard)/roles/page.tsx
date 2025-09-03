@@ -177,7 +177,7 @@ export default function RolesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col gap-4 p-3 sm:p-4 max-w-7xl mx-auto">
         {/* Header skeleton */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
