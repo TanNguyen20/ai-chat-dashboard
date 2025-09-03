@@ -205,7 +205,7 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+      <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4 overflow-x-hidden">
         {/* Stats Skeleton */}
         <div className="grid gap-4 md:grid-cols-3">
           {[...Array(3)].map((_, i) => (
