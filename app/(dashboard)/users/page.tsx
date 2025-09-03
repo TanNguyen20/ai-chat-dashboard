@@ -305,7 +305,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+    <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4 overflow-x-hidden">
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
