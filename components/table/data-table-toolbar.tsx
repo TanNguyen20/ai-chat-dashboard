@@ -38,7 +38,7 @@ export function DataTableToolbar<TData>({ table, globalFilter, setGlobalFilter }
   ]
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="">
       <div className="flex items-center justify-between">
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative">
