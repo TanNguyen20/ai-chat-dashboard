@@ -124,7 +124,7 @@ export default function StudentManagementPage() {
   const [data] = React.useState(() => generateMockData(1000))
 
   return (
-    <div className="flex flex-col gap-4 p-3 sm:p-4">
+    <div className="p-3 sm:p-4">
       <h1 className="text-3xl font-bold mb-8">Advanced Data Table</h1>
       <DataTable columns={columns} data={data} />
     </div>
