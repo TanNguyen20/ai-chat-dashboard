@@ -1,132 +1,162 @@
 "use client"
 
 import * as React from "react"
+import type { ColumnFiltersState, SortingState, PaginationState } from "@tanstack/react-table"
 import { DataTable } from "@/components/table/data-table"
-import { columns, type Student } from "@/components/table/columns"
+import { columns, type Student as UiStudent } from "@/components/table/columns"
+import { StudentService, type StudentDto, type PageRes } from "@/services/student"
+import type { FacetDef } from "@/components/table/data-table-toolbar"
 
-function generateMockData(count: number): Student[] {
-  const vietnameseNames = [
-    "Nguyễn Văn An",
-    "Trần Thị Bình",
-    "Lê Hoàng Cường",
-    "Phạm Thị Dung",
-    "Hoàng Văn Em",
-    "Vũ Thị Phương",
-    "Đặng Minh Quang",
-    "Bùi Thị Hương",
-    "Ngô Văn Tùng",
-    "Lý Thị Lan",
-    "Đinh Văn Hải",
-    "Phan Thị Mai",
-    "Võ Minh Nhật",
-    "Đỗ Thị Oanh",
-    "Tạ Văn Phúc",
-    "Chu Thị Quỳnh",
-    "Mai Văn Sơn",
-    "Lưu Thị Tâm",
-    "Hồ Văn Uy",
-    "Cao Thị Vân",
-  ]
-
-  const faculties = [
-    "Công nghệ thông tin",
-    "Kinh tế",
-    "Ngoại ngữ",
-    "Kỹ thuật",
-    "Y học",
-    "Luật",
-    "Giáo dục",
-    "Nông nghiệp",
-    "Thể dục thể thao",
-    "Nghệ thuật",
-  ]
-
-  const majors = [
-    "Khoa học máy tính",
-    "Hệ thống thông tin",
-    "An toàn thông tin",
-    "Quản trị kinh doanh",
-    "Kế toán",
-    "Tài chính ngân hàng",
-    "Tiếng Anh",
-    "Tiếng Trung",
-    "Cơ khí",
-    "Điện tử viễn thông",
-    "Xây dựng",
-    "Y khoa",
-    "Dược",
-    "Luật kinh tế",
-  ]
-
-  const campuses = ["Cơ sở 1", "Cơ sở 2", "Cơ sở 3"]
-  const educationLevels = ["Đại học", "Thạc sĩ", "Tiến sĩ"]
-  const trainingTypes = ["Chính quy", "Liên thông", "Từ xa"]
-  const genders = ["Nam", "Nữ"]
-  const provinces = [
-    "Hà Nội",
-    "TP. Hồ Chí Minh",
-    "Đà Nẵng",
-    "Hải Phòng",
-    "Cần Thơ",
-    "Nghệ An",
-    "Thanh Hóa",
-    "Quảng Nam",
-    "Bình Dương",
-    "Đồng Nai",
-  ]
-
-  return Array.from({ length: count }, (_, i) => {
-    const year = 2020 + Math.floor(Math.random() * 5)
-    const studentId = `${year}${String(i + 1).padStart(6, "0")}`
-    const name = vietnameseNames[Math.floor(Math.random() * vietnameseNames.length)]
-    const faculty = faculties[Math.floor(Math.random() * faculties.length)]
-    const major = majors[Math.floor(Math.random() * majors.length)]
-    const gender = genders[Math.floor(Math.random() * genders.length)]
-    const birthYear = 1995 + Math.floor(Math.random() * 10)
-    const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, "0")
-    const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, "0")
-    const enrollmentMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, "0")
-    const enrollmentDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, "0")
-    const province = provinces[Math.floor(Math.random() * provinces.length)]
-
-    return {
-      mssv: studentId,
-      ho_ten: name,
-      gioi_tinh: gender,
-      ngay_vao_truong: `${enrollmentDay}/${enrollmentMonth}/${year}`,
-      lop_hoc: `${major.substring(0, 2).toUpperCase()}${year.toString().slice(-2)}A${Math.floor(Math.random() * 5) + 1}`,
-      co_so: campuses[Math.floor(Math.random() * campuses.length)],
-      bac_dao_tao: educationLevels[Math.floor(Math.random() * educationLevels.length)],
-      loai_hinh_dao_tao: trainingTypes[Math.floor(Math.random() * trainingTypes.length)],
-      khoa: faculty,
-      nganh: major,
-      chuyen_nganh: Math.random() > 0.5 ? `${major} - Chuyên sâu` : null,
-      khoa_hoc: `K${year.toString().slice(-2)}`,
-      noi_cap: province,
-      ngay_sinh: `${birthDay}/${birthMonth}/${birthYear}`,
-      so_cmnd: `${Math.floor(Math.random() * 900000000) + 100000000}`,
-      doi_tuong: Math.random() > 0.7 ? "Ưu tiên" : "Bình thường",
-      ngay_vao_doan: Math.random() > 0.3 ? `${birthDay}/${birthMonth}/${birthYear + 16}` : null,
-      dien_thoai: `0${Math.floor(Math.random() * 9) + 1}${Math.floor(Math.random() * 100000000)
-        .toString()
-        .padStart(8, "0")}`,
-      dia_chi_lien_he: `${Math.floor(Math.random() * 999) + 1} Đường ${Math.floor(Math.random() * 50) + 1}, ${province}`,
-      noi_sinh: province,
-      ho_khau_thuong_tru: `${Math.floor(Math.random() * 999) + 1} Đường ${Math.floor(Math.random() * 50) + 1}, ${province}`,
-      email_dnc: `${studentId}@student.university.edu.vn`,
-      mat_khau_email_dnc: Math.random() > 0.5 ? `Pass${Math.floor(Math.random() * 10000)}` : null,
-      ma_ho_so: `HS${year}${String(i + 1).padStart(4, "0")}`,
-    }
-  })
+// map camelCase DTO -> snake_case UI type
+function dtoToUi(s: StudentDto): UiStudent {
+  return {
+    mssv: s.mssv,
+    ho_ten: s.hoTen ?? "",
+    gioi_tinh: s.gioiTinh ?? "",
+    ngay_vao_truong: s.ngayVaoTruong ?? "",
+    lop_hoc: s.lopHoc ?? "",
+    co_so: s.coSo ?? "",
+    bac_dao_tao: s.bacDaoTao ?? "",
+    loai_hinh_dao_tao: s.loaiHinhDaoTao ?? "",
+    khoa: s.khoa ?? "",
+    nganh: s.nganh ?? "",
+    chuyen_nganh: s.chuyenNganh ?? null,
+    khoa_hoc: s.khoaHoc ?? "",
+    noi_cap: s.noiCap ?? "",
+    ngay_sinh: s.ngaySinh ?? "",
+    so_cmnd: s.soCmnd ?? "",
+    doi_tuong: s.doiTuong ?? "",
+    ngay_vao_doan: s.ngayVaoDoan ?? null,
+    dien_thoai: s.dienThoai ?? "",
+    dia_chi_lien_he: s.diaChiLienHe ?? "",
+    noi_sinh: s.noiSinh ?? "",
+    ho_khau_thuong_tru: s.hoKhauThuongTru ?? "",
+    email_dnc: s.emailDnc ?? "",
+    mat_khau_email_dnc: s.matKhauEmailDnc ?? null,
+    ma_ho_so: s.maHoSo ?? "",
+  }
 }
 
-export default function StudentManagementPage() {
-  const [data] = React.useState(() => generateMockData(1000))
+const SORT_MAP: Record<string, string> = {
+  mssv: "mssv",
+  ho_ten: "hoTen",
+  gioi_tinh: "gioiTinh",
+  ngay_vao_truong: "ngayVaoTruong",
+  lop_hoc: "lopHoc",
+  co_so: "coSo",
+  bac_dao_tao: "bacDaoTao",
+  loai_hinh_dao_tao: "loaiHinhDaoTao",
+  khoa: "khoa",
+  nganh: "nganh",
+  chuyen_nganh: "chuyenNganh",
+  khoa_hoc: "khoaHoc",
+  noi_cap: "noiCap",
+  ngay_sinh: "ngaySinh",
+  so_cmnd: "soCmnd",
+  doi_tuong: "doiTuong",
+  ngay_vao_doan: "ngayVaoDoan",
+  dien_thoai: "dienThoai",
+  dia_chi_lien_he: "diaChiLienHe",
+  noi_sinh: "noiSinh",
+  ho_khau_thuong_tru: "hoKhauThuongTru",
+  email_dnc: "emailDnc",
+  mat_khau_email_dnc: "matKhauEmailDnc",
+  ma_ho_so: "maHoSo",
+}
+function toSpringSort(sorting: SortingState): string[] {
+  return sorting.map((s) => `${SORT_MAP[s.id] || s.id},${s.desc ? "desc" : "asc"}`).filter(Boolean)
+}
+
+export default function StudentsPage() {
+  const [rows, setRows] = React.useState<UiStudent[]>([])
+  const [total, setTotal] = React.useState(0)
+  const [loading, setLoading] = React.useState(true)
+  const [facets, setFacets] = React.useState<FacetDef[]>([
+    { id: "gioi_tinh", title: "Giới tính", options: [{ label: "Nam", value: "Nam" }, { label: "Nữ", value: "Nữ" }] },
+    { id: "co_so", title: "Cơ sở" },
+    { id: "bac_dao_tao", title: "Bậc đào tạo", options: [{ label: "Đại học", value: "Đại học" }, { label: "Thạc sĩ", value: "Thạc sĩ" }, { label: "Tiến sĩ", value: "Tiến sĩ" }] },
+    { id: "loai_hinh_dao_tao", title: "Loại hình đào tạo", options: [{ label: "Chính quy", value: "Chính quy" }, { label: "Liên thông", value: "Liên thông" }, { label: "Từ xa", value: "Từ xa" }] },
+    { id: "khoa", title: "Khoa" },
+    { id: "nganh", title: "Ngành" },
+  ])
+
+  // Optional: hydrate dynamic facet options from BE
+  React.useEffect(() => {
+    StudentService.getFacets()
+      .then((f) => {
+        setFacets((prev) =>
+          prev.map((x) => {
+            if (x.id === "co_so" && f.coSo?.length) return { ...x, options: f.coSo.map((v) => ({ label: v, value: v })) }
+            if (x.id === "khoa" && f.khoa?.length) return { ...x, options: f.khoa.map((v) => ({ label: v, value: v })) }
+            if (x.id === "nganh" && f.nganh?.length) return { ...x, options: f.nganh.map((v) => ({ label: v, value: v })) }
+            if (x.id === "gioi_tinh" && f.gioiTinh?.length) return { ...x, options: f.gioiTinh.map((v) => ({ label: v, value: v })) }
+            if (x.id === "bac_dao_tao" && f.bacDaoTao?.length) return { ...x, options: f.bacDaoTao.map((v) => ({ label: v, value: v })) }
+            if (x.id === "loai_hinh_dao_tao" && f.loaiHinhDaoTao?.length) return { ...x, options: f.loaiHinhDaoTao.map((v) => ({ label: v, value: v })) }
+            return x
+          }),
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleFetch = React.useCallback(async (args: {
+    pagination: PaginationState
+    sorting: SortingState
+    globalFilter: string
+    columnFilters: ColumnFiltersState
+  }) => {
+    const { pagination, sorting, globalFilter, columnFilters } = args
+    const { pageIndex, pageSize } = pagination
+
+    const params: any = { page: pageIndex, size: pageSize }
+    const sorts = toSpringSort(sorting)
+    if (sorts.length) params.sort = sorts
+
+    // Map UI facet ids -> BE param names (camelCase)
+    const map: Record<string, string> = {
+      gioi_tinh: "gioiTinh",
+      co_so: "coSo",
+      bac_dao_tao: "bacDaoTao",
+      loai_hinh_dao_tao: "loaiHinhDaoTao",
+      khoa: "khoa",
+      nganh: "nganh",
+    }
+    columnFilters.forEach((f) => {
+      const k = map[f.id as string]
+      if (!k) return
+      const vals = Array.isArray(f.value) ? (f.value as string[]) : []
+      if (vals.length) params[k] = vals
+    })
+
+    setLoading(true)
+    try {
+      const pageRes: PageRes<StudentDto> = globalFilter?.trim()
+        ? await StudentService.searchStudents(globalFilter.trim(), params)
+        : await StudentService.getStudents(params)
+      setRows(pageRes.content.map(dtoToUi))
+      setTotal(pageRes.totalElements)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // initial load
+  React.useEffect(() => {
+    handleFetch({ pagination: { pageIndex: 0, pageSize: 10 }, sorting: [], globalFilter: "", columnFilters: [] })
+  }, [handleFetch])
 
   return (
-    <div className="p-3 sm:p-4">
-      <h1 className="text-3xl font-bold mb-8">Advanced Data Table</h1>
-      <DataTable columns={columns} data={data} />
+    <div className="flex flex-col gap-4 p-3 sm:p-4">
+      <h1 className="text-3xl font-bold">Crawled Data</h1>
+      <DataTable
+        server
+        columns={columns}
+        data={rows}
+        total={total}
+        loading={loading}
+        onServerStateChange={handleFetch}
+        facets={facets}
+      />
     </div>
   )
 }

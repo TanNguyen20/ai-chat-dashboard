@@ -1,6 +1,7 @@
 import { TypedAxiosInstance } from "@/types/axios";
 import { getUserInfoFromLocalStorage } from "@/utils/commons"
 import axios from "axios"
+import qs from "qs"
 
 class AxiosClient {
   private static readonly instances: Map<string, TypedAxiosInstance> = new Map()
@@ -15,6 +16,9 @@ class AxiosClient {
         timeout: 10000,
         headers: {
           "Content-Type": "application/json",
+        },
+        paramsSerializer: {
+          serialize: (params) => qs.stringify(params, { arrayFormat: "repeat" }),
         },
       }) as TypedAxiosInstance;
       AxiosClient.instances.set(baseURL, instance)

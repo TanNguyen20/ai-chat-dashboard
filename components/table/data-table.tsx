@@ -6,6 +6,7 @@ import {
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
+  type PaginationState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -38,15 +39,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTablePagination } from "./data-table-pagination"
-import { DataTableToolbar } from "./data-table-toolbar"
+import { DataTableToolbar, type FacetDef } from "./data-table-toolbar"
 import type { Student } from "./columns"
+
+export interface FacetOption {
+  label: string
+  value: string
+  icon?: React.ComponentType<{ className?: string }>
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+
+  // server mode (already wired)
+  server?: boolean
+  total?: number
+  loading?: boolean
+  onServerStateChange?: (state: {
+    pagination: PaginationState
+    sorting: SortingState
+    globalFilter: string
+    columnFilters: ColumnFiltersState
+  }) => void
+
+  // NEW: facet definitions (parent-driven). If omitted, toolbar can still auto-derive.
+  facets?: FacetDef[]
 }
 
-function DraggableTableHeader({ header, table }: { header: any; table: any }) {
+function DraggableTableHeader({ header }: { header: any }) {
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
     id: header.column.id,
   })
@@ -93,7 +114,6 @@ function DraggableTableHeader({ header, table }: { header: any; table: any }) {
 
 function ExpandedRowContent({ row }: { row: Row<Student> }) {
   const student = row.original
-
   return (
     <div className="p-3 sm:p-4 bg-muted/30 border-t">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -170,46 +190,61 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
   )
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  server = false,
+  total,
+  loading = false,
+  onServerStateChange,
+  facets, // NEW
+}: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
   const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
     columns.map((column) => (typeof column.id === "string" ? column.id : (column as any).accessorKey)),
   )
 
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  React.useEffect(() => {
+    if (!server) return
+    setPagination((p) => ({ ...p, pageIndex: 0 }))
+  }, [server, sorting, globalFilter, columnFilters])
+
+  React.useEffect(() => {
+    if (!server || !onServerStateChange) return
+    onServerStateChange({ pagination, sorting, globalFilter, columnFilters })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [server, pagination.pageIndex, pagination.pageSize, sorting, globalFilter, columnFilters])
+
+  const pageCount = React.useMemo(() => {
+    if (!server || total == null) return undefined
+    return Math.max(1, Math.ceil(total / pagination.pageSize))
+  }, [server, total, pagination.pageSize])
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: "includesString",
     onColumnOrderChange: setColumnOrder,
     state: {
@@ -219,46 +254,58 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
       rowSelection,
       globalFilter,
       columnOrder,
+      pagination,
     },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
+    manualPagination: server,
+    manualSorting: server,
+    manualFiltering: server,
+    pageCount,
+    meta: { total },
+    initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
   })
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
-
     if (active && over && active.id !== over.id) {
-      setColumnOrder((columnOrder) => {
-        const oldIndex = columnOrder.indexOf(active.id as string)
-        const newIndex = columnOrder.indexOf(over.id as string)
-        return arrayMove(columnOrder, oldIndex, newIndex)
+      setColumnOrder((order) => {
+        const oldIndex = order.indexOf(active.id as string)
+        const newIndex = order.indexOf(over.id as string)
+        return arrayMove(order, oldIndex, newIndex)
       })
     }
   }
 
   return (
     <div className="w-full space-y-4">
-      <DataTableToolbar table={table} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} />
+      <DataTableToolbar
+        table={table}
+        globalFilter={globalFilter}
+        setGlobalFilter={setGlobalFilter}
+        facets={facets} // NEW
+      />
 
-      <div className="rounded-md border bg-background">
+      <div className="rounded-md border bg-background relative">
+        {loading && (
+          <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
+            Đang tải dữ liệu…
+          </div>
+        )}
+
         <div className="relative overflow-hidden">
           <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <Table className="relative">
                 <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id} className="border-b">
+                  {table.getHeaderGroups().map((hg) => (
+                    <TableRow key={hg.id} className="border-b">
                       <SortableContext
-                        items={headerGroup.headers
-                          .filter((header) => header.column.id !== "select" && header.column.id !== "expand")
-                          .map((header) => header.column.id)}
+                        items={hg.headers
+                          .filter((h) => h.column.id !== "select" && h.column.id !== "expand")
+                          .map((h) => h.column.id)}
                         strategy={horizontalListSortingStrategy}
                       >
-                        {headerGroup.headers.map((header) => (
-                          <DraggableTableHeader key={header.id} header={header} table={table} />
+                        {hg.headers.map((header) => (
+                          <DraggableTableHeader key={header.id} header={header} />
                         ))}
                       </SortableContext>
                     </TableRow>
@@ -280,7 +327,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                         </TableRow>
                         {row.getIsExpanded() && (
                           <TableRow>
-                            <TableCell colSpan={columns.length} className="p-0">
+                            <TableCell colSpan={(columns as any).length} className="p-0">
                               <ExpandedRowContent row={row as Row<Student>} />
                             </TableCell>
                           </TableRow>
@@ -289,7 +336,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={(columns as any).length} className="h-24 text-center text-muted-foreground">
                         No results found.
                       </TableCell>
                     </TableRow>
