@@ -16,6 +16,7 @@ import {
   useReactTable,
   type Row,
 } from "@tanstack/react-table"
+
 import {
   DndContext,
   KeyboardSensor,
@@ -35,6 +36,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -79,7 +81,7 @@ function DraggableTableHeader({ header }: { header: any }) {
 
   if (isSelectColumn || isExpandColumn) {
     return (
-      <TableHead key={header.id} className="whitespace-nowrap">
+      <TableHead key={header.id} className="whitespace-nowrap overflow-hidden text-ellipsis">
         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
       </TableHead>
     )
@@ -89,7 +91,7 @@ function DraggableTableHeader({ header }: { header: any }) {
     <TableHead
       ref={setNodeRef}
       key={header.id}
-      className="whitespace-nowrap relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
+      className="relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm whitespace-nowrap overflow-hidden text-ellipsis"
       style={style}
       {...attributes}
     >
@@ -137,7 +139,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           <CardHeader className="pb-2 px-3 pt-3">
             <CardTitle className="text-sm font-medium">Thông Tin Học Tập</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 px-3 pb-3">
+        <CardContent className="space-y-2 px-3 pb-3">
             <div>
               <span className="text-xs font-medium text-muted-foreground">Cơ sở:</span>
               <p className="text-sm break-words">{student.co_so || "N/A"}</p>
@@ -170,11 +172,11 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
               <span className="text-xs font-medium text-muted-foreground">CMND:</span>
               <p className="text-sm font-mono">{student.so_cmnd || "N/A"}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-xs font-medium text-muted-foreground">Giới tính:</span>
               <Badge
                 variant={student.gioi_tinh === "Nam" ? "default" : student.gioi_tinh === "Nữ" ? "secondary" : "outline"}
-                className="text-xs"
+                className="text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {student.gioi_tinh || "N/A"}
               </Badge>
@@ -258,6 +260,9 @@ export function DataTable<TData, TValue>({
     pageCount,
     meta: { total },
     initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
+    // optional: enforce a min/max for safety
+    columnResizeMode: "onChange",
+    defaultColumn: { size: 140, minSize: 60, maxSize: 600 },
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -272,7 +277,6 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    // ensure this container can shrink & fill next to a sidebar
     <div className="w-full min-w-0 space-y-4">
       <DataTableToolbar
         table={table}
@@ -291,8 +295,15 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {/* force table to span container */}
+            {/* fixed layout + explicit colgroup widths */}
             <Table className="min-w-full table-fixed">
+              {/* widths come from column.size */}
+              <colgroup>
+                {table.getVisibleLeafColumns().map((column) => (
+                  <col key={column.id} style={{ width: `${column.getSize()}px` }} />
+                ))}
+              </colgroup>
+
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -319,15 +330,23 @@ export function DataTable<TData, TValue>({
                         className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          <TableCell
+                            key={cell.id}
+                            className="px-2 py-3 sm:px-4 whitespace-nowrap overflow-hidden text-ellipsis"
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="truncate">
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </span>
+                              </div>
+                            </div>
                           </TableCell>
                         ))}
                       </TableRow>
 
                       {row.getIsExpanded() && (
                         <TableRow>
-                          {/* span exactly the number of visible columns */}
                           <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
                             <ExpandedRowContent row={row as Row<Student>} />
                           </TableCell>
@@ -337,7 +356,10 @@ export function DataTable<TData, TValue>({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={table.getVisibleLeafColumns().length}
+                      className="h-24 text-center text-muted-foreground"
+                    >
                       No results found.
                     </TableCell>
                   </TableRow>
