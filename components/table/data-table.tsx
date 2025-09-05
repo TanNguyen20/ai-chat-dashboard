@@ -51,8 +51,6 @@ export interface FacetOption {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-
-  // server mode (already wired)
   server?: boolean
   total?: number
   loading?: boolean
@@ -62,8 +60,6 @@ interface DataTableProps<TData, TValue> {
     globalFilter: string
     columnFilters: ColumnFiltersState
   }) => void
-
-  // NEW: facet definitions (parent-driven). If omitted, toolbar can still auto-derive.
   facets?: FacetDef[]
 }
 
@@ -197,7 +193,7 @@ export function DataTable<TData, TValue>({
   total,
   loading = false,
   onServerStateChange,
-  facets, // NEW
+  facets,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -276,75 +272,79 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="w-full space-y-4">
+    // ensure this container can shrink & fill next to a sidebar
+    <div className="w-full min-w-0 space-y-4">
       <DataTableToolbar
         table={table}
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
-        facets={facets} // NEW
+        facets={facets}
       />
 
-      <div className="rounded-md border bg-background relative">
+      <div className="rounded-md border bg-background relative w-full">
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
             Đang tải dữ liệu…
           </div>
         )}
 
-        <div className="relative overflow-hidden">
-          <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <Table className="relative">
-                <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  {table.getHeaderGroups().map((hg) => (
-                    <TableRow key={hg.id} className="border-b">
-                      <SortableContext
-                        items={hg.headers
-                          .filter((h) => h.column.id !== "select" && h.column.id !== "expand")
-                          .map((h) => h.column.id)}
-                        strategy={horizontalListSortingStrategy}
+        {/* single horizontal scroll wrapper */}
+        <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            {/* force table to span container */}
+            <Table className="min-w-full table-fixed">
+              <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id} className="border-b">
+                    <SortableContext
+                      items={hg.headers
+                        .filter((h) => h.column.id !== "select" && h.column.id !== "expand")
+                        .map((h) => h.column.id)}
+                      strategy={horizontalListSortingStrategy}
+                    >
+                      {hg.headers.map((header) => (
+                        <DraggableTableHeader key={header.id} header={header} />
+                      ))}
+                    </SortableContext>
+                  </TableRow>
+                ))}
+              </TableHeader>
+
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <React.Fragment key={row.id}>
+                      <TableRow
+                        data-state={row.getIsSelected() && "selected"}
+                        className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
                       >
-                        {hg.headers.map((header) => (
-                          <DraggableTableHeader key={header.id} header={header} />
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
                         ))}
-                      </SortableContext>
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <React.Fragment key={row.id}>
-                        <TableRow
-                          data-state={row.getIsSelected() && "selected"}
-                          className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
+                      </TableRow>
+
+                      {row.getIsExpanded() && (
+                        <TableRow>
+                          {/* span exactly the number of visible columns */}
+                          <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
+                            <ExpandedRowContent row={row as Row<Student>} />
+                          </TableCell>
                         </TableRow>
-                        {row.getIsExpanded() && (
-                          <TableRow>
-                            <TableCell colSpan={(columns as any).length} className="p-0">
-                              <ExpandedRowContent row={row as Row<Student>} />
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={(columns as any).length} className="h-24 text-center text-muted-foreground">
-                        No results found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </DndContext>
-          </div>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
+                      No results found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </DndContext>
         </div>
       </div>
 
