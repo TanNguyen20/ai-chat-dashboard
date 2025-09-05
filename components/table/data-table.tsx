@@ -51,6 +51,8 @@ export interface FacetOption {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+
+  // server mode
   server?: boolean
   total?: number
   loading?: boolean
@@ -60,6 +62,8 @@ interface DataTableProps<TData, TValue> {
     globalFilter: string
     columnFilters: ColumnFiltersState
   }) => void
+
+  // facet definitions
   facets?: FacetDef[]
 }
 
@@ -272,7 +276,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    // ensure this container can shrink & fill next to a sidebar
+    // can shrink & fill next to a sidebar
     <div className="w-full min-w-0 space-y-4">
       <DataTableToolbar
         table={table}
@@ -291,8 +295,8 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {/* force table to span container */}
-            <Table className="min-w-full table-fixed">
+            {/* switched to table-auto to prevent column overlap */}
+            <Table className="min-w-full table-auto">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -319,7 +323,10 @@ export function DataTable<TData, TValue>({
                         className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm">
+                          <TableCell
+                            key={cell.id}
+                            className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
+                          >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
