@@ -68,12 +68,10 @@ function DraggableTableHeader({ header }: { header: any }) {
     id: header.column.id,
   })
 
-  const baseStyle: React.CSSProperties = {
+  const style = {
     opacity: isDragging ? 0.8 : 1,
     transform: CSS.Translate.toString(transform),
     transition,
-    width: header.column.getSize(), // allow growth beyond this
-    // removed maxWidth so the table can expand to fill available space
   }
 
   const isSelectColumn = header.column.id === "select"
@@ -81,7 +79,7 @@ function DraggableTableHeader({ header }: { header: any }) {
 
   if (isSelectColumn || isExpandColumn) {
     return (
-      <TableHead key={header.id} style={baseStyle}>
+      <TableHead key={header.id} className="whitespace-nowrap">
         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
       </TableHead>
     )
@@ -91,8 +89,8 @@ function DraggableTableHeader({ header }: { header: any }) {
     <TableHead
       ref={setNodeRef}
       key={header.id}
-      className="relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
-      style={baseStyle}
+      className="whitespace-nowrap relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
+      style={style}
       {...attributes}
     >
       <div className="flex items-center gap-1 sm:gap-2 min-w-0">
@@ -260,10 +258,6 @@ export function DataTable<TData, TValue>({
     pageCount,
     meta: { total },
     initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
-
-    // --- Option B: Column sizing defaults ---
-    defaultColumn: { size: 180, minSize: 120 },
-    columnResizeMode: "onChange",
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -280,7 +274,12 @@ export function DataTable<TData, TValue>({
   return (
     // ensure this container can shrink & fill next to a sidebar
     <div className="w-full min-w-0 space-y-4">
-      <DataTableToolbar table={table} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} facets={facets} />
+      <DataTableToolbar
+        table={table}
+        globalFilter={globalFilter}
+        setGlobalFilter={setGlobalFilter}
+        facets={facets}
+      />
 
       <div className="rounded-md border bg-background relative w-full">
         {loading && (
@@ -290,10 +289,10 @@ export function DataTable<TData, TValue>({
         )}
 
         {/* single horizontal scroll wrapper */}
-        <div className="min-w-0 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             {/* force table to span container */}
-            <Table className="w-full">{/* removed table-fixed for flexible sizing */}
+            <Table className="min-w-full table-fixed">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -320,12 +319,8 @@ export function DataTable<TData, TValue>({
                         className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            style={{ width: cell.column.getSize() }} // allow growth; no maxWidth
-                            className="px-2 py-3 sm:px-4 text-sm"
-                          >
-                            <div className="truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
+                          <TableCell key={cell.id} className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
                       </TableRow>
