@@ -72,8 +72,8 @@ function DraggableTableHeader({ header }: { header: any }) {
     opacity: isDragging ? 0.8 : 1,
     transform: CSS.Translate.toString(transform),
     transition,
-    width: header.column.getSize(),
-    maxWidth: header.column.getSize(),
+    width: header.column.getSize(), // allow growth beyond this
+    // removed maxWidth so the table can expand to fill available space
   }
 
   const isSelectColumn = header.column.id === "select"
@@ -290,10 +290,10 @@ export function DataTable<TData, TValue>({
         )}
 
         {/* single horizontal scroll wrapper */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
+        <div className="min-w-0 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             {/* force table to span container */}
-            <Table className="min-w-full">{/* removed table-fixed for flexible sizing */}
+            <Table className="w-full">{/* removed table-fixed for flexible sizing */}
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -322,7 +322,7 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                            style={{ width: cell.column.getSize() }} // allow growth; no maxWidth
                             className="px-2 py-3 sm:px-4 text-sm"
                           >
                             <div className="truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
