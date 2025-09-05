@@ -51,8 +51,6 @@ export interface FacetOption {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-
-  // server mode
   server?: boolean
   total?: number
   loading?: boolean
@@ -62,8 +60,6 @@ interface DataTableProps<TData, TValue> {
     globalFilter: string
     columnFilters: ColumnFiltersState
   }) => void
-
-  // facet definitions
   facets?: FacetDef[]
 }
 
@@ -72,10 +68,12 @@ function DraggableTableHeader({ header }: { header: any }) {
     id: header.column.id,
   })
 
-  const style = {
+  const baseStyle: React.CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
     transform: CSS.Translate.toString(transform),
     transition,
+    width: header.column.getSize(),
+    maxWidth: header.column.getSize(),
   }
 
   const isSelectColumn = header.column.id === "select"
@@ -83,7 +81,7 @@ function DraggableTableHeader({ header }: { header: any }) {
 
   if (isSelectColumn || isExpandColumn) {
     return (
-      <TableHead key={header.id} className="whitespace-nowrap">
+      <TableHead key={header.id} style={baseStyle}>
         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
       </TableHead>
     )
@@ -93,8 +91,8 @@ function DraggableTableHeader({ header }: { header: any }) {
     <TableHead
       ref={setNodeRef}
       key={header.id}
-      className="whitespace-nowrap relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
-      style={style}
+      className="relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
+      style={baseStyle}
       {...attributes}
     >
       <div className="flex items-center gap-1 sm:gap-2 min-w-0">
@@ -262,6 +260,10 @@ export function DataTable<TData, TValue>({
     pageCount,
     meta: { total },
     initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
+
+    // --- Option B: Column sizing defaults ---
+    defaultColumn: { size: 180, minSize: 120 },
+    columnResizeMode: "onChange",
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -276,14 +278,9 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    // can shrink & fill next to a sidebar
+    // ensure this container can shrink & fill next to a sidebar
     <div className="w-full min-w-0 space-y-4">
-      <DataTableToolbar
-        table={table}
-        globalFilter={globalFilter}
-        setGlobalFilter={setGlobalFilter}
-        facets={facets}
-      />
+      <DataTableToolbar table={table} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} facets={facets} />
 
       <div className="rounded-md border bg-background relative w-full">
         {loading && (
@@ -295,8 +292,8 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {/* switched to table-auto to prevent column overlap */}
-            <Table className="min-w-full table-auto">
+            {/* force table to span container */}
+            <Table className="min-w-full">{/* removed table-fixed for flexible sizing */}
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -325,9 +322,10 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
+                            style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                            className="px-2 py-3 sm:px-4 text-sm"
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            <div className="truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
                           </TableCell>
                         ))}
                       </TableRow>
