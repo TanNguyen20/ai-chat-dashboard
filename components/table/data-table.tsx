@@ -280,7 +280,7 @@ export function DataTable<TData, TValue>({
 
   return (
     // can shrink & fill next to a sidebar
-    <div className="w-full min-w-0 space-y-4">
+    <div className="min-w-0 space-y-4" style={{width: isMobile ? "95vw" : "calc(97vw - var(--sidebar-width))"}}>
       <DataTableToolbar
         table={table}
         globalFilter={globalFilter}
@@ -288,8 +288,7 @@ export function DataTable<TData, TValue>({
         facets={facets}
       />
 
-      <div className="rounded-md border bg-background relative"
-        style={{width: isMobile ? "99vw" : "calc(97vw - var(--sidebar-width))"}}>
+      <div className="rounded-md border bg-background relative w-full">
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
             Đang tải dữ liệu…
