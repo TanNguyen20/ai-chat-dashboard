@@ -114,7 +114,7 @@ export function DataTableToolbar<TData>({
           <div className="relative">
             <SearchIconDecoration />
             <Input
-              placeholder="Tìm theo họ tên…"
+              placeholder="Search data"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="pl-8 max-w-sm"
