@@ -16,7 +16,6 @@ import {
   useReactTable,
   type Row,
 } from "@tanstack/react-table"
-
 import {
   DndContext,
   KeyboardSensor,
@@ -36,8 +35,8 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useSidebar } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTablePagination } from "./data-table-pagination"
@@ -53,6 +52,8 @@ export interface FacetOption {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+
+  // server mode
   server?: boolean
   total?: number
   loading?: boolean
@@ -62,6 +63,8 @@ interface DataTableProps<TData, TValue> {
     globalFilter: string
     columnFilters: ColumnFiltersState
   }) => void
+
+  // facet definitions
   facets?: FacetDef[]
 }
 
@@ -81,7 +84,7 @@ function DraggableTableHeader({ header }: { header: any }) {
 
   if (isSelectColumn || isExpandColumn) {
     return (
-      <TableHead key={header.id} className="whitespace-nowrap overflow-hidden text-ellipsis">
+      <TableHead key={header.id} className="whitespace-nowrap">
         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
       </TableHead>
     )
@@ -91,7 +94,7 @@ function DraggableTableHeader({ header }: { header: any }) {
     <TableHead
       ref={setNodeRef}
       key={header.id}
-      className="relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+      className="whitespace-nowrap relative group px-2 py-3 sm:px-4 font-medium text-xs sm:text-sm"
       style={style}
       {...attributes}
     >
@@ -139,7 +142,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           <CardHeader className="pb-2 px-3 pt-3">
             <CardTitle className="text-sm font-medium">Thông Tin Học Tập</CardTitle>
           </CardHeader>
-        <CardContent className="space-y-2 px-3 pb-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             <div>
               <span className="text-xs font-medium text-muted-foreground">Cơ sở:</span>
               <p className="text-sm break-words">{student.co_so || "N/A"}</p>
@@ -172,11 +175,11 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
               <span className="text-xs font-medium text-muted-foreground">CMND:</span>
               <p className="text-sm font-mono">{student.so_cmnd || "N/A"}</p>
             </div>
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">Giới tính:</span>
               <Badge
                 variant={student.gioi_tinh === "Nam" ? "default" : student.gioi_tinh === "Nữ" ? "secondary" : "outline"}
-                className="text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                className="text-xs"
               >
                 {student.gioi_tinh || "N/A"}
               </Badge>
@@ -206,6 +209,8 @@ export function DataTable<TData, TValue>({
   const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
     columns.map((column) => (typeof column.id === "string" ? column.id : (column as any).accessorKey)),
   )
+
+  const { isMobile } = useSidebar()
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -260,9 +265,6 @@ export function DataTable<TData, TValue>({
     pageCount,
     meta: { total },
     initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
-    // optional: enforce a min/max for safety
-    columnResizeMode: "onChange",
-    defaultColumn: { size: 140, minSize: 60, maxSize: 600 },
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -277,6 +279,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
+    // can shrink & fill next to a sidebar
     <div className="w-full min-w-0 space-y-4">
       <DataTableToolbar
         table={table}
@@ -285,7 +288,8 @@ export function DataTable<TData, TValue>({
         facets={facets}
       />
 
-      <div className="rounded-md border bg-background relative w-full">
+      <div className="rounded-md border bg-background relative"
+        style={{width: isMobile ? "90vw" : "calc(95vw - var(--sidebar-width))"}}>
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
             Đang tải dữ liệu…
@@ -295,15 +299,8 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {/* fixed layout + explicit colgroup widths */}
-            <Table className="min-w-full table-fixed">
-              {/* widths come from column.size */}
-              <colgroup>
-                {table.getVisibleLeafColumns().map((column) => (
-                  <col key={column.id} style={{ width: `${column.getSize()}px` }} />
-                ))}
-              </colgroup>
-
+            {/* switched to table-auto to prevent column overlap */}
+            <Table className="min-w-full table-auto">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">
@@ -332,21 +329,16 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="px-2 py-3 sm:px-4 whitespace-nowrap overflow-hidden text-ellipsis"
+                            className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
                           >
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="truncate">
-                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </span>
-                              </div>
-                            </div>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
                       </TableRow>
 
                       {row.getIsExpanded() && (
                         <TableRow>
+                          {/* span exactly the number of visible columns */}
                           <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
                             <ExpandedRowContent row={row as Row<Student>} />
                           </TableCell>
@@ -356,10 +348,7 @@ export function DataTable<TData, TValue>({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={table.getVisibleLeafColumns().length}
-                      className="h-24 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
                       No results found.
                     </TableCell>
                   </TableRow>
