@@ -289,7 +289,7 @@ export function DataTable<TData, TValue>({
       />
 
       <div className="rounded-md border bg-background relative"
-        style={{width: isMobile ? "90vw" : "calc(95vw - var(--sidebar-width))"}}>
+        style={{width: isMobile ? "99vw" : "calc(97vw - var(--sidebar-width))"}}>
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
             Đang tải dữ liệu…
