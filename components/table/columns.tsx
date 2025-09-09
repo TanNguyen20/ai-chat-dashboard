@@ -76,7 +76,7 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          MSSV
+          ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -88,7 +88,7 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Họ và Tên
+          Full name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -97,7 +97,7 @@ export const columns: ColumnDef<Student>[] = [
   },
   {
     accessorKey: "gioi_tinh",
-    header: "Giới Tính",
+    header: "Sex",
     cell: ({ row }) => {
       const gender = row.getValue("gioi_tinh") as string
       return (
@@ -112,7 +112,7 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Lớp Học
+          Grade
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -136,7 +136,7 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Ngành
+          Major
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -184,7 +184,7 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Email DNC
+          Email
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -193,7 +193,7 @@ export const columns: ColumnDef<Student>[] = [
   },
   {
     accessorKey: "dien_thoai",
-    header: "Điện Thoại",
+    header: "Phone number",
     cell: ({ row }) => <div className="font-mono text-sm">{row.getValue("dien_thoai") || "N/A"}</div>,
   },
   {
@@ -216,15 +216,15 @@ export const columns: ColumnDef<Student>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Eye className="mr-2 h-4 w-4" />
-              Xem chi tiết
+              View detail
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Edit className="mr-2 h-4 w-4" />
-              Chỉnh sửa
+              Edit
             </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive">
               <Trash2 className="mr-2 h-4 w-4" />
-              Xóa sinh viên
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
