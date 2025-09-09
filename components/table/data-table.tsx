@@ -120,19 +120,19 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <Card className="shadow-sm">
           <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Thông Tin Liên Hệ</CardTitle>
+            <CardTitle className="text-sm font-medium">Personal info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Điện thoại:</span>
+              <span className="text-xs font-medium text-muted-foreground">Phone number:</span>
               <p className="text-sm break-all">{student.dien_thoai || "N/A"}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Email DNC:</span>
+              <span className="text-xs font-medium text-muted-foreground">Email:</span>
               <p className="text-sm break-all">{student.email_dnc || "N/A"}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Địa chỉ liên hệ:</span>
+              <span className="text-xs font-medium text-muted-foreground">Address:</span>
               <p className="text-sm text-muted-foreground break-words">{student.dia_chi_lien_he || "N/A"}</p>
             </div>
           </CardContent>
@@ -140,7 +140,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
 
         <Card className="shadow-sm">
           <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Thông Tin Học Tập</CardTitle>
+            <CardTitle className="text-sm font-medium">Studying info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
@@ -152,7 +152,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
               <p className="text-sm text-muted-foreground">{student.loai_hinh_dao_tao || "N/A"}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Chuyên ngành:</span>
+              <span className="text-xs font-medium text-muted-foreground">Major:</span>
               <p className="text-sm text-muted-foreground break-words">{student.chuyen_nganh || "N/A"}</p>
             </div>
           </CardContent>
@@ -160,11 +160,11 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
 
         <Card className="shadow-sm sm:col-span-2 lg:col-span-1">
           <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Thông Tin Cá Nhân</CardTitle>
+            <CardTitle className="text-sm font-medium">Personal info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Ngày sinh:</span>
+              <span className="text-xs font-medium text-muted-foreground">Date of birth:</span>
               <p className="text-sm">{student.ngay_sinh || "N/A"}</p>
             </div>
             <div>
@@ -172,11 +172,11 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
               <p className="text-sm">{student.noi_sinh || "N/A"}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-muted-foreground">CMND:</span>
+              <span className="text-xs font-medium text-muted-foreground">Identity number:</span>
               <p className="text-sm font-mono">{student.so_cmnd || "N/A"}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Giới tính:</span>
+              <span className="text-xs font-medium text-muted-foreground">Sex:</span>
               <Badge
                 variant={student.gioi_tinh === "Nam" ? "default" : student.gioi_tinh === "Nữ" ? "secondary" : "outline"}
                 className="text-xs"
