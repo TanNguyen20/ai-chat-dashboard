@@ -291,7 +291,7 @@ export function DataTable<TData, TValue>({
       <div className="rounded-md border bg-background relative w-full">
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
-            Đang tải dữ liệu…
+            Loading data…
           </div>
         )}
 
