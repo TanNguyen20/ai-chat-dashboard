@@ -5,33 +5,30 @@ import { RoleAccessSettings } from "@/components/role-access-settings"
 
 export default function SettingsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="p-6 p-3 sm:p-4">
+    <div className="min-h-screen">
+      <div className="p-3 sm:p-4">
         <Tabs defaultValue="access-control" className="w-full">
-          <div className="mb-6 overflow-x-auto">
-            <TabsList className="grid grid-cols-5 w-full min-w-[640px] md:min-w-0 md:grid-cols-5">
-              <TabsTrigger value="access-control" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Shield className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Access Control</span>
-                <span className="sm:hidden">Access</span>
+          <div className="mb-6">
+            <TabsList className="grid grid-cols-5 w-full h-auto p-1">
+              <TabsTrigger value="access-control" className="flex flex-col gap-1 py-2 px-1 text-xs">
+                <Shield className="h-3 w-3" />
+                <span className="hidden xs:inline text-[10px] leading-tight">Access</span>
               </TabsTrigger>
-              <TabsTrigger value="user-management" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Users className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">User Management</span>
-                <span className="sm:hidden">Users</span>
+              <TabsTrigger value="user-management" className="flex flex-col gap-1 py-2 px-1 text-xs">
+                <Users className="h-3 w-3" />
+                <span className="hidden xs:inline text-[10px] leading-tight">Users</span>
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Bell className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Notifications</span>
-                <span className="sm:hidden">Alerts</span>
+              <TabsTrigger value="notifications" className="flex flex-col gap-1 py-2 px-1 text-xs">
+                <Bell className="h-3 w-3" />
+                <span className="hidden xs:inline text-[10px] leading-tight">Alerts</span>
               </TabsTrigger>
-              <TabsTrigger value="security" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Lock className="h-3 w-3 md:h-4 md:w-4" />
-                Security
+              <TabsTrigger value="security" className="flex flex-col gap-1 py-2 px-1 text-xs">
+                <Lock className="h-3 w-3" />
+                <span className="hidden xs:inline text-[10px] leading-tight">Security</span>
               </TabsTrigger>
-              <TabsTrigger value="general" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Settings className="h-3 w-3 md:h-4 md:w-4" />
-                General
+              <TabsTrigger value="general" className="flex flex-col gap-1 py-2 px-1 text-xs">
+                <Settings className="h-3 w-3" />
+                <span className="hidden xs:inline text-[10px] leading-tight">General</span>
               </TabsTrigger>
             </TabsList>
           </div>
