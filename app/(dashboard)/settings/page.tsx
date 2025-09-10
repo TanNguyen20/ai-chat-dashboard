@@ -6,16 +6,6 @@ import { RoleAccessSettings } from "@/components/role-access-settings"
 export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <Settings className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold text-foreground">Settings</h1>
-          </div>
-        </div>
-      </header>
-
       <div className="p-6">
         <Tabs defaultValue="access-control" className="w-full">
           <div className="mb-6 overflow-x-auto">
