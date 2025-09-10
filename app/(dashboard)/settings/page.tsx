@@ -3,7 +3,7 @@ import { Shield, Settings, Users, Bell, Lock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RoleAccessSettings } from "@/components/role-access-settings"
 
-export function SettingsPage() {
+export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
