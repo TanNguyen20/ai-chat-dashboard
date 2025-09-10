@@ -18,28 +18,33 @@ export default function SettingsPage() {
 
       <div className="p-6">
         <Tabs defaultValue="access-control" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="access-control" className="gap-2">
-              <Shield className="h-4 w-4" />
-              Access Control
-            </TabsTrigger>
-            <TabsTrigger value="user-management" className="gap-2">
-              <Users className="h-4 w-4" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
-              <Lock className="h-4 w-4" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="general" className="gap-2">
-              <Settings className="h-4 w-4" />
-              General
-            </TabsTrigger>
-          </TabsList>
+          <div className="mb-6 overflow-x-auto">
+            <TabsList className="grid grid-cols-5 w-full min-w-[640px] md:min-w-0 md:grid-cols-5">
+              <TabsTrigger value="access-control" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Shield className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Access Control</span>
+                <span className="sm:hidden">Access</span>
+              </TabsTrigger>
+              <TabsTrigger value="user-management" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">User Management</span>
+                <span className="sm:hidden">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Bell className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Notifications</span>
+                <span className="sm:hidden">Alerts</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Lock className="h-3 w-3 md:h-4 md:w-4" />
+                Security
+              </TabsTrigger>
+              <TabsTrigger value="general" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                General
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="access-control" className="mt-0">
             <RoleAccessSettings />
