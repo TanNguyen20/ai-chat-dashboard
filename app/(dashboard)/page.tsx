@@ -85,7 +85,7 @@ export default function DashboardPage() {
   const availableServices = services.filter((service) => hasRequiredRole(service.requiredRoles))
 
   return (
-    <div className="container mx-auto space-y-8 p-3 sm:p-4">
+    <div className="container space-y-8 p-3 sm:p-4">
       {/* Welcome Section */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.username}!</h1>
