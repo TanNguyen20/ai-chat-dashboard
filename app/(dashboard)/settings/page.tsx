@@ -6,7 +6,7 @@ import { RoleAccessSettings } from "@/components/role-access-settings"
 export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="p-6">
+      <div className="p-6 p-3 sm:p-4">
         <Tabs defaultValue="access-control" className="w-full">
           <div className="mb-6 overflow-x-auto">
             <TabsList className="grid grid-cols-5 w-full min-w-[640px] md:min-w-0 md:grid-cols-5">
