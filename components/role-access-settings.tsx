@@ -122,40 +122,45 @@ export function RoleAccessSettings() {
     }
   }
 
-  const toggleRole = (pageId: string, roleName: string) => {
-    setPageAccess(
-      pageAccess.map((page) => {
-        if (page.id === pageId) {
-          const roles = page.roles.includes(roleName)
-            ? page.roles.filter((r) => r !== roleName)
-            : [...page.roles, roleName]
-          return { ...page, roles }
-        }
-        return page
-      }),
-    )
-  }
-
-  const togglePermission = (pageId: string, permission: keyof PageAccess["permissions"]) => {
-    setPageAccess(
-      pageAccess.map((page) => {
-        if (page.id === pageId) {
-          return {
-            ...page,
-            permissions: {
-              ...page.permissions,
-              [permission]: !page.permissions[permission],
-            },
-          }
-        }
-        return page
-      }),
-    )
-  }
-
   const getRoleColor = (roleName: string) => {
     const role = mockRoles.find((r) => r.name === roleName)
     return role?.color || "bg-gray-100 text-gray-800"
+  }
+
+  const toggleNewPageRole = (roleName: string) => {
+    const roles = newPage.roles?.includes(roleName)
+      ? newPage.roles.filter((r) => r !== roleName)
+      : [...(newPage.roles || []), roleName]
+    setNewPage({ ...newPage, roles })
+  }
+
+  const toggleNewPagePermission = (permission: keyof PageAccess["permissions"]) => {
+    setNewPage({
+      ...newPage,
+      permissions: {
+        ...newPage.permissions!,
+        [permission]: !newPage.permissions![permission],
+      },
+    })
+  }
+
+  const toggleEditPageRole = (roleName: string) => {
+    if (!editingPage) return
+    const roles = editingPage.roles.includes(roleName)
+      ? editingPage.roles.filter((r) => r !== roleName)
+      : [...editingPage.roles, roleName]
+    setEditingPage({ ...editingPage, roles })
+  }
+
+  const toggleEditPagePermission = (permission: keyof PageAccess["permissions"]) => {
+    if (!editingPage) return
+    setEditingPage({
+      ...editingPage,
+      permissions: {
+        ...editingPage.permissions,
+        [permission]: !editingPage.permissions[permission],
+      },
+    })
   }
 
   return (
@@ -199,6 +204,44 @@ export function RoleAccessSettings() {
                   onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
                 />
               </div>
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Grant Access to Roles</Label>
+                <div className="flex flex-wrap gap-2">
+                  {mockRoles.map((role) => (
+                    <div key={role.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`new-${role.id}`}
+                        checked={newPage.roles?.includes(role.name) || false}
+                        onCheckedChange={() => toggleNewPageRole(role.name)}
+                      />
+                      <Badge
+                        variant="secondary"
+                        className={`${getRoleColor(role.name)} cursor-pointer`}
+                        onClick={() => toggleNewPageRole(role.name)}
+                      >
+                        {role.name}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-3 block">CRUD Permissions</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(newPage.permissions || {}).map(([permission, enabled]) => (
+                    <div key={permission} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`new-${permission}`}
+                        checked={enabled}
+                        onCheckedChange={() => toggleNewPagePermission(permission as keyof PageAccess["permissions"])}
+                      />
+                      <Label htmlFor={`new-${permission}`} className="text-sm capitalize cursor-pointer">
+                        {permission}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -240,43 +283,27 @@ export function RoleAccessSettings() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Roles Section */}
               <div>
                 <Label className="text-sm font-medium text-card-foreground mb-3 block">Accessible Roles</Label>
                 <div className="flex flex-wrap gap-2">
-                  {mockRoles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${page.id}-${role.id}`}
-                        checked={page.roles.includes(role.name)}
-                        onCheckedChange={() => toggleRole(page.id, role.name)}
-                      />
-                      <Badge
-                        variant="secondary"
-                        className={`${getRoleColor(role.name)} cursor-pointer`}
-                        onClick={() => toggleRole(page.id, role.name)}
-                      >
-                        {role.name}
+                  {page.roles.length > 0 ? (
+                    page.roles.map((roleName) => (
+                      <Badge key={roleName} variant="secondary" className={getRoleColor(roleName)}>
+                        {roleName}
                       </Badge>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No roles assigned</span>
+                  )}
                 </div>
               </div>
-
-              {/* Permissions Section */}
               <div>
                 <Label className="text-sm font-medium text-card-foreground mb-3 block">CRUD Permissions</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(page.permissions).map(([permission, enabled]) => (
                     <div key={permission} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${page.id}-${permission}`}
-                        checked={enabled}
-                        onCheckedChange={() => togglePermission(page.id, permission as keyof PageAccess["permissions"])}
-                      />
-                      <Label htmlFor={`${page.id}-${permission}`} className="text-sm capitalize cursor-pointer">
-                        {permission}
-                      </Label>
+                      <div className={`w-3 h-3 rounded-full ${enabled ? "bg-green-500" : "bg-gray-300"}`} />
+                      <Label className="text-sm capitalize">{permission}</Label>
                     </div>
                   ))}
                 </div>
@@ -291,7 +318,7 @@ export function RoleAccessSettings() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
-            <DialogDescription>Update the page URL and description</DialogDescription>
+            <DialogDescription>Update the page settings and permissions</DialogDescription>
           </DialogHeader>
           {editingPage && (
             <div className="space-y-4">
@@ -310,6 +337,44 @@ export function RoleAccessSettings() {
                   value={editingPage.description}
                   onChange={(e) => setEditingPage({ ...editingPage, description: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Grant Access to Roles</Label>
+                <div className="flex flex-wrap gap-2">
+                  {mockRoles.map((role) => (
+                    <div key={role.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-${role.id}`}
+                        checked={editingPage.roles.includes(role.name)}
+                        onCheckedChange={() => toggleEditPageRole(role.name)}
+                      />
+                      <Badge
+                        variant="secondary"
+                        className={`${getRoleColor(role.name)} cursor-pointer`}
+                        onClick={() => toggleEditPageRole(role.name)}
+                      >
+                        {role.name}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-3 block">CRUD Permissions</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(editingPage.permissions).map(([permission, enabled]) => (
+                    <div key={permission} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-${permission}`}
+                        checked={enabled}
+                        onCheckedChange={() => toggleEditPagePermission(permission as keyof PageAccess["permissions"])}
+                      />
+                      <Label htmlFor={`edit-${permission}`} className="text-sm capitalize cursor-pointer">
+                        {permission}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
