@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Trash2, Edit, Plus, MoreVertical } from "lucide-react"
 
@@ -36,6 +37,12 @@ interface Role {
   id: string
   name: string
   color: string
+}
+
+interface AppRoute {
+  file: string
+  next: string
+  pattern: string
 }
 
 const mockRoles: Role[] = [
@@ -80,12 +87,39 @@ export function RoleAccessSettings() {
   const [pageAccess, setPageAccess] = useState<PageAccess[]>(mockPageAccess)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingPage, setEditingPage] = useState<PageAccess | null>(null)
+  const [appRoutes, setAppRoutes] = useState<AppRoute[]>([])
+  const [loadingRoutes, setLoadingRoutes] = useState(false)
   const [newPage, setNewPage] = useState<Partial<PageAccess>>({
     url: "",
     description: "",
     roles: [],
     permissions: { create: false, read: true, update: false, delete: false },
   })
+
+  useEffect(() => {
+    const fetchAppRoutes = async () => {
+      setLoadingRoutes(true)
+      try {
+        const response = await fetch("/app-routes.json")
+        if (response.ok) {
+          const routes = await response.json()
+          setAppRoutes(routes)
+        }
+      } catch (error) {
+        console.error("Failed to fetch app routes:", error)
+      } finally {
+        setLoadingRoutes(false)
+      }
+    }
+
+    fetchAppRoutes()
+  }, [])
+
+  const getRouteDescription = (route: AppRoute) => {
+    const segments = route.file.split("/")
+    const fileName = segments[segments.length - 2] || segments[segments.length - 1]
+    return fileName.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  }
 
   const handleAddPage = () => {
     if (newPage.url && newPage.description) {
@@ -163,6 +197,29 @@ export function RoleAccessSettings() {
     })
   }
 
+  const handleRouteSelect = (routeUrl: string) => {
+    const selectedRoute = appRoutes.find((route) => route.next === routeUrl)
+    if (selectedRoute) {
+      setNewPage({
+        ...newPage,
+        url: routeUrl,
+        description: getRouteDescription(selectedRoute),
+      })
+    }
+  }
+
+  const handleEditRouteSelect = (routeUrl: string) => {
+    if (!editingPage) return
+    const selectedRoute = appRoutes.find((route) => route.next === routeUrl)
+    if (selectedRoute) {
+      setEditingPage({
+        ...editingPage,
+        url: routeUrl,
+        description: getRouteDescription(selectedRoute),
+      })
+    }
+  }
+
   return (
     <div>
       {/* Page Header */}
@@ -188,12 +245,21 @@ export function RoleAccessSettings() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="url">Page URL</Label>
-                <Input
-                  id="url"
-                  placeholder="/example-page"
-                  value={newPage.url || ""}
-                  onChange={(e) => setNewPage({ ...newPage, url: e.target.value })}
-                />
+                <Select value={newPage.url || ""} onValueChange={handleRouteSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appRoutes.map((route) => (
+                      <SelectItem key={route.next} value={route.next}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{route.next}</span>
+                          <span className="text-xs text-muted-foreground">{getRouteDescription(route)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -324,11 +390,21 @@ export function RoleAccessSettings() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="edit-url">Page URL</Label>
-                <Input
-                  id="edit-url"
-                  value={editingPage.url}
-                  onChange={(e) => setEditingPage({ ...editingPage, url: e.target.value })}
-                />
+                <Select value={editingPage.url} onValueChange={handleEditRouteSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a page URL" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appRoutes.map((route) => (
+                      <SelectItem key={route.next} value={route.next}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{route.next}</span>
+                          <span className="text-xs text-muted-foreground">{getRouteDescription(route)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="edit-description">Description</Label>
