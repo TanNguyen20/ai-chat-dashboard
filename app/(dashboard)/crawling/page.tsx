@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +50,7 @@ interface CrawledUser {
   mat_khau_email_dnc?: string;
   ma_ho_so?: string;
   timestamp: string;
-  status: string;
+  status: "success" | "no_info";
 }
 
 interface CrawlingStatus {
@@ -62,8 +62,22 @@ interface CrawlingStatus {
   currentUserId?: number;
   totalUsers?: number;
   processedUsers?: number;
+  successUsers?: number;
+  skippedUsers?: number;
+  failedUsers?: number; // counts "no_info"
   message?: string;
+  lastProcessed?: string | number | null;
 }
+
+type StreamMsg =
+  | { type: "started"; run_id: string; start: number; end: number; max_concurrent: number }
+  | { type: "student"; mssv: string; data: Record<string, any>; no_info?: boolean; status?: string; reason?: string }
+  | { type: "progress"; student_id: number; status: "skipped" | "failed" | "canceled" | string; reason?: string }
+  | { type: "warning"; message?: string }
+  | { type: "completed"; run_id: string; last_processed?: string | number | null }
+  | { type: "canceled"; run_id?: string; message?: string }
+  | { type: "error"; message?: string }
+  | Record<string, any>;
 
 export default function CrawlingPage() {
   const [formData, setFormData] = useState({
@@ -112,15 +126,16 @@ export default function CrawlingPage() {
     setCrawlingStatus({
       status: "running",
       processedUsers: 0,
+      successUsers: 0,
+      skippedUsers: 0,
+      failedUsers: 0, // will count "no_info"
       message: "Starting…",
     });
 
-    // Open SSE directly – this both starts and streams the run
     startSSE(buildStreamUrl());
   };
 
   const startSSE = (url: string) => {
-    // Close any existing stream
     if (eventSourceRef.current) eventSourceRef.current.close();
 
     const es = new EventSource(url, { withCredentials: false });
@@ -128,60 +143,93 @@ export default function CrawlingPage() {
 
     es.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data: StreamMsg = JSON.parse(event.data);
 
-        // Handle event types from FastAPI
         switch (data.type) {
           case "started": {
-            const { run_id, start, end, max_concurrent } = data;
-            setCrawlingStatus((prev) => ({
-              ...prev,
+            const { run_id, start, end, max_concurrent } = data as Extract<StreamMsg, { type: "started" }>;
+            setCrawlingStatus({
               status: "running",
               runId: run_id,
               effectiveStart: start,
               end,
               maxConcurrent: max_concurrent,
+              totalUsers: Math.max(0, end - start),
+              processedUsers: 0,
+              successUsers: 0,
+              skippedUsers: 0,
+              failedUsers: 0,
               message: `Running (start=${start}, end=${end}, concurrency=${max_concurrent})`,
-            }));
+            });
             break;
           }
 
           case "student": {
-            const u = (data.data || {}) as Partial<CrawledUser>;
-            const mssv = String(data.mssv ?? u.mssv ?? "");
+            const msg = data as Extract<StreamMsg, { type: "student" }>;
+            const u = (msg.data || {}) as Partial<CrawledUser>;
+            const mssv = String(msg.mssv || u.mssv || "");
+            const isNoInfo = !!msg.no_info || msg.status === "no_info";
+            const status: CrawledUser["status"] = isNoInfo ? "no_info" : "success";
+
             setCrawledUsers((prev) => [
               ...prev,
               {
                 ...u,
                 mssv,
                 timestamp: new Date().toLocaleTimeString(),
-                status: "success",
+                status,
               } as CrawledUser,
             ]);
-            setCrawlingStatus((prev) => ({
-              ...prev,
-              currentUserId: Number.parseInt(mssv || "0", 10) || prev.currentUserId,
-              processedUsers: (prev.processedUsers || 0) + 1,
-              message: `Processed ${prev.processedUsers ? prev.processedUsers + 1 : 1}`,
-            }));
+
+            setCrawlingStatus((prev) => {
+              const processed = (prev.processedUsers || 0) + 1;
+              const success = (prev.successUsers || 0) + (status === "success" ? 1 : 0);
+              const failed = (prev.failedUsers || 0) + (status === "no_info" ? 1 : 0);
+              return {
+                ...prev,
+                currentUserId: Number.parseInt(mssv || "0", 10) || prev.currentUserId,
+                processedUsers: processed,
+                successUsers: success,
+                failedUsers: failed,
+                lastProcessed: mssv,
+                message:
+                  status === "success"
+                    ? `Processed ${processed} • Success ${success}`
+                    : `Processed ${processed} • No info ${failed}`,
+              };
+            });
             break;
           }
 
           case "progress": {
-            // Optional: show heartbeat/progress without data
-            setCrawlingStatus((prev) => ({
-              ...prev,
-              currentUserId:
-                Number.isFinite(data.student_id) && typeof data.student_id === "number"
-                  ? data.student_id
-                  : prev.currentUserId,
-              message: `Checked ${data.student_id} (${data.status})`,
-            }));
+            // Only for skipped/canceled telemetry
+            const { student_id, status, reason } = data as Extract<StreamMsg, { type: "progress" }>;
+            setCrawlingStatus((prev) => {
+              const processed = (prev.processedUsers || 0) + 1;
+              let skipped = prev.skippedUsers || 0;
+              if (status === "skipped") skipped += 1;
+
+              const msg =
+                status === "skipped"
+                  ? `Skipped ${student_id}`
+                  : status === "canceled"
+                  ? `Canceled ${student_id}`
+                  : `Checked ${student_id} (${status}${reason ? `, ${reason}` : ""})`;
+
+              return {
+                ...prev,
+                processedUsers: processed,
+                skippedUsers: skipped,
+                currentUserId: Number.isFinite(student_id) ? student_id : prev.currentUserId,
+                lastProcessed: Number.isFinite(student_id) ? student_id : prev.lastProcessed,
+                message: msg,
+              };
+            });
             break;
           }
 
           case "warning": {
-            setError(String(data.message || "Warning"));
+            setError(String((data as any).message || "Warning"));
             break;
           }
 
@@ -189,7 +237,7 @@ export default function CrawlingPage() {
             setCrawlingStatus((prev) => ({
               ...prev,
               status: "canceled",
-              message: data.message || "Canceled",
+              message: (data as any).message || "Canceled",
             }));
             es.close();
             eventSourceRef.current = null;
@@ -200,7 +248,7 @@ export default function CrawlingPage() {
             setCrawlingStatus((prev) => ({
               ...prev,
               status: "completed",
-              message: `Completed. Last processed: ${data.last_processed}`,
+              message: `Completed. Last processed: ${(data as any).last_processed ?? "n/a"}`,
             }));
             es.close();
             eventSourceRef.current = null;
@@ -208,7 +256,7 @@ export default function CrawlingPage() {
           }
 
           case "error": {
-            setError(data.message || "Unknown error");
+            setError((data as any).message || "Unknown error");
             setCrawlingStatus({ status: "error", message: "Stream error" });
             es.close();
             eventSourceRef.current = null;
@@ -233,20 +281,17 @@ export default function CrawlingPage() {
   };
 
   const stopCrawling = async () => {
-    // Signal backend to cancel by run_id
     const runId = crawlingStatus.runId;
     if (runId) {
       try {
-        const res = await fetch(
-          `${BASE_URL.CRAWL_SERVICE}/cancel?run_id=${encodeURIComponent(runId)}`,
-          { method: "POST" }
-        );
+        const res = await fetch(`${BASE_URL.CRAWL_SERVICE}/cancel?run_id=${encodeURIComponent(runId)}`, {
+          method: "POST",
+        });
         if (!res.ok) {
-          // Not fatal—still close client stream
           console.warn("Cancel request failed", await res.text());
         }
       } catch (e) {
-        console.warn("Cancel request error", e);
+        console.warn("Cancel request error", e as any);
       }
     }
 
@@ -262,6 +307,13 @@ export default function CrawlingPage() {
       if (eventSourceRef.current) eventSourceRef.current.close();
     };
   }, []);
+
+  // Derived progress
+  const progress = useMemo(() => {
+    const total = crawlingStatus.totalUsers || 0;
+    const processed = crawlingStatus.processedUsers || 0;
+    return total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
+  }, [crawlingStatus.totalUsers, crawlingStatus.processedUsers]);
 
   return (
     <div className="bg-background">
@@ -357,6 +409,22 @@ export default function CrawlingPage() {
                 </div>
               </div>
 
+              {/* Counters + Progress */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Badge variant="outline">Run ID: {crawlingStatus.runId ?? "-"}</Badge>
+                <Badge variant="secondary">
+                  Processed: {crawlingStatus.processedUsers ?? 0}/{crawlingStatus.totalUsers ?? 0}
+                </Badge>
+                <Badge variant="outline">Success: {crawlingStatus.successUsers ?? 0}</Badge>
+                <Badge variant="outline">Skipped: {crawlingStatus.skippedUsers ?? 0}</Badge>
+                <Badge variant="outline">Failed / No info: {crawlingStatus.failedUsers ?? 0}</Badge>
+              </div>
+              {crawlingStatus.totalUsers ? (
+                <div className="w-full h-2 rounded bg-muted overflow-hidden">
+                  <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                </div>
+              ) : null}
+
               {error && (
                 <Alert variant="destructive" className="mt-2">
                   <AlertCircle className="h-4 w-4" />
@@ -387,192 +455,180 @@ export default function CrawlingPage() {
 
           {/* Status Panel */}
           {crawledUsers.length > 0 && (
-            <Card className="mt-4 sm:mt-6">
+            <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <Clock className="w-5 h-5" />
                   Crawled Users ({crawledUsers.length})
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  Real-time feed of successfully crawled student data
+                  Real-time feed of crawled student data (success &amp; no-info)
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6">
                 <ScrollArea className="h-80 sm:h-96 lg:h-[500px]">
                   <div className="space-y-4">
-                    {crawledUsers.map((user, index) => (
-                      <div key={`${user.mssv}-${index}`}>
-                        <Card className="border-l-4 border-l-primary/20">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
+                    {crawledUsers.map((user, index) => {
+                      const isNoInfo = user.status === "no_info";
+                      return (
+                        <div key={`${user.mssv}-${index}`}>
+                          <Card
+                            className={
+                              "border-l-4 " +
+                              (isNoInfo ? "border-l-destructive/30" : "border-l-primary/20")
+                            }
+                          >
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-2">
+                                  <User className={"w-4 h-4 " + (isNoInfo ? "text-destructive" : "text-primary")} />
+                                  <span className="font-semibold text-base">
+                                    {user.ho_ten || "Unknown Name"}
+                                  </span>
+                                  <Badge variant={isNoInfo ? "destructive" : "outline"} className="text-xs">
+                                    {isNoInfo ? "no_info" : "success"}
+                                  </Badge>
+                                </div>
+                                <div className="text-xs text-muted-foreground">{user.timestamp}</div>
+                              </div>
                               <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 text-primary" />
-                                <span className="font-semibold text-base">{user.ho_ten || "Unknown Name"}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {user.status}
-                                </Badge>
+                                <span className="text-sm text-muted-foreground">Student ID:</span>
+                                <span className="font-mono text-sm font-medium">{user.mssv}</span>
                               </div>
-                              <div className="text-xs text-muted-foreground">{user.timestamp}</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">Student ID:</span>
-                              <span className="font-mono text-sm font-medium">{user.mssv}</span>
-                            </div>
-                          </CardHeader>
+                            </CardHeader>
 
-                          <CardContent className="pt-0">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {/* Personal Information */}
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-primary flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  Personal Info
-                                </h4>
-                                <div className="space-y-1 text-xs">
-                                  {user.gioi_tinh && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Gender:</span>
-                                      <span>{user.gioi_tinh}</span>
-                                    </div>
-                                  )}
-                                  {user.ngay_sinh && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Birth Date:</span>
-                                      <span>{user.ngay_sinh}</span>
-                                    </div>
-                                  )}
-                                  {user.so_cmnd && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">ID Number:</span>
-                                      <span className="font-mono">{user.so_cmnd}</span>
-                                    </div>
-                                  )}
-                                  {user.noi_sinh && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Place of Birth:</span>
-                                      <span>{user.noi_sinh}</span>
-                                    </div>
-                                  )}
+                            <CardContent className="pt-0">
+                              {/* If no_info, show a tiny hint line */}
+                              {isNoInfo && (
+                                <div className="text-xs text-muted-foreground mb-3">
+                                  No data available for this student (max retries / timeout / invalid data).
                                 </div>
-                              </div>
+                              )}
 
-                              {/* Academic Information */}
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-primary flex items-center gap-1">
-                                  <GraduationCap className="w-3 h-3" />
-                                  Academic Info
-                                </h4>
-                                <div className="space-y-1 text-xs">
-                                  {user.khoa && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Faculty:</span>
-                                      <span>{user.khoa}</span>
+                              {!isNoInfo && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {/* Personal Information */}
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm text-primary flex items-center gap-1">
+                                      <User className="w-3 h-3" />
+                                      Personal Info
+                                    </h4>
+                                    <div className="space-y-1 text-xs">
+                                      {user.gioi_tinh && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Gender:</span>
+                                          <span>{user.gioi_tinh}</span>
+                                        </div>
+                                      )}
+                                      {user.ngay_sinh && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Birth Date:</span>
+                                          <span>{user.ngay_sinh}</span>
+                                        </div>
+                                      )}
+                                      {user.so_cmnd && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">ID Number:</span>
+                                          <span className="font-mono">{user.so_cmnd}</span>
+                                        </div>
+                                      )}
+                                      {user.noi_sinh && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Place of Birth:</span>
+                                          <span>{user.noi_sinh}</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  {user.nganh && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Major:</span>
-                                      <span>{user.nganh}</span>
+                                  </div>
+
+                                  {/* Academic Information */}
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm text-primary flex items-center gap-1">
+                                      <GraduationCap className="w-3 h-3" />
+                                      Academic Info
+                                    </h4>
+                                    <div className="space-y-1 text-xs">
+                                      {user.khoa && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Faculty:</span>
+                                          <span>{user.khoa}</span>
+                                        </div>
+                                      )}
+                                      {user.nganh && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Major:</span>
+                                          <span>{user.nganh}</span>
+                                        </div>
+                                      )}
+                                      {user.chuyen_nganh && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Specialization:</span>
+                                          <span>{user.chuyen_nganh}</span>
+                                        </div>
+                                      )}
+                                      {user.lop_hoc && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Class:</span>
+                                          <span>{user.lop_hoc}</span>
+                                        </div>
+                                      )}
+                                      {user.khoa_hoc && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Academic Year:</span>
+                                          <span>{user.khoa_hoc}</span>
+                                        </div>
+                                      )}
+                                      {user.bac_dao_tao && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Education Level:</span>
+                                          <span>{user.bac_dao_tao}</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  {user.chuyen_nganh && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Specialization:</span>
-                                      <span>{user.chuyen_nganh}</span>
+                                  </div>
+
+                                  {/* Contact & Other Information */}
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm text-primary flex items-center gap-1">
+                                      <Phone className="w-3 h-3" />
+                                      Contact Info
+                                    </h4>
+                                    <div className="space-y-1 text-xs">
+                                      {user.dien_thoai && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Phone:</span>
+                                          <span className="font-mono">{user.dien_thoai}</span>
+                                        </div>
+                                      )}
+                                      {user.email_dnc && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Email:</span>
+                                          <span className="font-mono text-xs break-all">{user.email_dnc}</span>
+                                        </div>
+                                      )}
+                                      {user.dia_chi_lien_he && (
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-muted-foreground">Contact Address:</span>
+                                          <span className="text-xs break-words">{user.dia_chi_lien_he}</span>
+                                        </div>
+                                      )}
+                                      {user.ho_khau_thuong_tru && (
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-muted-foreground">Permanent Address:</span>
+                                          <span className="text-xs break-words">{user.ho_khau_thuong_tru}</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  {user.lop_hoc && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Class:</span>
-                                      <span>{user.lop_hoc}</span>
-                                    </div>
-                                  )}
-                                  {user.khoa_hoc && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Academic Year:</span>
-                                      <span>{user.khoa_hoc}</span>
-                                    </div>
-                                  )}
-                                  {user.bac_dao_tao && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Education Level:</span>
-                                      <span>{user.bac_dao_tao}</span>
-                                    </div>
-                                  )}
+                                  </div>
                                 </div>
-                              </div>
-
-                              {/* Contact & Other Information */}
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-primary flex items-center gap-1">
-                                  <Phone className="w-3 h-3" />
-                                  Contact Info
-                                </h4>
-                                <div className="space-y-1 text-xs">
-                                  {user.dien_thoai && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Phone:</span>
-                                      <span className="font-mono">{user.dien_thoai}</span>
-                                    </div>
-                                  )}
-                                  {user.email_dnc && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Email:</span>
-                                      <span className="font-mono text-xs break-all">{user.email_dnc}</span>
-                                    </div>
-                                  )}
-                                  {user.dia_chi_lien_he && (
-                                    <div className="flex flex-col gap-1">
-                                      <span className="text-muted-foreground">Contact Address:</span>
-                                      <span className="text-xs break-words">{user.dia_chi_lien_he}</span>
-                                    </div>
-                                  )}
-                                  {user.ho_khau_thuong_tru && (
-                                    <div className="flex flex-col gap-1">
-                                      <span className="text-muted-foreground">Permanent Address:</span>
-                                      <span className="text-xs break-words">{user.ho_khau_thuong_tru}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Additional Information Row */}
-                            <div className="mt-4 pt-3 border-t border-border/50">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                                {user.co_so && (
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">Campus:</span>
-                                    <span>{user.co_so}</span>
-                                  </div>
-                                )}
-                                {user.ngay_vao_truong && (
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">Entry Date:</span>
-                                    <span>{user.ngay_vao_truong}</span>
-                                  </div>
-                                )}
-                                {user.ma_ho_so && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-muted-foreground">Profile Code:</span>
-                                    <span className="font-mono">{user.ma_ho_so}</span>
-                                  </div>
-                                )}
-                                {user.doi_tuong && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-muted-foreground">Target Group:</span>
-                                    <span>{user.doi_tuong}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        {index < crawledUsers.length - 1 && <Separator className="my-3" />}
-                      </div>
-                    ))}
+                              )}
+                              {/* If no_info, we intentionally don't render field grids */}
+                            </CardContent>
+                          </Card>
+                          {index < crawledUsers.length - 1 && <Separator className="my-3" />}
+                        </div>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               </CardContent>
