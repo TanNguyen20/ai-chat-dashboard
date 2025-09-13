@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,24 +20,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Trash2, Edit, Plus, MoreVertical } from "lucide-react"
 
-interface PageAccess {
-  id: string
-  url: string
-  description: string
-  roles: string[]
-  permissions: {
-    create: boolean
-    read: boolean
-    update: boolean
-    delete: boolean
-  }
-}
+import { RoleService } from "@/services/role"
+import type { Role as BERole } from "@/types/role"
 
-interface Role {
-  id: string
-  name: string
-  color: string
-}
+import { PageAccessService } from "@/services/pageAccess"
+import type { CrudKey, CrudSet, PageAccess as BEPage, RolePermissions, UpsertPageRequest } from "@/types/pageAccess"
 
 interface AppRoute {
   file: string
@@ -45,75 +32,108 @@ interface AppRoute {
   pattern: string
 }
 
-const mockRoles: Role[] = [
-  { id: "1", name: "Admin", color: "bg-red-100 text-red-800" },
-  { id: "2", name: "Editor", color: "bg-blue-100 text-blue-800" },
-  { id: "3", name: "Viewer", color: "bg-green-100 text-green-800" },
-  { id: "4", name: "Moderator", color: "bg-purple-100 text-purple-800" },
-]
+/* ---------- helpers ---------- */
+const defaultCRUDPermissions = { create: false, read: true, update: false, delete: false }
+const emptyCrud = (): CrudSet => (defaultCRUDPermissions)
 
-const mockPageAccess: PageAccess[] = [
-  {
-    id: "1",
-    url: "/dashboard",
-    description: "Main dashboard with analytics and overview",
-    roles: ["Admin", "Editor"],
-    permissions: { create: true, read: true, update: true, delete: false },
-  },
-  {
-    id: "2",
-    url: "/users",
-    description: "User management and profiles",
-    roles: ["Admin"],
-    permissions: { create: true, read: true, update: true, delete: true },
-  },
-  {
-    id: "3",
-    url: "/content",
-    description: "Content management system",
-    roles: ["Admin", "Editor", "Moderator"],
-    permissions: { create: true, read: true, update: true, delete: false },
-  },
-  {
-    id: "4",
-    url: "/reports",
-    description: "Analytics and reporting dashboard",
-    roles: ["Admin", "Viewer"],
-    permissions: { create: false, read: true, update: false, delete: false },
-  },
-]
+const ensureRoles = (roleNames: string[], current?: Partial<RolePermissions>): RolePermissions => {
+  const next: RolePermissions = {}
+  for (const rn of roleNames) {
+    next[rn] = current?.[rn] ? { ...defaultCRUDPermissions, ...current[rn]! } : emptyCrud()
+  }
+  return next
+}
+
+const anyPermissionTrue = (c: CrudSet) => c.create || c.read || c.update || c.delete
+
+const prettyRoleLabel = (roleName: string) =>
+  roleName.replace(/^ROLE_/, "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+
+const roleColor = (roleName: string) => {
+  if (roleName === "ROLE_USER") return "bg-green-100 text-green-800"
+  if (roleName === "ROLE_ADMIN") return "bg-red-100 text-red-800"
+  if (roleName === "ROLE_OWNER") return "bg-purple-100 text-purple-800"
+  if (roleName === "ROLE_SUPER_ADMIN") return "bg-amber-100 text-amber-800"
+  return "bg-gray-100 text-gray-800"
+}
+
+/* ---------- component ---------- */
 
 export function RoleAccessSettings() {
-  const [pageAccess, setPageAccess] = useState<PageAccess[]>(mockPageAccess)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [editingPage, setEditingPage] = useState<PageAccess | null>(null)
-  const [appRoutes, setAppRoutes] = useState<AppRoute[]>([])
+  const [routes, setRoutes] = useState<AppRoute[]>([])
   const [loadingRoutes, setLoadingRoutes] = useState(false)
-  const [newPage, setNewPage] = useState<Partial<PageAccess>>({
+
+  const [roles, setRoles] = useState<BERole[] | null>(null)
+  const roleNames = useMemo(() => (roles ? roles.map((r) => r.name) : []), [roles])
+
+  const [pages, setPages] = useState<BEPage[]>([])
+  const [loadingPages, setLoadingPages] = useState(false)
+
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingPage, setEditingPage] = useState<BEPage | null>(null)
+
+  const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
     description: "",
-    roles: [],
-    permissions: { create: false, read: true, update: false, delete: false },
+    rolePermissions: {},
   })
 
+  /* ---- load routes ---- */
   useEffect(() => {
-    const fetchAppRoutes = async () => {
+    const fetchRoutes = async () => {
       setLoadingRoutes(true)
       try {
-        const response = await fetch("/app-routes.json")
-        if (response.ok) {
-          const routes = await response.json()
-          setAppRoutes(routes)
-        }
-      } catch (error) {
-        console.error("Failed to fetch app routes:", error)
+        const res = await fetch("/app-routes.json")
+        if (res.ok) setRoutes(await res.json())
+      } catch (e) {
+        console.error("Failed to fetch app routes:", e)
       } finally {
         setLoadingRoutes(false)
       }
     }
-
-    fetchAppRoutes()
+    fetchRoutes()
   }, [])
+
+  /* ---- load roles (interceptor already returns data) ---- */
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const data = await RoleService.getAllRole() // <- returns Role[] directly
+        const sorted = [...data].sort((a, b) => (a.name > b.name ? 1 : -1))
+        setRoles(sorted)
+      } catch (e) {
+        console.error("Failed to load roles:", e)
+        setRoles([]) // avoid null
+      }
+    }
+    loadRoles()
+  }, [])
+
+  /* ---- once roles loaded, load pages & normalize ---- */
+  useEffect(() => {
+    if (roles === null) return
+    const loadPages = async () => {
+      setLoadingPages(true)
+      try {
+        const list = await PageAccessService.list() // <- returns PageAccess[] directly
+        const normalized = list.map((p) => ({
+          ...p,
+          rolePermissions: ensureRoles(roleNames, p.rolePermissions),
+        }))
+        setPages(normalized)
+        setNewPage((prev) => ({
+          ...prev,
+          rolePermissions: ensureRoles(roleNames, prev.rolePermissions),
+        }))
+      } catch (e) {
+        console.error("Failed to load pages:", e)
+      } finally {
+        setLoadingPages(false)
+      }
+    }
+    loadPages()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roles])
 
   const getRouteDescription = (route: AppRoute) => {
     const segments = route.file.split("/")
@@ -121,84 +141,94 @@ export function RoleAccessSettings() {
     return fileName.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
   }
 
-  const handleAddPage = () => {
-    if (newPage.url && newPage.description) {
-      const page: PageAccess = {
-        id: Date.now().toString(),
+  /* ---------- add / update / delete ---------- */
+
+  const handleAddPage = async () => {
+    if (!newPage.url || !newPage.description) return
+    try {
+      const payload: UpsertPageRequest = {
         url: newPage.url,
         description: newPage.description,
-        roles: newPage.roles || [],
-        permissions: newPage.permissions || { create: false, read: true, update: false, delete: false },
+        rolePermissions: ensureRoles(roleNames, newPage.rolePermissions),
       }
-      setPageAccess([...pageAccess, page])
-      setNewPage({
-        url: "",
-        description: "",
-        roles: [],
-        permissions: { create: false, read: true, update: false, delete: false },
-      })
+      const created = await PageAccessService.create(payload) // <- created PageAccess
+      const normalized = { ...created, rolePermissions: ensureRoles(roleNames, created.rolePermissions) }
+      setPages((prev) => [...prev, normalized])
+      setNewPage({ url: "", description: "", rolePermissions: ensureRoles(roleNames) })
       setIsAddDialogOpen(false)
+    } catch (e) {
+      console.error("Create page failed:", e)
+      alert("Failed to create page")
     }
   }
 
-  const handleDeletePage = (id: string) => {
-    setPageAccess(pageAccess.filter((page) => page.id !== id))
-  }
-
-  const handleEditPage = (page: PageAccess) => {
-    setEditingPage({ ...page })
-  }
-
-  const handleUpdatePage = () => {
-    if (editingPage) {
-      setPageAccess(pageAccess.map((page) => (page.id === editingPage.id ? editingPage : page)))
-      setEditingPage(null)
+  const handleDeletePage = async (id: number) => {
+    try {
+      await PageAccessService.delete(id)
+      setPages((prev) => prev.filter((p) => p.id !== id))
+    } catch (e) {
+      console.error("Delete page failed:", e)
+      alert("Failed to delete page")
     }
   }
 
-  const getRoleColor = (roleName: string) => {
-    const role = mockRoles.find((r) => r.name === roleName)
-    return role?.color || "bg-gray-100 text-gray-800"
-  }
-
-  const toggleNewPageRole = (roleName: string) => {
-    const roles = newPage.roles?.includes(roleName)
-      ? newPage.roles.filter((r) => r !== roleName)
-      : [...(newPage.roles || []), roleName]
-    setNewPage({ ...newPage, roles })
-  }
-
-  const toggleNewPagePermission = (permission: keyof PageAccess["permissions"]) => {
-    setNewPage({
-      ...newPage,
-      permissions: {
-        ...newPage.permissions!,
-        [permission]: !newPage.permissions![permission],
-      },
-    })
-  }
-
-  const toggleEditPageRole = (roleName: string) => {
-    if (!editingPage) return
-    const roles = editingPage.roles.includes(roleName)
-      ? editingPage.roles.filter((r) => r !== roleName)
-      : [...editingPage.roles, roleName]
-    setEditingPage({ ...editingPage, roles })
-  }
-
-  const toggleEditPagePermission = (permission: keyof PageAccess["permissions"]) => {
-    if (!editingPage) return
+  const handleEditPage = (page: BEPage) => {
     setEditingPage({
-      ...editingPage,
-      permissions: {
-        ...editingPage.permissions,
-        [permission]: !editingPage.permissions[permission],
-      },
+      ...page,
+      rolePermissions: ensureRoles(roleNames, page.rolePermissions),
     })
   }
+
+  const handleUpdatePage = async () => {
+    if (!editingPage) return
+    try {
+      const payload: UpsertPageRequest = {
+        url: editingPage.url,
+        description: editingPage.description,
+        rolePermissions: ensureRoles(roleNames, editingPage.rolePermissions),
+      }
+      const updated = await PageAccessService.update(editingPage.id, payload)
+      const normalized = { ...updated, rolePermissions: ensureRoles(roleNames, updated.rolePermissions) }
+      setPages((prev) => prev.map((p) => (p.id === normalized.id ? normalized : p)))
+      setEditingPage(null)
+    } catch (e) {
+      console.error("Update page failed:", e)
+      alert("Failed to update page")
+    }
+  }
+
+  /* ---------- toggles ---------- */
+
+  const toggleNewPageRolePermission = (roleName: string, perm: CrudKey) => {
+    const rp = ensureRoles(roleNames, newPage.rolePermissions)
+    rp[roleName][perm] = !rp[roleName][perm]
+    setNewPage({ ...newPage, rolePermissions: { ...rp } })
+  }
+
+  const setAllNewPageRole = (roleName: string, value: boolean) => {
+    const rp = ensureRoles(roleNames, newPage.rolePermissions)
+    rp[roleName] = { create: value, read: value, update: value, delete: value }
+    setNewPage({ ...newPage, rolePermissions: { ...rp } })
+  }
+
+  const toggleEditPageRolePermission = (roleName: string, perm: CrudKey) => {
+    if (!editingPage) return
+    const rp = ensureRoles(roleNames, editingPage.rolePermissions)
+    rp[roleName][perm] = !rp[roleName][perm]
+    setEditingPage({ ...editingPage, rolePermissions: { ...rp } })
+  }
+
+  const setAllEditPageRole = (roleName: string, value: boolean) => {
+    if (!editingPage) return
+    const rp = ensureRoles(roleNames, editingPage.rolePermissions)
+    rp[roleName] = { create: value, read: value, update: value, delete: value }
+    setEditingPage({ ...editingPage, rolePermissions: { ...rp } })
+  }
+
+  /* ---------- route selects ---------- */
 
   const handleRouteSelect = (routeUrl: string) => {
-    const selectedRoute = appRoutes.find((route) => route.next === routeUrl)
+    const selectedRoute = routes.find((route) => route.next === routeUrl)
     if (selectedRoute) {
       setNewPage({
         ...newPage,
@@ -210,7 +240,7 @@ export function RoleAccessSettings() {
 
   const handleEditRouteSelect = (routeUrl: string) => {
     if (!editingPage) return
-    const selectedRoute = appRoutes.find((route) => route.next === routeUrl)
+    const selectedRoute = routes.find((route) => route.next === routeUrl)
     if (selectedRoute) {
       setEditingPage({
         ...editingPage,
@@ -220,37 +250,104 @@ export function RoleAccessSettings() {
     }
   }
 
+  /* ---------- permission matrix ---------- */
+
+  const PermissionMatrix = ({
+    rolePermissions,
+    onToggle,
+    onSetAll,
+    compact = false,
+  }: {
+    rolePermissions: RolePermissions
+    onToggle: (roleName: string, perm: CrudKey) => void
+    onSetAll: (roleName: string, value: boolean) => void
+    compact?: boolean
+  }) => {
+    const perms: CrudKey[] = ["create", "read", "update", "delete"]
+    return (
+      <div className="w-full overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
+              {perms.map((p) => (
+                <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-2 capitalize">
+                  {p}
+                </th>
+              ))}
+              <th className="text-xs font-medium text-muted-foreground pb-2 pl-2">All</th>
+            </tr>
+          </thead>
+          <tbody>
+            {roleNames.map((role) => (
+              <tr key={role} className="border-t">
+                <td className="py-2 pr-2">
+                  <Badge variant="secondary" className={roleColor(role)}>
+                    {prettyRoleLabel(role)}
+                  </Badge>
+                </td>
+                {perms.map((perm) => (
+                  <td key={perm} className="px-2 py-2 text-center">
+                    <Checkbox
+                      checked={rolePermissions[role]?.[perm] ?? false}
+                      onCheckedChange={() => onToggle(role, perm)}
+                      aria-label={`${prettyRoleLabel(role)} ${perm}`}
+                    />
+                  </td>
+                ))}
+                <td className="pl-2 py-2">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size={compact ? "sm" : "sm"} onClick={() => onSetAll(role, true)}>
+                      Enable
+                    </Button>
+                    <Button variant="ghost" size={compact ? "sm" : "sm"} onClick={() => onSetAll(role, false)}>
+                      Clear
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  /* ---------- render ---------- */
+
   return (
     <div>
-      {/* Page Header */}
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
           <p className="text-muted-foreground text-pretty">
-            Configure which roles can access specific pages and their CRUD permissions
+            Assign <span className="font-medium">CRUD permissions per role</span> for each page (roles & data from BE).
           </p>
         </div>
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2" disabled={!roles || roleNames.length === 0}>
               <Plus className="h-4 w-4" />
               Add Page
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Page</DialogTitle>
-              <DialogDescription>Configure access settings for a new page URL</DialogDescription>
+              <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
             </DialogHeader>
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="url">Page URL</Label>
-                <Select value={newPage.url || ""} onValueChange={handleRouteSelect}>
+                <Select value={newPage.url} onValueChange={handleRouteSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {appRoutes.map((route) => (
+                    {routes.map((route) => (
                       <SelectItem key={route.next} value={route.next}>
                         <div className="flex flex-col">
                           <span className="font-medium">{route.next}</span>
@@ -261,132 +358,149 @@ export function RoleAccessSettings() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Input
                   id="description"
                   placeholder="Brief description of the page"
-                  value={newPage.description || ""}
+                  value={newPage.description}
                   onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
                 />
               </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Grant Access to Roles</Label>
-                <div className="flex flex-wrap gap-2">
-                  {mockRoles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`new-${role.id}`}
-                        checked={newPage.roles?.includes(role.name) || false}
-                        onCheckedChange={() => toggleNewPageRole(role.name)}
-                      />
-                      <Badge
-                        variant="secondary"
-                        className={`${getRoleColor(role.name)} cursor-pointer`}
-                        onClick={() => toggleNewPageRole(role.name)}
-                      >
-                        {role.name}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">CRUD Permissions</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(newPage.permissions || {}).map(([permission, enabled]) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`new-${permission}`}
-                        checked={enabled}
-                        onCheckedChange={() => toggleNewPagePermission(permission as keyof PageAccess["permissions"])}
-                      />
-                      <Label htmlFor={`new-${permission}`} className="text-sm capitalize cursor-pointer">
-                        {permission}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Per-Role Permissions</Label>
+                {roles && roleNames.length > 0 ? (
+                  <PermissionMatrix
+                    rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
+                    onToggle={toggleNewPageRolePermission}
+                    onSetAll={setAllNewPageRole}
+                  />
+                ) : (
+                  <div className="text-sm text-muted-foreground">Loading roles…</div>
+                )}
               </div>
             </div>
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddPage}>Add Page</Button>
+              <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0}>
+                Add Page
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Page Access Cards */}
+      {/* Pages */}
       <div className="space-y-4">
-        {pageAccess.map((page) => (
-          <Card key={page.id} className="border border-border">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg font-medium text-card-foreground">{page.url}</CardTitle>
-                  <CardDescription className="text-pretty">{page.description}</CardDescription>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEditPage(page)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDeletePage(page.id)} className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium text-card-foreground mb-3 block">Accessible Roles</Label>
-                <div className="flex flex-wrap gap-2">
-                  {page.roles.length > 0 ? (
-                    page.roles.map((roleName) => (
-                      <Badge key={roleName} variant="secondary" className={getRoleColor(roleName)}>
-                        {roleName}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">No roles assigned</span>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-card-foreground mb-3 block">CRUD Permissions</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.entries(page.permissions).map(([permission, enabled]) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${enabled ? "bg-green-500" : "bg-gray-300"}`} />
-                      <Label className="text-sm capitalize">{permission}</Label>
+        {loadingPages && pages.length === 0 ? (
+          <div className="text-sm text-muted-foreground">Loading pages…</div>
+        ) : pages.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No pages configured yet.</div>
+        ) : (
+          pages.map((page) => {
+            const enabledRoles = roleNames.filter((r) => page.rolePermissions[r] && anyPermissionTrue(page.rolePermissions[r]))
+            return (
+              <Card key={page.id} className="border border-border">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg font-medium text-card-foreground">{page.url}</CardTitle>
+                      <CardDescription className="text-pretty">{page.description}</CardDescription>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditPage(page)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeletePage(page.id)} className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-medium text-card-foreground mb-3 block">Roles with Access</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {roles && enabledRoles.length > 0 ? (
+                        enabledRoles.map((r) => (
+                          <Badge key={r} variant="secondary" className={roleColor(r)}>
+                            {prettyRoleLabel(r)}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No roles have permissions</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-card-foreground mb-1 block">
+                      CRUD Permission Matrix
+                    </Label>
+                    <div className="w-full overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr>
+                            <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
+                            {(["create", "read", "update", "delete"] as CrudKey[]).map((p) => (
+                              <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-2 capitalize">
+                                {p}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roleNames.map((role) => (
+                            <tr key={role} className="border-t">
+                              <td className="py-2 pr-2">
+                                <Badge variant="secondary" className={roleColor(role)}>
+                                  {prettyRoleLabel(role)}
+                                </Badge>
+                              </td>
+                              {(["create", "read", "update", "delete"] as CrudKey[]).map((perm) => (
+                                <td key={perm} className="px-2 py-2">
+                                  <div
+                                    className={`w-3 h-3 rounded-full ${
+                                      page.rolePermissions[role]?.[perm] ? "bg-green-500" : "bg-gray-300"
+                                    }`}
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })
+        )}
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit dialog */}
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
-            <DialogDescription>Update the page settings and permissions</DialogDescription>
+            <DialogDescription>Update the page and per-role permissions</DialogDescription>
           </DialogHeader>
-          {editingPage && (
+          {editingPage && roles && roleNames.length > 0 && (
             <div className="space-y-4">
               <div>
                 <Label htmlFor="edit-url">Page URL</Label>
@@ -395,7 +509,7 @@ export function RoleAccessSettings() {
                     <SelectValue placeholder="Select a page URL" />
                   </SelectTrigger>
                   <SelectContent>
-                    {appRoutes.map((route) => (
+                    {routes.map((route) => (
                       <SelectItem key={route.next} value={route.next}>
                         <div className="flex flex-col">
                           <span className="font-medium">{route.next}</span>
@@ -406,6 +520,7 @@ export function RoleAccessSettings() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label htmlFor="edit-description">Description</Label>
                 <Input
@@ -414,43 +529,15 @@ export function RoleAccessSettings() {
                   onChange={(e) => setEditingPage({ ...editingPage, description: e.target.value })}
                 />
               </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Grant Access to Roles</Label>
-                <div className="flex flex-wrap gap-2">
-                  {mockRoles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-${role.id}`}
-                        checked={editingPage.roles.includes(role.name)}
-                        onCheckedChange={() => toggleEditPageRole(role.name)}
-                      />
-                      <Badge
-                        variant="secondary"
-                        className={`${getRoleColor(role.name)} cursor-pointer`}
-                        onClick={() => toggleEditPageRole(role.name)}
-                      >
-                        {role.name}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">CRUD Permissions</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(editingPage.permissions).map(([permission, enabled]) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-${permission}`}
-                        checked={enabled}
-                        onCheckedChange={() => toggleEditPagePermission(permission as keyof PageAccess["permissions"])}
-                      />
-                      <Label htmlFor={`edit-${permission}`} className="text-sm capitalize cursor-pointer">
-                        {permission}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Per-Role Permissions</Label>
+                <PermissionMatrix
+                  rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
+                  onToggle={toggleEditPageRolePermission}
+                  onSetAll={setAllEditPageRole}
+                  compact
+                />
               </div>
             </div>
           )}
