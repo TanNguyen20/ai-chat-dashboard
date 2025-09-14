@@ -1,7 +1,17 @@
 "use client"
 import { Shield, Settings, Users, Bell, Lock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 import { RoleAccessSettings } from "@/components/role-access-settings"
+import { Suspense } from "react"
+
+const TabContentSkeleton = ({ icon: Icon, title }: { icon: any; title: string }) => (
+  <div className="text-center py-12">
+    <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+    <Skeleton className="h-6 w-48 mx-auto mb-2" />
+    <Skeleton className="h-4 w-64 mx-auto" />
+  </div>
+)
 
 export default function SettingsPage() {
   return (
@@ -34,7 +44,9 @@ export default function SettingsPage() {
           </div>
 
           <TabsContent value="access-control" className="mt-0">
-            <RoleAccessSettings />
+            <Suspense fallback={<TabContentSkeleton icon={Shield} title="Loading Access Control..." />}>
+              <RoleAccessSettings />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="user-management" className="mt-0">

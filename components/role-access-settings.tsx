@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,7 @@ interface AppRoute {
 
 /* ---------- helpers ---------- */
 const defaultCRUDPermissions = { create: false, read: true, update: false, delete: false }
-const emptyCrud = (): CrudSet => (defaultCRUDPermissions)
+const emptyCrud = (): CrudSet => defaultCRUDPermissions
 
 const ensureRoles = (roleNames: string[], current?: Partial<RolePermissions>): RolePermissions => {
   const next: RolePermissions = {}
@@ -47,7 +48,11 @@ const ensureRoles = (roleNames: string[], current?: Partial<RolePermissions>): R
 const anyPermissionTrue = (c: CrudSet) => c.create || c.read || c.update || c.delete
 
 const prettyRoleLabel = (roleName: string) =>
-  roleName.replace(/^ROLE_/, "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  roleName
+    .replace(/^ROLE_/, "")
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
 
 const roleColor = (roleName: string) => {
   if (roleName === "ROLE_USER") return "bg-green-100 text-green-800"
@@ -56,6 +61,101 @@ const roleColor = (roleName: string) => {
   if (roleName === "ROLE_SUPER_ADMIN") return "bg-amber-100 text-amber-800"
   return "bg-gray-100 text-gray-800"
 }
+
+/* ---------- skeleton components ---------- */
+const PageCardSkeleton = () => (
+  <Card className="border border-border">
+    <CardHeader className="pb-4">
+      <div className="flex items-start justify-between">
+        <div className="space-y-2 flex-1">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <Skeleton className="h-8 w-8" />
+      </div>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div>
+        <Skeleton className="h-4 w-32 mb-3" />
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-14" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-40 mb-3" />
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-18" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)
+
+const PermissionMatrixSkeleton = () => (
+  <div className="w-full overflow-x-auto">
+    <table className="w-full border-collapse">
+      <thead>
+        <tr>
+          <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
+          <th className="text-xs font-medium text-muted-foreground pb-2 px-2">Create</th>
+          <th className="text-xs font-medium text-muted-foreground pb-2 px-2">Read</th>
+          <th className="text-xs font-medium text-muted-foreground pb-2 px-2">Update</th>
+          <th className="text-xs font-medium text-muted-foreground pb-2 px-2">Delete</th>
+          <th className="text-xs font-medium text-muted-foreground pb-2 pl-2">All</th>
+        </tr>
+      </thead>
+      <tbody>
+        {[1, 2, 3].map((i) => (
+          <tr key={i} className="border-t">
+            <td className="py-2 pr-2">
+              <Skeleton className="h-6 w-16" />
+            </td>
+            <td className="px-2 py-2 text-center">
+              <Skeleton className="h-4 w-4 mx-auto" />
+            </td>
+            <td className="px-2 py-2 text-center">
+              <Skeleton className="h-4 w-4 mx-auto" />
+            </td>
+            <td className="px-2 py-2 text-center">
+              <Skeleton className="h-4 w-4 mx-auto" />
+            </td>
+            <td className="px-2 py-2 text-center">
+              <Skeleton className="h-4 w-4 mx-auto" />
+            </td>
+            <td className="pl-2 py-2">
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-12" />
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)
 
 /* ---------- component ---------- */
 
@@ -371,14 +471,16 @@ export function RoleAccessSettings() {
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                {roles && roleNames.length > 0 ? (
+                {roles === null ? (
+                  <PermissionMatrixSkeleton />
+                ) : roles && roleNames.length > 0 ? (
                   <PermissionMatrix
                     rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
                     onToggle={toggleNewPageRolePermission}
                     onSetAll={setAllNewPageRole}
                   />
                 ) : (
-                  <div className="text-sm text-muted-foreground">Loading roles…</div>
+                  <div className="text-sm text-muted-foreground">No roles available</div>
                 )}
               </div>
             </div>
@@ -398,12 +500,20 @@ export function RoleAccessSettings() {
       {/* Pages */}
       <div className="space-y-4">
         {loadingPages && pages.length === 0 ? (
-          <div className="text-sm text-muted-foreground">Loading pages…</div>
+          <div className="space-y-4">
+            <PageCardSkeleton />
+            <PageCardSkeleton />
+            <PageCardSkeleton />
+          </div>
         ) : pages.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No pages configured yet.</div>
+          <div className="text-center py-12">
+            <div className="text-sm text-muted-foreground">No pages configured yet.</div>
+          </div>
         ) : (
           pages.map((page) => {
-            const enabledRoles = roleNames.filter((r) => page.rolePermissions[r] && anyPermissionTrue(page.rolePermissions[r]))
+            const enabledRoles = roleNames.filter(
+              (r) => page.rolePermissions[r] && anyPermissionTrue(page.rolePermissions[r]),
+            )
             return (
               <Card key={page.id} className="border border-border">
                 <CardHeader className="pb-4">
