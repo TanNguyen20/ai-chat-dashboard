@@ -166,7 +166,7 @@ export default function CrawlingPage() {
 
           case "student": {
             const msg = data as Extract<StreamMsg, { type: "student" }>;
-            const u = (msg.data || {}) as Partial<CrawledUser>;
+            const u = (msg.data && Object.keys(msg.data).length > 0 ? msg.data : (msg as any)) as Partial<CrawledUser>;
             const mssv = String(msg.mssv || u.mssv || "");
             const isNoInfo = !!msg.no_info || msg.status === "no_info";
             const status: CrawledUser["status"] = isNoInfo ? "no_info" : "success";

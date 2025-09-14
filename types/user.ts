@@ -7,7 +7,7 @@ export interface User {
   isAccountNonLocked: boolean
   isCredentialsNonExpired: boolean
   isEnabled: boolean
-  roles: Set<Role>
+  roles: Array<Role>
 }
 
 export interface UserInfoLocalStorage {

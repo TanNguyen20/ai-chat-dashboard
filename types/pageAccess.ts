@@ -1,18 +1,20 @@
-export type CrudKey = "create" | "read" | "update" | "delete"
-export type CrudSet = Record<CrudKey, boolean>
-
-/** Maps role name (e.g. "ROLE_ADMIN") -> CRUD flags */
-export type RolePermissions = Record<string, CrudSet>
+export type RoleKey = `ROLE_${string}`;
+export type CRUD = { create: boolean; read: boolean; update: boolean; delete: boolean };
+export type RolePermissions = Record<RoleKey | string, CRUD>;
 
 export interface PageAccess {
-  id: number
-  url: string
-  description: string
-  rolePermissions: RolePermissions
+  id: number;
+  url: string;
+  description: string;
+  rolePermissions: RolePermissions;
 }
 
 export interface UpsertPageRequest {
-  url: string
-  description: string
-  rolePermissions: RolePermissions
+  url: string;
+  description: string;
+  rolePermissions: RolePermissions;
 }
+
+export type CrudKey = "create" | "read" | "update" | "delete"
+
+export type CrudSet = Record<CrudKey, boolean>

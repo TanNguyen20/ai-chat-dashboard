@@ -186,8 +186,8 @@ export default function UsersPage() {
     else setSelectedRoles((prev) => prev.filter((r) => r !== roleName))
   }
 
-  const getUserRoleBadges = (userRoles: Set<Role>) =>
-    Array.from(userRoles).map((role) => (
+  const getUserRoleBadges = (userRoles: Array<Role>) =>
+    userRoles.map((role) => (
       <Badge key={role.id} variant={role.name.includes("ADMIN") ? "default" : "secondary"} className="text-xs">
         {formatRoleName(role.name)}
       </Badge>

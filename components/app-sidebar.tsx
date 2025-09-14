@@ -1,8 +1,11 @@
-"use client"
+"use client";
 
-import type * as React from "react"
-import { usePathname } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
+import type * as React from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+
+import { useAuth } from "@/components/auth-provider";
+
 import {
   Sidebar,
   SidebarContent,
@@ -15,24 +18,36 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  useSidebar, // ⬅️ add this
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { LayoutDashboard, Bot, Users, Shield, Settings, LogOut, ChevronUp, User, BarChart3, Settings2Icon, Pickaxe, Database } from "lucide-react"
-import { hasRole, getHighestRole } from "@/utils/commons"
-import Link from "next/link"
-import { Role } from "@/const/role"
+} from "@/components/ui/dropdown-menu";
+import {
+  LayoutDashboard,
+  Bot,
+  Users,
+  Shield,
+  Settings,
+  LogOut,
+  ChevronUp,
+  User,
+  BarChart3,
+  Settings2Icon,
+  Pickaxe,
+  Database,
+} from "lucide-react";
+import { getHighestRole } from "@/utils/commons";
+import { usePermission } from "@/contexts/permission";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  showLogoutDialog: boolean
-  setShowLogoutDialog: (show: boolean) => void
+  showLogoutDialog: boolean;
+  setShowLogoutDialog: (show: boolean) => void;
 }
 
 export const navigationItems = [
@@ -40,87 +55,81 @@ export const navigationItems = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Overview" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Overview" }],
   },
   {
     title: "Chatbot",
     url: "/chatbot",
     icon: Bot,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Chatbot" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Chatbot" }],
   },
   {
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
-    roles: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }],
   },
   {
     title: "Analytics Config",
     url: "/analytics-config",
     icon: Settings2Icon,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }],
   },
   {
     title: "Users",
     url: "/users",
     icon: Users,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Users" }],
   },
   {
     title: "Roles",
     url: "/roles",
     icon: Shield,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Roles" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Roles" }],
   },
   {
     title: "Crawled Data",
     url: "/crawled-data",
     icon: Database,
-    roles: [Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawled Data" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawled Data" }],
   },
   {
     title: "Crawl System",
     url: "/crawling",
     icon: Pickaxe,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawl System" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Crawl System" }],
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
-    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Settings" }]
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Settings" }],
   },
-]
+];
 
 export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: AppSidebarProps) {
-  const { user } = useAuth()
-  const pathname = usePathname()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
-  const filteredNavItems = navigationItems.filter((item) => item.roles.some((role) => user && hasRole(user, role)))
+  const { canRead, isChecking } = usePermission();
 
-  const getUserInitials = (username: string) => {
-    return username
+  // Hide items while permissions are still resolving (optional)
+  const filteredNavItems = isChecking
+    ? []
+    : navigationItems.filter((item) => canRead(item.url));
+
+  const getUserInitials = (username: string) =>
+    username
       .split(" ")
-      .map((name) => name[0])
+      .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
 
-  // helper to close on mobile after navigating
   const handleNavClick = () => {
-    if (isMobile) setOpenMobile(false)
-  }
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -210,5 +219,5 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
