@@ -3,7 +3,6 @@
 import * as React from "react"
 import type { Table, Column } from "@tanstack/react-table"
 import { Cross2Icon } from "@radix-ui/react-icons"
-import { Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
@@ -12,7 +11,7 @@ import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 // Reusable facet types so parent can pass them in
 export type FacetOption = { label: string; value: string; icon?: React.ComponentType<{ className?: string }> }
 export type FacetDef = {
-  /** UI column id (snake_case), e.g. "gioi_tinh" */
+  /** UI column id (camelCase), e.g. "gioiTinh" */
   id: string
   /** Button label, e.g. "Giới tính" */
   title: string
@@ -29,7 +28,7 @@ interface DataTableToolbarProps<TData> {
   globalFilter: string
   setGlobalFilter: (value: string) => void
 
-  /** NEW: optional parent-provided facets */
+  /** optional parent-provided facets */
   facets?: FacetDef[]
 }
 
@@ -65,11 +64,11 @@ export function DataTableToolbar<TData>({
     return arr.length ? arr : fallback ?? []
   }
 
-  // If parent didn't pass facets, keep a sensible default set
+  // Sensible default facets (camelCase ids)
   const defaultFacets: FacetDef[] = [
     {
-      id: "gioi_tinh",
-      title: "Giới tính",
+      id: "gioiTinh",
+      title: "Sex",
       options: [
         { label: "Nam", value: "Nam" },
         { label: "Nữ", value: "Nữ" },
@@ -77,10 +76,10 @@ export function DataTableToolbar<TData>({
       mode: "multi",
       limit: 5,
     },
-    { id: "co_so", title: "Cơ sở", mode: "multi", limit: 30 },
+    { id: "coSo", title: "Cơ sở", mode: "multi", limit: 30 },
     {
-      id: "bac_dao_tao",
-      title: "Bậc đào tạo",
+      id: "bacDaoTao",
+      title: "Education Level",
       options: [
         { label: "Đại học", value: "Đại học" },
         { label: "Thạc sĩ", value: "Thạc sĩ" },
@@ -90,7 +89,7 @@ export function DataTableToolbar<TData>({
       limit: 10,
     },
     {
-      id: "loai_hinh_dao_tao",
+      id: "loaiHinhDaoTao",
       title: "Loại hình đào tạo",
       options: [
         { label: "Chính quy", value: "Chính quy" },
@@ -100,8 +99,8 @@ export function DataTableToolbar<TData>({
       mode: "multi",
       limit: 10,
     },
-    { id: "khoa", title: "Khoa", mode: "multi", limit: 30 },
-    { id: "nganh", title: "Ngành", mode: "multi", limit: 30 },
+    { id: "khoa", title: "Faculty", mode: "multi", limit: 30 },
+    { id: "nganh", title: "Major", mode: "multi", limit: 30 },
   ]
 
   const activeFacets = facets && facets.length ? facets : defaultFacets

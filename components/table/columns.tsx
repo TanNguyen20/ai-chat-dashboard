@@ -15,29 +15,29 @@ import { Badge } from "@/components/ui/badge"
 
 export type Student = {
   mssv: string
-  ho_ten: string | null
-  gioi_tinh: string | null
-  ngay_vao_truong: string | null
-  lop_hoc: string | null
-  co_so: string | null
-  bac_dao_tao: string | null
-  loai_hinh_dao_tao: string | null
+  hoTen: string | null
+  gioiTinh: string | null
+  ngayVaoTruong: string | null
+  lopHoc: string | null
+  coSo: string | null
+  bacDaoTao: string | null
+  loaiHinhDaoTao: string | null
   khoa: string | null
   nganh: string | null
-  chuyen_nganh: string | null
-  khoa_hoc: string | null
-  noi_cap: string | null
-  ngay_sinh: string | null
-  so_cmnd: string | null
-  doi_tuong: string | null
-  ngay_vao_doan: string | null
-  dien_thoai: string | null
-  dia_chi_lien_he: string | null
-  noi_sinh: string | null
-  ho_khau_thuong_tru: string | null
-  email_dnc: string | null
-  mat_khau_email_dnc: string | null
-  ma_ho_so: string | null
+  chuyenNganh: string | null
+  khoaHoc: string | null
+  noiCap: string | null
+  ngaySinh: string | null
+  soCmnd: string | null
+  doiTuong: string | null
+  ngayVaoDoan: string | null
+  dienThoai: string | null
+  diaChiLienHe: string | null
+  noiSinh: string | null
+  hoKhauThuongTru: string | null
+  emailDnc: string | null
+  matKhauEmailDnc: string | null
+  maHoSo: string | null
 }
 
 export const columns: ColumnDef<Student>[] = [
@@ -84,7 +84,7 @@ export const columns: ColumnDef<Student>[] = [
     cell: ({ row }) => <div className="font-mono font-medium">{row.getValue("mssv")}</div>,
   },
   {
-    accessorKey: "ho_ten",
+    accessorKey: "hoTen",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -93,13 +93,13 @@ export const columns: ColumnDef<Student>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("ho_ten") || "N/A"}</div>,
+    cell: ({ row }) => <div className="font-medium">{(row.getValue("hoTen") as string) || "N/A"}</div>,
   },
   {
-    accessorKey: "gioi_tinh",
+    accessorKey: "gioiTinh",
     header: "Sex",
     cell: ({ row }) => {
-      const gender = row.getValue("gioi_tinh") as string
+      const gender = row.getValue("gioiTinh") as string
       return (
         <Badge variant={gender === "Nam" ? "default" : gender === "Nữ" ? "secondary" : "outline"}>
           {gender || "N/A"}
@@ -108,7 +108,7 @@ export const columns: ColumnDef<Student>[] = [
     },
   },
   {
-    accessorKey: "lop_hoc",
+    accessorKey: "lopHoc",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -117,19 +117,19 @@ export const columns: ColumnDef<Student>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="font-mono">{row.getValue("lop_hoc") || "N/A"}</div>,
+    cell: ({ row }) => <div className="font-mono">{(row.getValue("lopHoc") as string) || "N/A"}</div>,
   },
   {
     accessorKey: "khoa",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Khoa
+          Faculty
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("khoa") || "N/A"}</div>,
+    cell: ({ row }) => <div>{(row.getValue("khoa") as string) || "N/A"}</div>,
   },
   {
     accessorKey: "nganh",
@@ -141,13 +141,25 @@ export const columns: ColumnDef<Student>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue("nganh") || "N/A"}</div>,
+    cell: ({ row }) => <div className="max-w-[200px] truncate">{(row.getValue("nganh") as string) || "N/A"}</div>,
   },
   {
-    accessorKey: "bac_dao_tao",
-    header: "Bậc Đào Tạo",
+    accessorKey: "coSo",
+    header: "Cơ sở",
+    enableSorting: false,
+    cell: ({ row }) => <div>{(row.getValue("coSo") as string) || "N/A"}</div>,
+  },
+  {
+    accessorKey: "loaiHinhDaoTao",
+    header: "Loại hình đào tạo",
+    enableSorting: false,
+    cell: ({ row }) => <div>{(row.getValue("loaiHinhDaoTao") as string) || "N/A"}</div>,
+  },
+  {
+    accessorKey: "bacDaoTao",
+    header: "Education Level",
     cell: ({ row }) => {
-      const level = row.getValue("bac_dao_tao") as string
+      const level = row.getValue("bacDaoTao") as string
       return (
         <Badge variant={level === "Đại học" ? "default" : level === "Thạc sĩ" ? "secondary" : "outline"}>
           {level || "N/A"}
@@ -156,19 +168,19 @@ export const columns: ColumnDef<Student>[] = [
     },
   },
   {
-    accessorKey: "khoa_hoc",
+    accessorKey: "khoaHoc",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Khóa Học
+          Academic Year
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="font-mono">{row.getValue("khoa_hoc") || "N/A"}</div>,
+    cell: ({ row }) => <div className="font-mono">{(row.getValue("khoaHoc") as string) || "N/A"}</div>,
   },
   {
-    accessorKey: "ngay_vao_truong",
+    accessorKey: "ngayVaoTruong",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -177,10 +189,10 @@ export const columns: ColumnDef<Student>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="font-mono text-sm">{row.getValue("ngay_vao_truong") || "N/A"}</div>,
+    cell: ({ row }) => <div className="font-mono text-sm">{(row.getValue("ngayVaoTruong") as string) || "N/A"}</div>,
   },
   {
-    accessorKey: "email_dnc",
+    accessorKey: "emailDnc",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -189,19 +201,18 @@ export const columns: ColumnDef<Student>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase text-sm">{row.getValue("email_dnc") || "N/A"}</div>,
+    cell: ({ row }) => <div className="lowercase text-sm">{(row.getValue("emailDnc") as string) || "N/A"}</div>,
   },
   {
-    accessorKey: "dien_thoai",
+    accessorKey: "dienThoai",
     header: "Phone number",
-    cell: ({ row }) => <div className="font-mono text-sm">{row.getValue("dien_thoai") || "N/A"}</div>,
+    cell: ({ row }) => <div className="font-mono text-sm">{(row.getValue("dienThoai") as string) || "N/A"}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
       const student = row.original
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

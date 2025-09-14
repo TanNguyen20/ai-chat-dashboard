@@ -125,15 +125,15 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
               <span className="text-xs font-medium text-muted-foreground">Phone number:</span>
-              <p className="text-sm break-all">{student.dien_thoai || "N/A"}</p>
+              <p className="text-sm break-all">{student.dienThoai || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Email:</span>
-              <p className="text-sm break-all">{student.email_dnc || "N/A"}</p>
+              <p className="text-sm break-all">{student.emailDnc || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Address:</span>
-              <p className="text-sm text-muted-foreground break-words">{student.dia_chi_lien_he || "N/A"}</p>
+              <p className="text-sm text-muted-foreground break-words">{student.diaChiLienHe || "N/A"}</p>
             </div>
           </CardContent>
         </Card>
@@ -145,15 +145,15 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
               <span className="text-xs font-medium text-muted-foreground">Cơ sở:</span>
-              <p className="text-sm break-words">{student.co_so || "N/A"}</p>
+              <p className="text-sm break-words">{student.coSo || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Loại hình đào tạo:</span>
-              <p className="text-sm text-muted-foreground">{student.loai_hinh_dao_tao || "N/A"}</p>
+              <p className="text-sm text-muted-foreground">{student.loaiHinhDaoTao || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Major:</span>
-              <p className="text-sm text-muted-foreground break-words">{student.chuyen_nganh || "N/A"}</p>
+              <p className="text-sm text-muted-foreground break-words">{student.chuyenNganh || "N/A"}</p>
             </div>
           </CardContent>
         </Card>
@@ -165,23 +165,23 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
               <span className="text-xs font-medium text-muted-foreground">Date of birth:</span>
-              <p className="text-sm">{student.ngay_sinh || "N/A"}</p>
+              <p className="text-sm">{student.ngaySinh || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Nơi sinh:</span>
-              <p className="text-sm">{student.noi_sinh || "N/A"}</p>
+              <p className="text-sm">{student.noiSinh || "N/A"}</p>
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground">Identity number:</span>
-              <p className="text-sm font-mono">{student.so_cmnd || "N/A"}</p>
+              <p className="text-sm font-mono">{student.soCmnd || "N/A"}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">Sex:</span>
               <Badge
-                variant={student.gioi_tinh === "Nam" ? "default" : student.gioi_tinh === "Nữ" ? "secondary" : "outline"}
+                variant={student.gioiTinh === "Nam" ? "default" : student.gioiTinh === "Nữ" ? "secondary" : "outline"}
                 className="text-xs"
               >
-                {student.gioi_tinh || "N/A"}
+                {student.gioiTinh || "N/A"}
               </Badge>
             </div>
           </CardContent>
@@ -279,7 +279,6 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    // can shrink & fill next to a sidebar
     <div className="min-w-0 space-y-4" style={{width: isMobile ? "95vw" : "calc(97vw - var(--sidebar-width))"}}>
       <DataTableToolbar
         table={table}
@@ -298,7 +297,6 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {/* switched to table-auto to prevent column overlap */}
             <Table className="min-w-full table-auto">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
@@ -337,7 +335,6 @@ export function DataTable<TData, TValue>({
 
                       {row.getIsExpanded() && (
                         <TableRow>
-                          {/* span exactly the number of visible columns */}
                           <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
                             <ExpandedRowContent row={row as Row<Student>} />
                           </TableCell>
