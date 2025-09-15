@@ -52,6 +52,10 @@ const PUBLIC_PATHS = new Set<string>([
   "/register",
   "/error/forbidden",
   "/error/not-found",
+  "/error/unauthorized",
+  "/error/service-unavailable",
+  "/error/internal-server-error",
+  "/error/default",
 ]);
 
 // ---- Helpers ----
