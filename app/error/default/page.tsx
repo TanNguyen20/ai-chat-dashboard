@@ -5,17 +5,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, RefreshCw, Home, Mail } from "lucide-react"
 import Link from "next/link"
 
-interface DefaultErrorProps {
-  errorCode?: string | number
-  title?: string
-  message?: string
-}
+export default function DefaultErrorPage() {
+  const errorCode = "Error"
+  const title = "Something went wrong"
+  const message = "An unexpected error occurred. Please try again or contact support if the problem persists."
 
-export default function DefaultErrorPage({
-  errorCode = "Error",
-  title = "Something went wrong",
-  message = "An unexpected error occurred. Please try again or contact support if the problem persists.",
-}: DefaultErrorProps) {
   const handleRefresh = () => {
     window.location.reload()
   }
