@@ -1,10 +1,18 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { PageAccessService } from "@/services/pageAccess";
 import type { PageAccess } from "@/types/pageAccess";
 import { useAuth } from "@/components/auth-provider";
+import Loading from "@/components/loading";
 
 // ---- Types ----
 type Crud = { create: boolean; read: boolean; update: boolean; delete: boolean };
@@ -127,12 +135,18 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
   const getPermissionsFor = useCallback(
     (url: string): Crud | null => {
       const page = findExactPage(pages, url);
-      return aggregatePermissions(roleNames, page?.rolePermissions as RolePermissionsMap | undefined);
+      return aggregatePermissions(
+        roleNames,
+        page?.rolePermissions as RolePermissionsMap | undefined
+      );
     },
     [pages, roleNames]
   );
 
-  const canRead = useCallback((url: string) => Boolean(getPermissionsFor(url)?.read), [getPermissionsFor]);
+  const canRead = useCallback(
+    (url: string) => Boolean(getPermissionsFor(url)?.read),
+    [getPermissionsFor]
+  );
 
   // Guard: redirect when forbidden (exact match required)
   useEffect(() => {
@@ -173,8 +187,15 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     [permissions, getPermissionsFor, canRead, isChecking]
   );
 
-  // Optional: render nothing while guarding to avoid flicker
-  if (isChecking) return null;
+  // --- Show loading while auth is still resolving ---
+  if (isAuthLoading) {
+    return <Loading />;
+  }
+
+  // --- Show loading while permission check is running to avoid flicker ---
+  if (isChecking) {
+    return <Loading />;
+  }
 
   return <PermissionContext.Provider value={ctx}>{children}</PermissionContext.Provider>;
 }
