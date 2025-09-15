@@ -47,7 +47,12 @@ interface PermissionContextType {
 const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
 
 // Public routes that should bypass permission checks
-const PUBLIC_PATHS = new Set<string>(["/login", "/register", "/error/forbidden"]);
+const PUBLIC_PATHS = new Set<string>([
+  "/login",
+  "/register",
+  "/error/forbidden",
+  "/error/not-found",
+]);
 
 // ---- Helpers ----
 const normalizePath = (p?: string) => {
@@ -92,22 +97,25 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
 
   const [pages, setPages] = useState<PageAccess[] | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [loadError, setLoadError] = useState(false); // remember fetch errors (fail closed)
 
   const loadPages = async () => {
-    const res = await PageAccessService.list();
-    setPages(res);
+    try {
+      const res = await PageAccessService.list();
+      setPages(res);
+      setLoadError(false);
+    } catch (e) {
+      console.error("Failed to fetch page access list", e);
+      setPages([]);       // fail closed
+      setLoadError(true); // mark error so unknown paths go to /error/forbidden
+    }
   };
 
   // Fetch when auth resolved or user changes
   useEffect(() => {
     if (isAuthLoading) return;
     (async () => {
-      try {
-        await loadPages();
-      } catch (e) {
-        console.error("Failed to fetch page access list", e);
-        setPages([]); // fail closed
-      }
+      await loadPages();
     })();
   }, [isAuthLoading, user?.id]);
 
@@ -148,9 +156,12 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     [getPermissionsFor]
   );
 
-  // Guard: redirect when forbidden (exact match required)
+  // Guard: redirect when notfound/forbidden (exact match required)
   useEffect(() => {
     if (isAuthLoading) return;
+
+    // begin check (helps avoid flicker on route changes)
+    setIsChecking(true);
 
     // Let the auth layer handle unauthenticated users (redirect to /login, etc.)
     if (!user) {
@@ -167,13 +178,34 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     // Wait for access list to load
     if (!pages) return;
 
-    // EXACT match only: if the current path isn't defined, it's forbidden
-    const isForbidden = !currentPage || !(permissions?.read);
-    if (isForbidden) {
-      router.replace("/error/forbidden");
+    const pageIsKnown = Boolean(currentPage);
+    const canReadCurrent = Boolean(permissions?.read);
+
+    if (!pageIsKnown) {
+      // If the list fetch failed, fail closed to /error/forbidden; otherwise /error/notfound
+      router.replace(loadError ? "/error/forbidden" : "/error/not-found");
+      setIsChecking(false);
+      return;
     }
+
+    if (!canReadCurrent) {
+      router.replace("/error/forbidden");
+      setIsChecking(false);
+      return;
+    }
+
+    // allowed
     setIsChecking(false);
-  }, [isAuthLoading, user, pages, path, currentPage, permissions?.read, router]);
+  }, [
+    isAuthLoading,
+    user,
+    pages,
+    path,
+    currentPage,
+    permissions?.read,
+    router,
+    loadError,
+  ]);
 
   const ctx = useMemo<PermissionContextType>(
     () => ({
