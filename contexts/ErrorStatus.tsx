@@ -35,7 +35,7 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
                                     router.push("/error/service-unavailable");
                                     break;
                                 default:
-                                    console.error("Unhandled error:", error);
+                                    router.push("/error/default");
                                     break;
                             }
                         }
