@@ -186,6 +186,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     const canReadCurrent = Boolean(permissions?.read);
 
     if (!pageIsKnown) {
+      alert("debug log pageIsKnown");
       // If the list fetch failed, fail closed to /error/forbidden; otherwise /error/notfound
       router.replace(loadError ? "/error/forbidden" : "/error/not-found");
       setIsChecking(false);
@@ -193,6 +194,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     }
 
     if (!canReadCurrent) {
+      alert("debug log canReadCurrent");
       router.replace("/error/forbidden");
       setIsChecking(false);
       return;
