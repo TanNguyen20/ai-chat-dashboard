@@ -17,8 +17,7 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
                 key.interceptors.response.use(
                     null,
                     (error) => {
-                        console.log("error debug log: ", error);
-                        if (error.response.data.code) {
+                        if (error?.response?.data?.code) {
                             switch (error.response.data.code) {
                                 case "404":
                                     router.push("/error/not-found");
@@ -40,7 +39,7 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
                                     break;
                             }
                         }
-                        if (error.response?.data?.message) {
+                        if (error?.response?.data?.message) {
                             return Promise.reject(new Error(error.response.data.message))
                         }
                         return Promise.reject(error)
