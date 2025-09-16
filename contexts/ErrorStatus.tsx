@@ -17,6 +17,7 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
                 key.interceptors.response.use(
                     null,
                     (error) => {
+                        console.log("error debug log: ", error);
                         if (error.response.data.code) {
                             switch (error.response.data.code) {
                                 case "404":
