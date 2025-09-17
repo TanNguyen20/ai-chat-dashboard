@@ -13,7 +13,7 @@ class AxiosClient {
     if (!AxiosClient.instances.has(baseURL)) {
       const instance = axios.create({
         baseURL: baseURL,
-        timeout: 10000,
+        timeout: 60000,
         headers: {
           "Content-Type": "application/json",
         },
