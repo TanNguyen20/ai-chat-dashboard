@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { ErrorHandlerProvider } from "@/contexts/ErrorStatus"
 import { PermissionProvider } from "@/contexts/permission"
+import AiChat from "@/components/ai-chat-script"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,6 +35,7 @@ export default function RootLayout({
             <Toaster />
           </ErrorHandlerProvider>
         </ThemeProvider>
+        <AiChat apiKey="LNo8UU2+Yi6NgVKV7FM3X8vdNCf3bSB3SALDa3GCUISFhfFCXg6yi1N3lWtgjJpn" />
       </body>
     </html>
   )
