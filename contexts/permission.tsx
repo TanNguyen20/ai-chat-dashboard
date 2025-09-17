@@ -63,7 +63,6 @@ const normalizePath = (p?: string) => {
   if (!p) return "/";
   const noHash = p.split("#")[0];
   const noQuery = noHash.split("?")[0];
-  // remove trailing slash (except for root)
   return noQuery !== "/" && noQuery.endsWith("/") ? noQuery.slice(0, -1) : noQuery;
 };
 
@@ -110,7 +109,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       setLoadError(false);
     } catch (e) {
       console.error("Failed to fetch page access list", e);
-      setPages([]);       // fail closed
+      setPages([]);       // fail closed (treat everything as unknown)
       setLoadError(true); // mark error so unknown paths go to /error/forbidden
     }
   };
@@ -180,27 +179,25 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     }
 
     // Wait for access list to load
-    if (!pages) return;
+    if (pages === null) return;
 
     const pageIsKnown = Boolean(currentPage);
     const canReadCurrent = Boolean(permissions?.read);
 
     if (!pageIsKnown) {
-      alert("debug log pageIsKnown");
-      // If the list fetch failed, fail closed to /error/forbidden; otherwise /error/notfound
+      // If fetch succeeded but route missing -> /error/not-found
+      // If fetch failed -> fail closed to /error/forbidden
       router.replace(loadError ? "/error/forbidden" : "/error/not-found");
-      setIsChecking(false);
-      return;
+      return; // keep spinner until navigation finishes (prevents flash)
     }
 
     if (!canReadCurrent) {
-      alert("debug log canReadCurrent");
+      // Route is known but lacking read permission -> /error/forbidden
       router.replace("/error/forbidden");
-      setIsChecking(false);
-      return;
+      return; // keep spinner until navigation finishes
     }
 
-    // allowed
+    // Allowed
     setIsChecking(false);
   }, [
     isAuthLoading,
