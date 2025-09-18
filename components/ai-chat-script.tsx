@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_SRC =
-  "https://cdn.jsdelivr.net/gh/TanNguyen20/ai-chatbot-ui@build/ai-chat-ui.js";
+  "https://ai-chat-ui-cdn.netlify.app/ai-chat-ui.js";
 const SCRIPT_ID = "ai-chat-ui-loader";
 
 // Keep a single shared load Promise on the window so multiple components coordinate.
