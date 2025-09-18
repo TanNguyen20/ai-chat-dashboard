@@ -1,20 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,26 +11,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Plus,
-  Bot,
-  MessageSquare,
-  Globe,
-  Palette,
-  Calendar,
-  MoreHorizontal,
-  Trash2,
-  Edit,
-  Loader2,
-  Copy,
-  Check,
-} from "lucide-react"
-import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/contexts/Authentication"
 import { toast } from "@/hooks/use-toast"
+import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
+import {
+  Bot,
+  Calendar,
+  Check,
+  Copy,
+  Edit,
+  Globe,
+  Loader2,
+  MessageSquare,
+  MoreHorizontal,
+  Palette,
+  Plus,
+  Trash2,
+} from "lucide-react"
+import { useEffect, useState } from "react"
 
 const themeColors = [
   { value: "blue", label: "Blue", color: "bg-blue-500" },

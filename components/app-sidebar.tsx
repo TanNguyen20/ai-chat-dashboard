@@ -1,11 +1,19 @@
 "use client";
 
-import type * as React from "react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type * as React from "react";
 
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/contexts/Authentication";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -20,30 +28,22 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  LayoutDashboard,
-  Bot,
-  Users,
-  Shield,
-  Settings,
-  LogOut,
-  ChevronUp,
-  User,
-  BarChart3,
-  Settings2Icon,
-  Pickaxe,
-  Database,
-} from "lucide-react";
+import { usePermission } from "@/contexts/Permission";
 import { getHighestRole } from "@/utils/commons";
-import { usePermission } from "@/contexts/permission";
+import {
+  BarChart3,
+  Bot,
+  ChevronUp,
+  Database,
+  LayoutDashboard,
+  LogOut,
+  Pickaxe,
+  Settings,
+  Settings2Icon,
+  Shield,
+  User,
+  Users,
+} from "lucide-react";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   showLogoutDialog: boolean;

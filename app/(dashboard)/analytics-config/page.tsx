@@ -1,23 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,26 +12,43 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Server,
-  Search,
-  RefreshCw,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Role } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
+import { AnalyticsConfigService } from "@/services/analyticsConfig"
+import type { AnalyticsConfig, CreateAnalyticsConfig, UpdateAnalyticsConfig } from "@/types/analyticsConfig"
+import { hasRole } from "@/utils/commons"
+import {
   AlertCircle,
-  Filter,
-  Grid3X3,
-  List,
-  Plus,
-  Loader2,
-  Trash2,
   Edit,
   Eye,
   EyeOff,
+  Filter,
+  Grid3X3,
+  List,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Search,
+  Server,
+  Trash2,
 } from "lucide-react"
-import { AnalyticsConfigService } from "@/services/analyticsConfig"
-import type { AnalyticsConfig, CreateAnalyticsConfig, UpdateAnalyticsConfig } from "@/types/analyticsConfig"
-import { useAuth } from "@/components/auth-provider"
-import { hasRole } from "@/utils/commons"
-import { Role } from "@/const/role"
+import type React from "react"
+import { useEffect, useState } from "react"
 
 export default function AnalyticsConfigPage() {
   const { user } = useAuth()

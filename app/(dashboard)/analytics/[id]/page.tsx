@@ -1,39 +1,39 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Role } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
+import { useToast } from "@/hooks/use-toast"
+import { AnalyticsService } from "@/services/analytics"
+import { SupersetService } from "@/services/superset"
+import type { AnalyticsDashboard } from "@/types/analytics"
+import { hasRole } from "@/utils/commons"
 import {
-  BarChart3,
-  RefreshCw,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  MessageSquare,
   Activity,
+  AlertCircle,
+  ArrowLeft,
+  BarChart3,
   Calendar,
-  Settings,
-  Save,
   CheckCircle,
   ExternalLink,
-  ArrowLeft,
+  MessageSquare,
+  RefreshCw,
+  Save,
+  Settings,
+  TrendingUp,
+  Users,
 } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
-import { SupersetService } from "@/services/superset"
-import { AnalyticsService } from "@/services/analytics"
-import { hasRole } from "@/utils/commons"
-import type { AnalyticsDashboard } from "@/types/analytics"
-import { useToast } from "@/hooks/use-toast"
-import { Role } from "@/const/role"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 // Mock analytics data
 const analyticsData = {

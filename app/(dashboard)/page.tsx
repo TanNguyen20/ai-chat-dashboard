@@ -1,15 +1,15 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3, Settings, MessageSquare, Users, Shield, TrendingUp, Activity, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Role } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
+import { getHighestRole } from "@/utils/commons"
+import { Activity, BarChart3, Clock, MessageSquare, Settings, Shield, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
 import { useEffect } from "react"
-import { Role } from "@/const/role"
-import { getHighestRole } from "@/utils/commons"
 
 const services = [
   {
@@ -81,7 +81,7 @@ export default function DashboardPage() {
     const userRoles = Array.from(user.roles).map((role) => role.name)
     return requiredRoles.some((requiredRole) => userRoles.includes(requiredRole))
   }
-  
+
   const availableServices = services.filter((service) => hasRequiredRole(service.requiredRoles))
 
   return (

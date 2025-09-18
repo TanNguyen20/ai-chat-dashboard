@@ -1,24 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,25 +12,43 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Shield,
-  Search,
-  RefreshCw,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
+import { Role as EnumRole } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
+import { RoleService } from "@/services/role"
+import type { CreateRole, Role } from "@/types/role"
+import { hasRole } from "@/utils/commons"
+import {
   AlertCircle,
+  Calendar,
   Filter,
   Grid3X3,
   List,
-  Plus,
   Loader2,
-  Users,
-  Calendar,
+  Plus,
+  RefreshCw,
+  Search,
+  Shield,
   Trash2,
+  Users,
 } from "lucide-react"
-import { RoleService } from "@/services/role"
-import type { Role, CreateRole } from "@/types/role"
-import { Role as EnumRole } from "@/const/role"
-import { useAuth } from "@/components/auth-provider"
-import { hasRole } from "@/utils/commons"
+import type React from "react"
+import { useEffect, useState } from "react"
 // import { ThemeToggle } from "@/components/theme-toggle" // (unused)
 
 export default function RolesPage() {

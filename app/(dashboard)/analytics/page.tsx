@@ -2,24 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,31 +14,48 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  BarChart3,
-  Search,
-  RefreshCw,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Role } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
+import { AnalyticsService } from "@/services/analytics"
+import { AnalyticsConfigService } from "@/services/analyticsConfig"
+import type { AnalyticsDashboard, CreateAnalyticsDashboard } from "@/types/analytics"
+import type { AnalyticsConfig } from "@/types/analyticsConfig"
+import { hasRole } from "@/utils/commons"
+import {
   AlertCircle,
+  BarChart3,
+  Edit,
+  ExternalLink,
   Filter,
   Grid3X3,
   List,
-  Plus,
-  X,
   Loader2,
-  Trash2,
-  ExternalLink,
-  Users,
+  Plus,
+  RefreshCw,
+  Search,
   Shield,
-  Edit,
+  Trash2,
+  Users,
+  X,
 } from "lucide-react"
-import { AnalyticsService } from "@/services/analytics"
-import type { AnalyticsDashboard, CreateAnalyticsDashboard } from "@/types/analytics"
-import { useAuth } from "@/components/auth-provider"
-import { hasRole } from "@/utils/commons"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { AnalyticsConfigService } from "@/services/analyticsConfig"
-import type { AnalyticsConfig } from "@/types/analyticsConfig"
-import { Role } from "@/const/role"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function AnalyticsListPage() {
   const router = useRouter()

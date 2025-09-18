@@ -1,13 +1,9 @@
 "use client"
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
 import { AppSidebar, navigationItems } from "@/components/app-sidebar"
 import Loading from "@/components/loading"
 import { LogoutConfirmation } from "@/components/logout-confirmation"
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,8 +12,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/Authentication"
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import type React from "react"
+import { useEffect, useState } from "react"
 
 export default function DashboardLayout({
   children,
@@ -55,7 +55,7 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loading/>
+        <Loading />
       </div>
     )
   }
@@ -90,7 +90,7 @@ export default function DashboardLayout({
                 ))}
               </BreadcrumbList>
             </Breadcrumb>
-            <ThemeToggle/>
+            <ThemeToggle />
           </div>
         </header>
 

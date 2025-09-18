@@ -1,20 +1,20 @@
-import type React from "react"
+import AiChat from "@/components/ai-chat-script"
+import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/contexts/Authentication"
+import { ErrorHandlerProvider } from "@/contexts/ErrorStatus"
+import { PermissionProvider } from "@/contexts/Permission"
+import { ThemeProvider } from "@/contexts/Theme"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import type React from "react"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/components/auth-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { ErrorHandlerProvider } from "@/contexts/ErrorStatus"
-import { PermissionProvider } from "@/contexts/permission"
-import AiChat from "@/components/ai-chat-script"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "A modern admin dashboard built with Next.js",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({

@@ -1,18 +1,18 @@
 "use client";
 
+import Loading from "@/components/loading";
+import { useAuth } from "@/contexts/Authentication";
+import { PageAccessService } from "@/services/pageAccess";
+import type { PageAccess } from "@/types/pageAccess";
+import { usePathname, useRouter } from "next/navigation";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  useCallback,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { PageAccessService } from "@/services/pageAccess";
-import type { PageAccess } from "@/types/pageAccess";
-import { useAuth } from "@/components/auth-provider";
-import Loading from "@/components/loading";
 
 // ---- Types ----
 type Crud = { create: boolean; read: boolean; update: boolean; delete: boolean };

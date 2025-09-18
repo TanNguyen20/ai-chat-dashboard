@@ -1,18 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { UserService } from "@/services/user"
-import { RoleService } from "@/services/role"
-import type { User } from "@/types/user"
-import type { Role } from "@/types/role"
-import { Role as EnumRole } from "@/const/role"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -22,12 +13,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Role as EnumRole } from "@/const/role"
+import { useAuth } from "@/contexts/Authentication"
 import { toast } from "@/hooks/use-toast"
-import { Plus, Edit, Trash2, Users, UserCheck, UserX, UserCog } from "lucide-react"
-import { hasRole, formatRoleName } from "@/utils/commons"
+import { RoleService } from "@/services/role"
+import { UserService } from "@/services/user"
+import type { Role } from "@/types/role"
+import type { User } from "@/types/user"
+import { formatRoleName, hasRole } from "@/utils/commons"
+import { Edit, Plus, Trash2, UserCheck, UserCog, Users, UserX } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface NewUser {
   username: string
