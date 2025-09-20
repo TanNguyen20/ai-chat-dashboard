@@ -26,6 +26,8 @@ import type { Role as BERole } from "@/types/role"
 
 import { PageAccessService } from "@/services/pageAccess"
 import type { CrudKey, CrudSet, PageAccess as BEPage, RolePermissions, UpsertPageRequest } from "@/types/pageAccess"
+import Loading from "./loading"
+import { useAuth } from "@/contexts/Authentication"
 
 interface AppRoute {
   file: string
@@ -167,10 +169,11 @@ export function RoleAccessSettings() {
   const roleNames = useMemo(() => (roles ? roles.map((r) => r.name) : []), [roles])
 
   const [pages, setPages] = useState<BEPage[]>([])
-  const [loadingPages, setLoadingPages] = useState(false)
+  const [loadingPages, setLoadingPages] = useState<null | boolean>(null)
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingPage, setEditingPage] = useState<BEPage | null>(null)
+  const { isLoading: isAuthLoading } = useAuth();
 
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
@@ -415,6 +418,10 @@ export function RoleAccessSettings() {
 
   /* ---------- render ---------- */
 
+  if (isAuthLoading) {
+      return <Loading />;
+    }
+
   return (
     <div>
       {/* Header */}
@@ -422,7 +429,7 @@ export function RoleAccessSettings() {
         <div>
           <h2 className="text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
           <p className="text-muted-foreground text-pretty">
-            Assign <span className="font-medium">CRUD permissions per role</span> for each page (roles & data from BE).
+            Assign <span className="font-medium">CRUD permissions per role</span>
           </p>
         </div>
 
@@ -499,7 +506,7 @@ export function RoleAccessSettings() {
 
       {/* Pages */}
       <div className="space-y-4">
-        {loadingPages && pages.length === 0 ? (
+        {loadingPages === null || loadingPages === true ? (
           <div className="space-y-4">
             <PageCardSkeleton />
             <PageCardSkeleton />
