@@ -62,11 +62,18 @@ export default function ChatbotPage() {
   const { user: currentUser } = useAuth()
   const [chatbots, setChatbots] = useState<Chatbot[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingChatbot, setEditingChatbot] = useState<Chatbot | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [copiedApiKeys, setCopiedApiKeys] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState<ChatbotRequest>({
+    name: "",
+    allowedHost: "",
+    themeColor: "blue",
+  })
+  const [editFormData, setEditFormData] = useState<ChatbotRequest>({
     name: "",
     allowedHost: "",
     themeColor: "blue",
@@ -127,6 +134,35 @@ export default function ChatbotPage() {
     }
   }
 
+  const handleUpdateChatbot = async () => {
+    if (!editingChatbot || !editFormData.name || !editFormData.allowedHost || !editFormData.themeColor) {
+      setError("Please fill in all fields")
+      return
+    }
+
+    try {
+      await ChatbotService.updateChatbot(editingChatbot.id, editFormData)
+      setIsEditDialogOpen(false)
+      setEditingChatbot(null)
+      setEditFormData({ name: "", allowedHost: "", themeColor: "blue" })
+      setSuccess("Chatbot updated successfully")
+      setError("")
+      fetchChatbots()
+      toast({
+        title: "Success",
+        description: "Chatbot updated successfully",
+      })
+    } catch (error: any) {
+      console.error("Failed to update chatbot:", error)
+      setError(error.response?.data?.message || "Failed to update chatbot")
+      toast({
+        title: "Error",
+        description: "Failed to update chatbot",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleDeleteChatbot = async () => {
     if (!deleteDialog.chatbot) return
 
@@ -178,6 +214,17 @@ export default function ChatbotPage() {
   const openAddDialog = () => {
     setFormData({ name: "", allowedHost: "", themeColor: "blue" })
     setIsAddDialogOpen(true)
+    setError("")
+  }
+
+  const openEditDialog = (chatbot: Chatbot) => {
+    setEditingChatbot(chatbot)
+    setEditFormData({
+      name: chatbot.name,
+      allowedHost: chatbot.allowedHost,
+      themeColor: chatbot.themeColor,
+    })
+    setIsEditDialogOpen(true)
     setError("")
   }
 
@@ -481,7 +528,7 @@ export default function ChatbotPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEditDialog(chatbot)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
@@ -538,6 +585,68 @@ export default function ChatbotPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Chatbot</DialogTitle>
+            <DialogDescription>Update your chatbot's name, allowed hosts, and theme color.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-chatbot-name">Chatbot Name</Label>
+              <Input
+                id="edit-chatbot-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder="Enter chatbot name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-allowed-host">Allowed Hosts</Label>
+              <Input
+                id="edit-allowed-host"
+                value={editFormData.allowedHost}
+                onChange={(e) => setEditFormData({ ...editFormData, allowedHost: e.target.value })}
+                placeholder="localhost,example.com"
+              />
+              <p className="text-xs text-muted-foreground">Comma-separated list of allowed domains</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-theme-color">Theme Color</Label>
+              <Select
+                value={editFormData.themeColor}
+                onValueChange={(value) => setEditFormData({ ...editFormData, themeColor: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select theme color" />
+                </SelectTrigger>
+                <SelectContent>
+                  {themeColors.map((color) => (
+                    <SelectItem key={color.value} value={color.value}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded-full ${color.color}`} />
+                        {color.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateChatbot}>Update Chatbot</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialog.isOpen} onOpenChange={closeDeleteDialog}>
         <AlertDialogContent>

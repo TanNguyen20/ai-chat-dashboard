@@ -1,5 +1,6 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
+import { StudentType } from "@/const/student"
 
 // ----- DTOs matching Spring JSON (camelCase) -----
 export type StudentDto = {
@@ -93,8 +94,8 @@ export class StudentService {
     await api.delete<void>(`/${mssv}`)
   }
 
-  static async getFacets(): Promise<FacetsRes> {
-    const res = await api.get<FacetsRes>("/facets")
+  static async getFacets(studentType: StudentType): Promise<FacetsRes> {
+    const res = await api.get<FacetsRes>("/facets", { params: { studentType } })
     return res
   }
 }
