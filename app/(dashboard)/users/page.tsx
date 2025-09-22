@@ -24,9 +24,9 @@ import { toast } from "@/hooks/use-toast"
 import { RoleService } from "@/services/role"
 import { UserService } from "@/services/user"
 import type { Role } from "@/types/role"
-import type { User } from "@/types/user"
+import type { User, UserInfoRequest } from "@/types/user"
 import { formatRoleName, hasRole } from "@/utils/commons"
-import { Edit, Plus, Trash2, UserCheck, UserCog, Users, UserX } from "lucide-react"
+import { Edit, Plus, Trash2, UserCheck, UserCog, Users, UserX, RotateCcw } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface NewUser {
@@ -51,6 +51,7 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
+  const [isResetInfoDialogOpen, setIsResetInfoDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
@@ -67,6 +68,12 @@ export default function UsersPage() {
     roles: [],
   })
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [userInfoReset, setUserInfoReset] = useState<UserInfoRequest>({
+    isAccountNonExpired: true,
+    isAccountNonLocked: true,
+    isCredentialsNonExpired: true,
+    isEnabled: true,
+  })
 
   useEffect(() => {
     fetchUsers()
@@ -156,6 +163,19 @@ export default function UsersPage() {
     }
   }
 
+  const handleResetUserInfo = async () => {
+    if (!selectedUser) return
+    try {
+      await UserService.updateUserInfo(selectedUser.id, userInfoReset)
+      setIsResetInfoDialogOpen(false)
+      setSelectedUser(null)
+      fetchUsers()
+      toast({ title: "Success", description: "User info updated successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update user info", variant: "destructive" })
+    }
+  }
+
   const confirmDeleteUser = (userDeleting: User) => {
     if (user?.id === userDeleting?.id) {
       toast({ title: "Error", description: "You cannot delete your own account", variant: "destructive" })
@@ -181,6 +201,17 @@ export default function UsersPage() {
     setIsRoleDialogOpen(true)
   }
 
+  const openResetInfoDialog = (u: User) => {
+    setSelectedUser(u)
+    setUserInfoReset({
+      isAccountNonExpired: u.accountNonExpired,
+      isAccountNonLocked: u.accountNonLocked,
+      isCredentialsNonExpired: u.credentialsNonExpired,
+      isEnabled: u.enabled,
+    })
+    setIsResetInfoDialogOpen(true)
+  }
+
   const handleRoleChange = (roleName: string, checked: boolean) => {
     if (checked) setSelectedRoles((prev) => [...prev, roleName])
     else setSelectedRoles((prev) => prev.filter((r) => r !== roleName))
@@ -198,6 +229,15 @@ export default function UsersPage() {
     const adminUsers = users.filter((u) => Array.from(u.roles).some((r) => r.name.includes("ADMIN"))).length
     const regularUsers = totalUsers - adminUsers
     return { totalUsers, adminUsers, regularUsers }
+  }
+
+  const getUserStatus = (userData: User) => {
+    const isEnabled = userData.enabled
+    const isAccountValid = userData.accountNonLocked && userData.accountNonExpired && userData.credentialsNonExpired
+
+    if (!isEnabled) return { label: "Disabled", variant: "destructive" as const }
+    if (!isAccountValid) return { label: "Locked", variant: "destructive" as const }
+    return { label: "Active", variant: "default" as const }
   }
 
   const { totalUsers, adminUsers, regularUsers } = getStats()
@@ -425,41 +465,47 @@ export default function UsersPage() {
         <CardContent className="space-y-4">
           {/* Mobile: stacked cards (no table) */}
           <div className="grid gap-3 sm:hidden">
-            {users.map((u) => (
-              <Card key={u.id} className="hover:shadow-sm transition-shadow">
-                <CardContent className="py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-semibold break-words">{u.username}</div>
-                      <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
-                      <div className="mt-2">
-                        <Badge variant={u.isEnabled ? "default" : "destructive"}>
-                          {u.isEnabled ? "Active" : "Disabled"}
-                        </Badge>
+            {users.map((u) => {
+              const status = getUserStatus(u)
+              return (
+                <Card key={u.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold break-words">{u.username}</div>
+                        <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
+                        <div className="mt-2">
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {isSuperAdmin && (
+                          <Button variant="outline" size="icon" onClick={() => openRoleDialog(u)}>
+                            <UserCog className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isSuperAdmin && (
+                          <Button variant="outline" size="icon" onClick={() => openResetInfoDialog(u)}>
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => confirmDeleteUser(u)}
+                          disabled={u.id === user?.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex shrink-0 gap-2">
-                      <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {isSuperAdmin && (
-                        <Button variant="outline" size="icon" onClick={() => openRoleDialog(u)}>
-                          <UserCog className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => confirmDeleteUser(u)}
-                        disabled={u.id === user?.id}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Desktop/Tablet: table */}
@@ -475,39 +521,45 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((userData) => (
-                    <TableRow key={userData.id}>
-                      <TableCell className="font-medium break-words">{userData.username}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={userData.isEnabled ? "default" : "destructive"}>
-                          {userData.isEnabled ? "Active" : "Disabled"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {isSuperAdmin && (
-                            <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
-                              <UserCog className="h-4 w-4" />
+                  {users.map((userData) => {
+                    const status = getUserStatus(userData)
+                    return (
+                      <TableRow key={userData.id}>
+                        <TableCell className="font-medium break-words">{userData.username}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => confirmDeleteUser(userData)}
-                            disabled={userData.id === user?.id}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {isSuperAdmin && (
+                              <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
+                                <UserCog className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {isSuperAdmin && (
+                              <Button variant="outline" size="sm" onClick={() => openResetInfoDialog(userData)}>
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => confirmDeleteUser(userData)}
+                              disabled={userData.id === user?.id}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -610,6 +662,70 @@ export default function UsersPage() {
               Cancel
             </Button>
             <Button onClick={handleUpdateUserRoles}>Update Roles</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset User Info Dialog */}
+      <Dialog open={isResetInfoDialogOpen} onOpenChange={setIsResetInfoDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Reset User Info</DialogTitle>
+            <DialogDescription>Update account status settings for {selectedUser?.username}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isEnabled"
+                checked={userInfoReset.isEnabled}
+                onCheckedChange={(checked) => setUserInfoReset({ ...userInfoReset, isEnabled: checked as boolean })}
+              />
+              <Label htmlFor="isEnabled" className="text-sm font-medium">
+                Account Enabled
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isAccountNonLocked"
+                checked={userInfoReset.isAccountNonLocked}
+                onCheckedChange={(checked) =>
+                  setUserInfoReset({ ...userInfoReset, isAccountNonLocked: checked as boolean })
+                }
+              />
+              <Label htmlFor="isAccountNonLocked" className="text-sm font-medium">
+                Account Not Locked
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isAccountNonExpired"
+                checked={userInfoReset.isAccountNonExpired}
+                onCheckedChange={(checked) =>
+                  setUserInfoReset({ ...userInfoReset, isAccountNonExpired: checked as boolean })
+                }
+              />
+              <Label htmlFor="isAccountNonExpired" className="text-sm font-medium">
+                Account Not Expired
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isCredentialsNonExpired"
+                checked={userInfoReset.isCredentialsNonExpired}
+                onCheckedChange={(checked) =>
+                  setUserInfoReset({ ...userInfoReset, isCredentialsNonExpired: checked as boolean })
+                }
+              />
+              <Label htmlFor="isCredentialsNonExpired" className="text-sm font-medium">
+                Credentials Not Expired
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetInfoDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleResetUserInfo}>Update Info</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

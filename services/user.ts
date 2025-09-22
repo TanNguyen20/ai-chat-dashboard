@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
-import type { User } from "@/types/user"
+import type { User, UserInfoRequest } from "@/types/user"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/users`)
 
@@ -43,6 +43,11 @@ export class UserService {
 
   static async updateUserRoles(userId: number, roles: string[]): Promise<User> {
     const response = await api.post(`/${userId}/roles`, { roles })
+    return response
+  }
+
+  static async updateUserInfo(userId: number, data: UserInfoRequest): Promise<void> {
+    const response = await api.put(`/${userId}`, data)
     return response
   }
 }
