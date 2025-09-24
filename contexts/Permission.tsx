@@ -66,11 +66,35 @@ const normalizePath = (p?: string) => {
   return noQuery !== "/" && noQuery.endsWith("/") ? noQuery.slice(0, -1) : noQuery;
 };
 
-// EXACT match only
+// NEW: convert Next.js-style patterns to a regex (supports [id], [...slug], [[...slug]])
+const patternToRegex = (pattern: string) => {
+  // normalize + escape regex specials
+  let p = normalizePath(pattern).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // [[...slug]] -> optional catch-all (zero or more segments)
+  p = p.replace(/\\\[\[\.\.\.(.*?)\\\]\]/g, "(?:/(.+))?");
+
+  // [...slug] -> catch-all (one or more segments)
+  p = p.replace(/\\\[\.\.\.(.*?)\\\]/g, "/(.+)");
+
+  // [id] -> single segment
+  p = p.replace(/\\\[(.*?)\\\]/g, "/([^/]+)");
+
+  if (p === "\\/") return /^\/$/;
+  return new RegExp(`^${p}$`);
+};
+
+// UPDATED: EXACT first, then dynamic
 const findExactPage = (all: PageAccess[] | null, p: string): PageAccess | undefined => {
   if (!all) return undefined;
   const path = normalizePath(p);
-  return all.find((pg) => normalizePath(pg.url) === path);
+
+  // 1) exact match
+  const exact = all.find((pg) => normalizePath(pg.url) === path);
+  if (exact) return exact;
+
+  // 2) dynamic match (e.g., /analytics/[id], /docs/[...slug], /optional/[[...rest]])
+  return all.find((pg) => patternToRegex(pg.url).test(path));
 };
 
 const aggregatePermissions = (roles: string[], rp?: RolePermissionsMap): Crud | null => {
@@ -142,7 +166,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     );
   }, [roleNames, currentPage]);
 
-  // Helpers to check ANY URL (exact match)
+  // Helpers to check ANY URL (exact or dynamic)
   const getPermissionsFor = useCallback(
     (url: string): Crud | null => {
       const page = findExactPage(pages, url);
@@ -159,7 +183,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     [getPermissionsFor]
   );
 
-  // Guard: redirect when notfound/forbidden (exact match required)
+  // Guard: redirect when notfound/forbidden (exact or dynamic)
   useEffect(() => {
     if (isAuthLoading) return;
 
