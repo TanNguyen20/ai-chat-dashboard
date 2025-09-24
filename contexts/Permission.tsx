@@ -71,16 +71,19 @@ const patternToRegex = (pattern: string) => {
   // normalize + escape regex specials
   let p = normalizePath(pattern).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  // [[...slug]] -> optional catch-all (zero or more segments)
-  p = p.replace(/\\\[\[\.\.\.(.*?)\\\]\]/g, "(?:/(.+))?");
+  // IMPORTANT: consume the leading slash in replacements to avoid creating a double "//"
+  // /[[...slug]] -> optional catch-all (zero or more segments)
+  p = p.replace(/\/\\\[\[\.\.\.(.*?)\\\]\]/g, "(?:\/.+)?");
 
-  // [...slug] -> catch-all (one or more segments)
-  p = p.replace(/\\\[\.\.\.(.*?)\\\]/g, "/(.+)");
+  // /[...slug] -> catch-all (one or more segments)
+  p = p.replace(/\/\\\[\.\.\.(.*?)\\\]/g, "\/.+");
 
-  // [id] -> single segment
-  p = p.replace(/\\\[(.*?)\\\]/g, "/([^/]+)");
+  // /[id] -> single segment
+  p = p.replace(/\/\\\[(.*?)\\\]/g, "\/[^/]+");
 
+  // exact root
   if (p === "\\/") return /^\/$/;
+
   return new RegExp(`^${p}$`);
 };
 
