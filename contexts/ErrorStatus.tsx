@@ -49,12 +49,8 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
             }
           }
           else {
-            if (error?.response?.data) {
-              return Promise.reject(error.response.data);
-            }
-            return Promise.reject(error);
+            return error;
           }
-
         }
       );
 
