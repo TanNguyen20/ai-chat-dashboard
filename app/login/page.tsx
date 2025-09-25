@@ -31,7 +31,7 @@ export default function LoginPage() {
       setError("")
       await login(username, password)
     } catch (error: any) {
-      setError(error.response?.data?.message || "Login failed")
+      setError(error?.description || "Login failed")
     } finally {
       setLoading(false)
     }
