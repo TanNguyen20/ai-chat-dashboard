@@ -24,7 +24,7 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
         (error) => {
           // Always propagate the server's message if present
           if (error?.response?.data?.message) {
-            return Promise.reject(new Error(error.response.data.message));
+            return Promise.reject(new Error(error.response.data));
           }
 
           // Do not navigate away when on /register or /login
