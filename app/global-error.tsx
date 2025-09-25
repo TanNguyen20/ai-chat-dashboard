@@ -1,5 +1,9 @@
 'use client' // Error boundaries must be Client Components
- 
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle, RefreshCw, Home, Mail } from "lucide-react"
+import Link from "next/link"
 import { useEffect } from 'react'
  
 export default function Error({
