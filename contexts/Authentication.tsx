@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const currentUser = await UserService.getCurrentUser()
       setUser(currentUser)
+      alert("run this line")
       router.push("/")
     } catch (error) {
       throw error
