@@ -31,8 +31,7 @@ export default function LoginPage() {
       setError("")
       await login(username, password)
     } catch (error: any) {
-      console.log(JSON.stringify(error));
-      setError("Login failed")
+      setError(error?.description || "Login failed")
     } finally {
       setLoading(false)
     }
