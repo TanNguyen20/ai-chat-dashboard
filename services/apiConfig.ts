@@ -53,7 +53,23 @@ class AxiosClient {
           return response.data
         },
         (error) => {
-          return Promise.reject(error);
+          if (error.response?.data) {
+            // unwrap your backend's error response
+            const backendError = error.response.data;
+            return Promise.reject({
+              status: error.response.status,
+              code: backendError.code,
+              message: backendError.message,
+              description: backendError.description,
+              timestamp: backendError.timestamp,
+            });
+          }
+      
+          // fallback if no response (e.g., network error)
+          return Promise.reject({
+            status: 0,
+            message: error.message || "Network error",
+          });
         }
       )
 
