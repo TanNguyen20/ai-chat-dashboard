@@ -11,8 +11,13 @@ export class UserService {
   }
 
   static async getCurrentUser(): Promise<User> {
-    const response = await api.get("/me")
-    return response
+    try {
+      const response = await api.get("/me")
+      return response
+    }
+    catch (error) {
+      return Promise.reject(error)
+    }
   }
 
   static async createUser(userData: {
