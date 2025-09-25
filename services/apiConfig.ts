@@ -52,7 +52,10 @@ class AxiosClient {
           }
           return response.data
         },
-        null
+        (error) => {
+          console.log(error)
+          return error
+        }
       )
 
       AxiosClient.interceptorsAttached.add(baseURL)
