@@ -22,6 +22,9 @@ export const ErrorHandlerProvider = ({ children }: { children: ReactNode }) => {
       const id = instance.interceptors.response.use(
         (response) => response,
         (error) => {
+          if (error?.response?.data) {
+            return Promise.reject(new Error(error.response.data));
+          }
           // Do not navigate away when on /register or /login
           if (!skipRedirect) {
             const code = String(error?.response?.data?.code ?? "");
