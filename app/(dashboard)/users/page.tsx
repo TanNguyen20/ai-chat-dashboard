@@ -48,6 +48,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
@@ -82,6 +83,9 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
+      if (!loading) {
+        setRefreshing(true)
+      }
       const userData = await UserService.getAllUser()
       setUsers(userData)
     } catch (error) {
@@ -92,6 +96,7 @@ export default function UsersPage() {
       })
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -240,6 +245,58 @@ export default function UsersPage() {
     return { label: "Active", variant: "default" as const }
   }
 
+  const UserItemSkeleton = ({ isMobile = false }: { isMobile?: boolean }) => {
+    if (isMobile) {
+      return (
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardContent className="py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-5 w-24 mb-2" />
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-12" />
+                </div>
+                <Skeleton className="h-5 w-14" />
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="h-8 w-8" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <TableRow>
+        <TableCell>
+          <Skeleton className="h-4 w-24" />
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-12" />
+          </div>
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-5 w-14" />
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </TableCell>
+      </TableRow>
+    )
+  }
+
   const { totalUsers, adminUsers, regularUsers } = getStats()
   const isSuperAdmin = user && hasRole(user, EnumRole.SUPER_ADMIN)
 
@@ -276,25 +333,7 @@ export default function UsersPage() {
             {/* Mobile skeleton cards */}
             <div className="grid gap-3 sm:hidden">
               {[...Array(3)].map((_, i) => (
-                <Card key={i} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <Skeleton className="h-5 w-24 mb-2" />
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <Skeleton className="h-5 w-16" />
-                          <Skeleton className="h-5 w-12" />
-                        </div>
-                        <Skeleton className="h-5 w-14" />
-                      </div>
-                      <div className="flex shrink-0 gap-2">
-                        <Skeleton className="h-8 w-8" />
-                        <Skeleton className="h-8 w-8" />
-                        <Skeleton className="h-8 w-8" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <UserItemSkeleton key={i} isMobile />
               ))}
             </div>
 
@@ -312,27 +351,7 @@ export default function UsersPage() {
                   </TableHeader>
                   <TableBody>
                     {[...Array(5)].map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-24" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Skeleton className="h-5 w-16" />
-                            <Skeleton className="h-5 w-12" />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-5 w-14" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Skeleton className="h-8 w-8" />
-                            <Skeleton className="h-8 w-8" />
-                            <Skeleton className="h-8 w-8" />
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <UserItemSkeleton key={i} />
                     ))}
                   </TableBody>
                 </Table>
@@ -463,52 +482,52 @@ export default function UsersPage() {
 
         {/* Content */}
         <CardContent className="space-y-4">
-          {/* Mobile: stacked cards (no table) */}
           <div className="grid gap-3 sm:hidden">
-            {users.map((u) => {
-              const status = getUserStatus(u)
-              return (
-                <Card key={u.id} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-semibold break-words">{u.username}</div>
-                        <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
-                        <div className="mt-2">
-                          <Badge variant={status.variant}>{status.label}</Badge>
+            {refreshing
+              ? [...Array(users.length || 3)].map((_, i) => <UserItemSkeleton key={`skeleton-${i}`} isMobile />)
+              : users.map((u) => {
+                  const status = getUserStatus(u)
+                  return (
+                    <Card key={u.id} className="hover:shadow-sm transition-shadow">
+                      <CardContent className="py-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-semibold break-words">{u.username}</div>
+                            <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
+                            <div className="mt-2">
+                              <Badge variant={status.variant}>{status.label}</Badge>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            {isSuperAdmin && (
+                              <Button variant="outline" size="icon" onClick={() => openRoleDialog(u)}>
+                                <UserCog className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {isSuperAdmin && (
+                              <Button variant="outline" size="icon" onClick={() => openResetInfoDialog(u)}>
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => confirmDeleteUser(u)}
+                              disabled={u.id === user?.id}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex shrink-0 gap-2">
-                        <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {isSuperAdmin && (
-                          <Button variant="outline" size="icon" onClick={() => openRoleDialog(u)}>
-                            <UserCog className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {isSuperAdmin && (
-                          <Button variant="outline" size="icon" onClick={() => openResetInfoDialog(u)}>
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => confirmDeleteUser(u)}
-                          disabled={u.id === user?.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
           </div>
 
-          {/* Desktop/Tablet: table */}
           <div className="hidden sm:block">
             <div className="w-full overflow-x-auto">
               <Table>
@@ -521,45 +540,47 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((userData) => {
-                    const status = getUserStatus(userData)
-                    return (
-                      <TableRow key={userData.id}>
-                        <TableCell className="font-medium break-words">{userData.username}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={status.variant}>{status.label}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            {isSuperAdmin && (
-                              <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
-                                <UserCog className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {isSuperAdmin && (
-                              <Button variant="outline" size="sm" onClick={() => openResetInfoDialog(userData)}>
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => confirmDeleteUser(userData)}
-                              disabled={userData.id === user?.id}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
+                  {refreshing
+                    ? [...Array(users.length || 5)].map((_, i) => <UserItemSkeleton key={`skeleton-${i}`} />)
+                    : users.map((userData) => {
+                        const status = getUserStatus(userData)
+                        return (
+                          <TableRow key={userData.id}>
+                            <TableCell className="font-medium break-words">{userData.username}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">{getUserRoleBadges(userData.roles)}</div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={status.variant}>{status.label}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => openEditDialog(userData)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                {isSuperAdmin && (
+                                  <Button variant="outline" size="sm" onClick={() => openRoleDialog(userData)}>
+                                    <UserCog className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {isSuperAdmin && (
+                                  <Button variant="outline" size="sm" onClick={() => openResetInfoDialog(userData)}>
+                                    <RotateCcw className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => confirmDeleteUser(userData)}
+                                  disabled={userData.id === user?.id}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                 </TableBody>
               </Table>
             </div>
