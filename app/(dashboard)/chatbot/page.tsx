@@ -43,6 +43,7 @@ import {
   Palette,
   Plus,
   Trash2,
+  RefreshCw,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -70,6 +71,7 @@ export default function ChatbotPage() {
   const [copiedApiKeys, setCopiedApiKeys] = useState<Set<string>>(new Set())
   const [isCreating, setIsCreating] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [formData, setFormData] = useState<ChatbotRequest>({
     name: "",
     allowedHost: "",
@@ -105,6 +107,27 @@ export default function ChatbotPage() {
       setError("Failed to load chatbots")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true)
+      await fetchChatbots()
+      toast({
+        title: "Refreshed",
+        description: "Chatbot data has been updated",
+      })
+    } catch (error: any) {
+      console.error("Failed to refresh chatbots:", error)
+      setError("Failed to refresh chatbots")
+      toast({
+        title: "Error",
+        description: "Failed to refresh chatbot data",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -394,84 +417,96 @@ export default function ChatbotPage() {
               <CardTitle>My Chatbots</CardTitle>
               <CardDescription>Manage your chatbots and their configurations</CardDescription>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openAddDialog} className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Add Chatbot</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Chatbot</DialogTitle>
-                  <DialogDescription>
-                    Configure your new chatbot with a name, allowed hosts, and theme color.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="chatbot-name">Chatbot Name</Label>
-                    <Input
-                      id="chatbot-name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Enter chatbot name"
-                    />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center space-x-2 bg-transparent"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openAddDialog} className="flex items-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Add Chatbot</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Create New Chatbot</DialogTitle>
+                    <DialogDescription>
+                      Configure your new chatbot with a name, allowed hosts, and theme color.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="chatbot-name">Chatbot Name</Label>
+                      <Input
+                        id="chatbot-name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Enter chatbot name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="allowed-host">Allowed Hosts</Label>
+                      <Input
+                        id="allowed-host"
+                        value={formData.allowedHost}
+                        onChange={(e) => setFormData({ ...formData, allowedHost: e.target.value })}
+                        placeholder="localhost,example.com"
+                      />
+                      <p className="text-xs text-muted-foreground">Comma-separated list of allowed domains</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="theme-color">Theme Color</Label>
+                      <Select
+                        value={formData.themeColor}
+                        onValueChange={(value) => setFormData({ ...formData, themeColor: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select theme color" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {themeColors.map((color) => (
+                            <SelectItem key={color.value} value={color.value}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-4 h-4 rounded-full ${color.color}`} />
+                                {color.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddChatbot} disabled={isCreating}>
+                        {isCreating ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating Chatbot...
+                          </>
+                        ) : (
+                          "Create Chatbot"
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="allowed-host">Allowed Hosts</Label>
-                    <Input
-                      id="allowed-host"
-                      value={formData.allowedHost}
-                      onChange={(e) => setFormData({ ...formData, allowedHost: e.target.value })}
-                      placeholder="localhost,example.com"
-                    />
-                    <p className="text-xs text-muted-foreground">Comma-separated list of allowed domains</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="theme-color">Theme Color</Label>
-                    <Select
-                      value={formData.themeColor}
-                      onValueChange={(value) => setFormData({ ...formData, themeColor: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select theme color" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {themeColors.map((color) => (
-                          <SelectItem key={color.value} value={color.value}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full ${color.color}`} />
-                              {color.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAddChatbot} disabled={isCreating}>
-                      {isCreating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Chatbot...
-                        </>
-                      ) : (
-                        "Create Chatbot"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -591,7 +626,12 @@ export default function ChatbotPage() {
                       <span>Created {formatDate(chatbot.createdAt)}</span>
                     </div>
                     <div className="pt-2">
-                      <Button variant="outline" size="sm" className="w-full bg-transparent">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full bg-transparent"
+                        onClick={() => openEditDialog(chatbot)}
+                      >
                         Configure
                       </Button>
                     </div>
