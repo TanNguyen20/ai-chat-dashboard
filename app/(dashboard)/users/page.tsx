@@ -49,6 +49,11 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false)
+  const [isUpdatingRoles, setIsUpdatingRoles] = useState(false)
+  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false)
+  const [isDeletingUser, setIsDeletingUser] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
@@ -114,6 +119,7 @@ export default function UsersPage() {
   }
 
   const handleAddUser = async () => {
+    setIsCreatingUser(true)
     try {
       await UserService.createUser(newUser)
       setNewUser({ username: "", email: "", password: "", roles: [EnumRole.USER] })
@@ -122,10 +128,13 @@ export default function UsersPage() {
       toast({ title: "Success", description: "User created successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to create user", variant: "destructive" })
+    } finally {
+      setIsCreatingUser(false)
     }
   }
 
   const handleEditUser = async () => {
+    setIsUpdatingUser(true)
     try {
       await UserService.updateUser(editUser.id, {
         username: editUser.username,
@@ -137,6 +146,8 @@ export default function UsersPage() {
       toast({ title: "Success", description: "User updated successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to update user", variant: "destructive" })
+    } finally {
+      setIsUpdatingUser(false)
     }
   }
 
@@ -145,17 +156,21 @@ export default function UsersPage() {
       toast({ title: "Error", description: "You cannot delete your own account", variant: "destructive" })
       return
     }
+    setIsDeletingUser(true)
     try {
       await UserService.deleteUser(userId)
       fetchUsers()
       toast({ title: "Success", description: "User deleted successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to delete user", variant: "destructive" })
+    } finally {
+      setIsDeletingUser(false)
     }
   }
 
   const handleUpdateUserRoles = async () => {
     if (!selectedUser) return
+    setIsUpdatingRoles(true)
     try {
       await UserService.updateUserRoles(selectedUser.id, selectedRoles)
       setIsRoleDialogOpen(false)
@@ -165,11 +180,14 @@ export default function UsersPage() {
       toast({ title: "Success", description: "User roles updated successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to update user roles", variant: "destructive" })
+    } finally {
+      setIsUpdatingRoles(false)
     }
   }
 
   const handleResetUserInfo = async () => {
     if (!selectedUser) return
+    setIsUpdatingInfo(true)
     try {
       await UserService.updateUserInfo(selectedUser.id, userInfoReset)
       setIsResetInfoDialogOpen(false)
@@ -178,6 +196,8 @@ export default function UsersPage() {
       toast({ title: "Success", description: "User info updated successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to update user info", variant: "destructive" })
+    } finally {
+      setIsUpdatingInfo(false)
     }
   }
 
@@ -473,7 +493,9 @@ export default function UsersPage() {
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAddUser}>Create User</Button>
+                  <Button onClick={handleAddUser} disabled={isCreatingUser}>
+                    {isCreatingUser ? "Creating User..." : "Create User"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -604,6 +626,7 @@ export default function UsersPage() {
             </Button>
             <Button
               variant="destructive"
+              disabled={isDeletingUser}
               onClick={() => {
                 if (userToDelete) {
                   handleDeleteUser(userToDelete.id)
@@ -612,7 +635,7 @@ export default function UsersPage() {
                 }
               }}
             >
-              Delete
+              {isDeletingUser ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -650,7 +673,9 @@ export default function UsersPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleEditUser}>Update User</Button>
+            <Button onClick={handleEditUser} disabled={isUpdatingUser}>
+              {isUpdatingUser ? "Updating User..." : "Update User"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -682,7 +707,9 @@ export default function UsersPage() {
             <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateUserRoles}>Update Roles</Button>
+            <Button onClick={handleUpdateUserRoles} disabled={isUpdatingRoles}>
+              {isUpdatingRoles ? "Updating Roles..." : "Update Roles"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -746,7 +773,9 @@ export default function UsersPage() {
             <Button variant="outline" onClick={() => setIsResetInfoDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleResetUserInfo}>Update Info</Button>
+            <Button onClick={handleResetUserInfo} disabled={isUpdatingInfo}>
+              {isUpdatingInfo ? "Updating Info..." : "Update Info"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
