@@ -68,6 +68,8 @@ export default function ChatbotPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [copiedApiKeys, setCopiedApiKeys] = useState<Set<string>>(new Set())
+  const [isCreating, setIsCreating] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [formData, setFormData] = useState<ChatbotRequest>({
     name: "",
     allowedHost: "",
@@ -113,6 +115,7 @@ export default function ChatbotPage() {
     }
 
     try {
+      setIsCreating(true)
       await ChatbotService.createChatbot(formData)
       setFormData({ name: "", allowedHost: "", themeColor: "blue" })
       setIsAddDialogOpen(false)
@@ -131,6 +134,8 @@ export default function ChatbotPage() {
         description: "Failed to create chatbot",
         variant: "destructive",
       })
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -141,6 +146,7 @@ export default function ChatbotPage() {
     }
 
     try {
+      setIsUpdating(true)
       await ChatbotService.updateChatbot(editingChatbot.id, editFormData)
       setIsEditDialogOpen(false)
       setEditingChatbot(null)
@@ -160,6 +166,8 @@ export default function ChatbotPage() {
         description: "Failed to update chatbot",
         variant: "destructive",
       })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -450,7 +458,16 @@ export default function ChatbotPage() {
                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleAddChatbot}>Create Chatbot</Button>
+                    <Button onClick={handleAddChatbot} disabled={isCreating}>
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Chatbot...
+                        </>
+                      ) : (
+                        "Create Chatbot"
+                      )}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -642,7 +659,16 @@ export default function ChatbotPage() {
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateChatbot}>Update Chatbot</Button>
+              <Button onClick={handleUpdateChatbot} disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating Chatbot...
+                  </>
+                ) : (
+                  "Update Chatbot"
+                )}
+              </Button>
             </div>
           </div>
         </DialogContent>
