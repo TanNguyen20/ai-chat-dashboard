@@ -1,12 +1,18 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
 import type { Role, CreateRole } from "@/types/role"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/roles`)
 
 export class RoleService {
   static async getAllRole(): Promise<Array<Role>> {
     const response = await api.get("")
+    return response
+  }
+
+  static async getRolesPagination(params: PaginationRequestParams): Promise<Page<Role>> {
+    const response = await api.get("/pagination", { params })
     return response
   }
 

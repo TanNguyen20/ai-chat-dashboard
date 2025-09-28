@@ -1,3 +1,4 @@
+import { Page, PaginationRequestParams } from "@/types/pagination"
 import AxiosClient from "./apiConfig"
 import { BASE_URL } from "@/const/api"
 
@@ -25,8 +26,8 @@ export class ChatbotService {
     return response
   }
 
-  static async getChatbotList(): Promise<Chatbot[]> {
-    const response = await api.get("/config-info")
+  static async getChatbotList(params: PaginationRequestParams): Promise<Page<Chatbot>> {
+    const response = await api.get("/config-info", {params})
     return response
   }
 

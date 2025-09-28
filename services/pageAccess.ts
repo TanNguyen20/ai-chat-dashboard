@@ -1,12 +1,18 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
 import type { PageAccess, UpsertPageRequest } from "@/types/pageAccess"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/pages`)
 
 export class PageAccessService {
   static async list(): Promise<PageAccess[]> {
     const res = await api.get("")
+    return res
+  }
+
+  static async listWithPagination(params: PaginationRequestParams): Promise<Page<PageAccess>> {
+    const res = await api.get("/pagination", { params })
     return res
   }
 

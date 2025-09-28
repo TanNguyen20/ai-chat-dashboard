@@ -94,7 +94,7 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="min-w-0 h-[calc(100vh-4rem)] overflow-auto">{children}</main>
       </SidebarInset>
 
       <LogoutConfirmation

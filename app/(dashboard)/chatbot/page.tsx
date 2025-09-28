@@ -25,11 +25,21 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/Authentication"
 import { toast } from "@/hooks/use-toast"
 import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
+import { Page } from "@/types/pagination"
 import {
   Bot,
   Calendar,
@@ -62,6 +72,9 @@ const themeColors = [
 export default function ChatbotPage() {
   const { user: currentUser } = useAuth()
   const [chatbots, setChatbots] = useState<Chatbot[]>([])
+  const [paginationData, setPaginationData] = useState<Page<Chatbot> | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingChatbot, setEditingChatbot] = useState<Chatbot | null>(null)
@@ -94,13 +107,18 @@ export default function ChatbotPage() {
 
   useEffect(() => {
     fetchChatbots()
-  }, [])
+  }, [currentPage, pageSize])
 
   const fetchChatbots = async () => {
     try {
       setLoading(true)
-      const data = await ChatbotService.getChatbotList()
-      setChatbots(data)
+      const data = await ChatbotService.getChatbotList({
+        page: currentPage,
+        size: pageSize,
+        sort: "createdAt,desc",
+      })
+      setPaginationData(data)
+      setChatbots(data.content)
       setError("")
     } catch (error: any) {
       console.error("Failed to fetch chatbots:", error)
@@ -144,6 +162,7 @@ export default function ChatbotPage() {
       setIsAddDialogOpen(false)
       setSuccess("Chatbot created successfully")
       setError("")
+      setCurrentPage(0)
       fetchChatbots()
       toast({
         title: "Success",
@@ -207,6 +226,8 @@ export default function ChatbotPage() {
       setSuccess("Chatbot deleted successfully")
       setError("")
 
+      fetchChatbots()
+
       toast({
         title: "Success",
         description: `Chatbot "${deleteDialog.chatbot.name}" has been deleted`,
@@ -222,6 +243,15 @@ export default function ChatbotPage() {
         variant: "destructive",
       })
     }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (size: string) => {
+    setPageSize(Number.parseInt(size))
+    setCurrentPage(0) // Reset to first page when changing page size
   }
 
   const openDeleteDialog = (chatbot: Chatbot) => {
@@ -314,6 +344,92 @@ export default function ChatbotPage() {
     }
   }
 
+  const renderPagination = () => {
+    if (!paginationData || paginationData.totalPages <= 1) return null
+
+    const { totalPages, number: currentPageNumber, first, last } = paginationData
+    const pages = []
+
+    // Always show first page
+    if (currentPageNumber > 2) {
+      pages.push(0)
+      if (currentPageNumber > 3) {
+        pages.push(-1) // Ellipsis
+      }
+    }
+
+    // Show pages around current page
+    for (let i = Math.max(0, currentPageNumber - 1); i <= Math.min(totalPages - 1, currentPageNumber + 1); i++) {
+      pages.push(i)
+    }
+
+    // Always show last page
+    if (currentPageNumber < totalPages - 3) {
+      if (currentPageNumber < totalPages - 4) {
+        pages.push(-1) // Ellipsis
+      }
+      pages.push(totalPages - 1)
+    }
+
+    return (
+      <div className="flex items-center justify-between">
+        <div className="flex flex-1 justify-start items-center space-x-2">
+          <p className="text-sm text-muted-foreground">
+            Showing {paginationData.numberOfElements} of {paginationData.totalElements} results
+          </p>
+          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">per page</span>
+        </div>
+        <div className="flex flex-1 justify-end items-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => !first && handlePageChange(currentPageNumber - 1)}
+                  className={first ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+
+              {pages.map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === -1 ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={page === currentPageNumber}
+                      className="cursor-pointer"
+                    >
+                      {page + 1}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => !last && handlePageChange(currentPageNumber + 1)}
+                  className={last ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+
+      </div>
+    )
+  }
+
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -363,7 +479,7 @@ export default function ChatbotPage() {
                 <Bot className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{chatbots.length}</div>
+                <div className="text-2xl font-bold">{paginationData?.totalElements || 0}</div>
               </CardContent>
             </Card>
 
@@ -373,7 +489,7 @@ export default function ChatbotPage() {
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{chatbots.length}</div>
+                <div className="text-2xl font-bold">{paginationData?.totalElements || 0}</div>
               </CardContent>
             </Card>
 
@@ -562,83 +678,87 @@ export default function ChatbotPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {chatbots.map((chatbot) => (
-                <Card key={chatbot.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${getThemeColorClass(chatbot.themeColor)}`} />
-                        {chatbot.name}
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Active</Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditDialog(chatbot)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
-                              onClick={() => openDeleteDialog(chatbot)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {chatbots.map((chatbot) => (
+                  <Card key={chatbot.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${getThemeColorClass(chatbot.themeColor)}`} />
+                          {chatbot.name}
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Active</Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEditDialog(chatbot)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => openDeleteDialog(chatbot)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Globe className="h-4 w-4" />
-                      <span className="truncate">{chatbot.allowedHost}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Palette className="h-4 w-4" />
-                      <span className="capitalize">{chatbot.themeColor}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Bot className="h-4 w-4" />
-                      <span className="font-mono text-xs">{maskApiKey(chatbot.apiKey)}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-muted"
-                        onClick={() => copyApiKey(chatbot.apiKey, chatbot.id)}
-                      >
-                        {copiedApiKeys.has(chatbot.id) ? (
-                          <Check className="h-3 w-3 text-green-600" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>Created {formatDate(chatbot.createdAt)}</span>
-                    </div>
-                    <div className="pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full bg-transparent"
-                        onClick={() => openEditDialog(chatbot)}
-                      >
-                        Configure
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Globe className="h-4 w-4" />
+                        <span className="truncate">{chatbot.allowedHost}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Palette className="h-4 w-4" />
+                        <span className="capitalize">{chatbot.themeColor}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Bot className="h-4 w-4" />
+                        <span className="font-mono text-xs">{maskApiKey(chatbot.apiKey)}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-muted"
+                          onClick={() => copyApiKey(chatbot.apiKey, chatbot.id)}
+                        >
+                          {copiedApiKeys.has(chatbot.id) ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>Created {formatDate(chatbot.createdAt)}</span>
+                      </div>
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full bg-transparent"
+                          onClick={() => openEditDialog(chatbot)}
+                        >
+                          Configure
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="mt-6">{renderPagination()}</div>
+            </>
           )}
         </CardContent>
       </Card>

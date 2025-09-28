@@ -15,6 +15,15 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -43,12 +52,45 @@ interface EditUser {
   roles: string[]
 }
 
+interface PaginatedUsersResponse {
+  content: User[]
+  pageable: {
+    pageNumber: number
+    pageSize: number
+    sort: {
+      empty: boolean
+      sorted: boolean
+      unsorted: boolean
+    }
+    offset: number
+    paged: boolean
+    unpaged: boolean
+  }
+  last: boolean
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  sort: {
+    empty: boolean
+    sorted: boolean
+    unsorted: boolean
+  }
+  first: boolean
+  numberOfElements: number
+  empty: boolean
+}
+
 export default function UsersPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
   const [isCreatingUser, setIsCreatingUser] = useState(false)
   const [isUpdatingUser, setIsUpdatingUser] = useState(false)
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false)
@@ -84,15 +126,17 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers()
     fetchRoles()
-  }, [])
+  }, [currentPage, pageSize])
 
   const fetchUsers = async () => {
     try {
       if (!loading) {
         setRefreshing(true)
       }
-      const userData = await UserService.getAllUser()
-      setUsers(userData)
+      const response: PaginatedUsersResponse = await UserService.getAllUser({ page: currentPage, size: pageSize })
+      setUsers(response.content)
+      setTotalPages(response.totalPages)
+      setTotalElements(response.totalElements)
     } catch (error) {
       toast({
         title: "Error",
@@ -124,6 +168,7 @@ export default function UsersPage() {
       await UserService.createUser(newUser)
       setNewUser({ username: "", email: "", password: "", roles: [EnumRole.USER] })
       setIsAddDialogOpen(false)
+      setCurrentPage(0)
       fetchUsers()
       toast({ title: "Success", description: "User created successfully" })
     } catch (error) {
@@ -159,7 +204,11 @@ export default function UsersPage() {
     setIsDeletingUser(true)
     try {
       await UserService.deleteUser(userId)
-      fetchUsers()
+      if (users.length === 1 && currentPage > 0) {
+        setCurrentPage(currentPage - 1)
+      } else {
+        fetchUsers()
+      }
       toast({ title: "Success", description: "User deleted successfully" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to delete user", variant: "destructive" })
@@ -250,9 +299,9 @@ export default function UsersPage() {
     ))
 
   const getStats = () => {
-    const totalUsers = users.length
+    const totalUsers = totalElements
     const adminUsers = users.filter((u) => Array.from(u.roles).some((r) => r.name.includes("ADMIN"))).length
-    const regularUsers = totalUsers - adminUsers
+    const regularUsers = users.length - adminUsers // Current page regular users
     return { totalUsers, adminUsers, regularUsers }
   }
 
@@ -315,6 +364,15 @@ export default function UsersPage() {
         </TableCell>
       </TableRow>
     )
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(Number.parseInt(newPageSize))
+    setCurrentPage(0) // Reset to first page when changing page size
   }
 
   const { totalUsers, adminUsers, regularUsers } = getStats()
@@ -407,7 +465,7 @@ export default function UsersPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
+            <CardTitle className="text-sm font-medium">Regular Users (Current Page)</CardTitle>
             <UserX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -423,9 +481,22 @@ export default function UsersPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <CardTitle className="break-words">User Management</CardTitle>
-              <CardDescription>Manage users and their permissions</CardDescription>
+              <CardDescription>
+                Manage users and their permissions • Showing {users.length} of {totalElements} users
+              </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 onClick={fetchUsers}
@@ -618,6 +689,81 @@ export default function UsersPage() {
               </Table>
             </div>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages} • {totalElements} total users
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 0 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {/* Show first page */}
+                  {currentPage > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                    </>
+                  )}
+
+                  {/* Show pages around current page */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageIndex = Math.max(0, Math.min(currentPage - 2, totalPages - 5)) + i
+                    if (pageIndex >= totalPages) return null
+
+                    return (
+                      <PaginationItem key={pageIndex}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(pageIndex)}
+                          isActive={pageIndex === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {pageIndex + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  })}
+
+                  {/* Show last page */}
+                  {currentPage < totalPages - 3 && (
+                    <>
+                      {currentPage < totalPages - 4 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
 

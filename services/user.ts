@@ -1,12 +1,13 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
 import type { User, UserInfoRequest } from "@/types/user"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/users`)
 
 export class UserService {
-  static async getAllUser(): Promise<Array<User>> {
-    const response = await api.get("")
+  static async getAllUser(params: PaginationRequestParams): Promise<Page<User>> {
+    const response = await api.get("", { params })
     return response
   }
 

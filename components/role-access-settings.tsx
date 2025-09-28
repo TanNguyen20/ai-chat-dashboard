@@ -19,15 +19,32 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { Trash2, Edit, Plus, MoreVertical } from "lucide-react"
 
 import { RoleService } from "@/services/role"
 import type { Role as BERole } from "@/types/role"
 
 import { PageAccessService } from "@/services/pageAccess"
-import type { CrudKey, CrudSet, PageAccess as BEPage, RolePermissions, UpsertPageRequest } from "@/types/pageAccess"
+import type {
+  CrudKey,
+  CrudSet,
+  PageAccess as BEPage,
+  RolePermissions,
+  UpsertPageRequest,
+  PageAccess,
+} from "@/types/pageAccess"
 import Loading from "./loading"
 import { useAuth } from "@/contexts/Authentication"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 interface AppRoute {
   file: string
@@ -168,18 +185,22 @@ export function RoleAccessSettings() {
   const [roles, setRoles] = useState<BERole[] | null>(null)
   const roleNames = useMemo(() => (roles ? roles.map((r) => r.name) : []), [roles])
 
-  const [pages, setPages] = useState<BEPage[]>([])
+  const [paginatedData, setPaginatedData] = useState<Page<PageAccess> | null>(null)
   const [loadingPages, setLoadingPages] = useState<null | boolean>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingPage, setEditingPage] = useState<BEPage | null>(null)
-  const { isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth()
 
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
     description: "",
     rolePermissions: {},
   })
+
+  const pages = paginatedData?.content || []
 
   /* ---- load routes ---- */
   useEffect(() => {
@@ -212,18 +233,26 @@ export function RoleAccessSettings() {
     loadRoles()
   }, [])
 
-  /* ---- once roles loaded, load pages & normalize ---- */
+  /* ---- load pages with pagination ---- */
   useEffect(() => {
     if (roles === null) return
     const loadPages = async () => {
       setLoadingPages(true)
       try {
-        const list = await PageAccessService.list() // <- returns PageAccess[] directly
-        const normalized = list.map((p) => ({
+        const paginationParams: PaginationRequestParams = { page: currentPage, size: pageSize }
+        const response = await PageAccessService.listWithPagination(paginationParams)
+
+        // Normalize the role permissions for each page
+        const normalizedContent = response.content.map((p) => ({
           ...p,
           rolePermissions: ensureRoles(roleNames, p.rolePermissions),
         }))
-        setPages(normalized)
+
+        setPaginatedData({
+          ...response,
+          content: normalizedContent,
+        })
+
         setNewPage((prev) => ({
           ...prev,
           rolePermissions: ensureRoles(roleNames, prev.rolePermissions),
@@ -236,7 +265,7 @@ export function RoleAccessSettings() {
     }
     loadPages()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roles])
+  }, [roles, currentPage, pageSize])
 
   const getRouteDescription = (route: AppRoute) => {
     const segments = route.file.split("/")
@@ -256,7 +285,16 @@ export function RoleAccessSettings() {
       }
       const created = await PageAccessService.create(payload) // <- created PageAccess
       const normalized = { ...created, rolePermissions: ensureRoles(roleNames, created.rolePermissions) }
-      setPages((prev) => [...prev, normalized])
+
+      if (paginatedData) {
+        const updatedContent = [...paginatedData.content, normalized]
+        setPaginatedData({
+          ...paginatedData,
+          content: updatedContent,
+          totalElements: paginatedData.totalElements + 1,
+        })
+      }
+
       setNewPage({ url: "", description: "", rolePermissions: ensureRoles(roleNames) })
       setIsAddDialogOpen(false)
     } catch (e) {
@@ -268,7 +306,15 @@ export function RoleAccessSettings() {
   const handleDeletePage = async (id: number) => {
     try {
       await PageAccessService.delete(id)
-      setPages((prev) => prev.filter((p) => p.id !== id))
+
+      if (paginatedData) {
+        const updatedContent = paginatedData.content.filter((p) => p.id !== id)
+        setPaginatedData({
+          ...paginatedData,
+          content: updatedContent,
+          totalElements: paginatedData.totalElements - 1,
+        })
+      }
     } catch (e) {
       console.error("Delete page failed:", e)
       alert("Failed to delete page")
@@ -292,12 +338,29 @@ export function RoleAccessSettings() {
       }
       const updated = await PageAccessService.update(editingPage.id, payload)
       const normalized = { ...updated, rolePermissions: ensureRoles(roleNames, updated.rolePermissions) }
-      setPages((prev) => prev.map((p) => (p.id === normalized.id ? normalized : p)))
+
+      if (paginatedData) {
+        const updatedContent = paginatedData.content.map((p) => (p.id === normalized.id ? normalized : p))
+        setPaginatedData({
+          ...paginatedData,
+          content: updatedContent,
+        })
+      }
+
       setEditingPage(null)
     } catch (e) {
       console.error("Update page failed:", e)
       alert("Failed to update page")
     }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (size: string) => {
+    setPageSize(Number.parseInt(size))
+    setCurrentPage(0) // Reset to first page when changing page size
   }
 
   /* ---------- toggles ---------- */
@@ -419,8 +482,8 @@ export function RoleAccessSettings() {
   /* ---------- render ---------- */
 
   if (isAuthLoading) {
-      return <Loading />;
-    }
+    return <Loading />
+  }
 
   return (
     <div>
@@ -431,77 +494,101 @@ export function RoleAccessSettings() {
           <p className="text-muted-foreground text-pretty">
             Assign <span className="font-medium">CRUD permissions per role</span>
           </p>
+          {paginatedData && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Showing {paginatedData.numberOfElements} of {paginatedData.totalElements} pages
+            </p>
+          )}
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2" disabled={!roles || roleNames.length === 0}>
-              <Plus className="h-4 w-4" />
-              Add Page
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Page</DialogTitle>
-              <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
-            </DialogHeader>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="pageSize" className="text-sm">
+              Show:
+            </Label>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="url">Page URL</Label>
-                <Select value={newPage.url} onValueChange={handleRouteSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {routes.map((route) => (
-                      <SelectItem key={route.next} value={route.next}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{route.next}</span>
-                          <span className="text-xs text-muted-foreground">{getRouteDescription(route)}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  placeholder="Brief description of the page"
-                  value={newPage.description}
-                  onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                {roles === null ? (
-                  <PermissionMatrixSkeleton />
-                ) : roles && roleNames.length > 0 ? (
-                  <PermissionMatrix
-                    rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
-                    onToggle={toggleNewPageRolePermission}
-                    onSetAll={setAllNewPageRole}
-                  />
-                ) : (
-                  <div className="text-sm text-muted-foreground">No roles available</div>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0}>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2" disabled={!roles || roleNames.length === 0}>
+                <Plus className="h-4 w-4" />
                 Add Page
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add New Page</DialogTitle>
+                <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="url">Page URL</Label>
+                  <Select value={newPage.url} onValueChange={handleRouteSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {routes.map((route) => (
+                        <SelectItem key={route.next} value={route.next}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{route.next}</span>
+                            <span className="text-xs text-muted-foreground">{getRouteDescription(route)}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    placeholder="Brief description of the page"
+                    value={newPage.description}
+                    onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Per-Role Permissions</Label>
+                  {roles === null ? (
+                    <PermissionMatrixSkeleton />
+                  ) : roles && roleNames.length > 0 ? (
+                    <PermissionMatrix
+                      rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
+                      onToggle={toggleNewPageRolePermission}
+                      onSetAll={setAllNewPageRole}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No roles available</div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0}>
+                  Add Page
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Pages */}
@@ -609,6 +696,66 @@ export function RoleAccessSettings() {
           })
         )}
       </div>
+
+      {paginatedData && paginatedData.totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 0 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: paginatedData.totalPages }, (_, i) => {
+                // Show first page, last page, current page, and pages around current page
+                const showPage = i === 0 || i === paginatedData.totalPages - 1 || Math.abs(i - currentPage) <= 1
+
+                if (!showPage) {
+                  // Show ellipsis if there's a gap
+                  if (i === 1 && currentPage > 3) {
+                    return (
+                      <PaginationItem key={`ellipsis-start`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )
+                  }
+                  if (i === paginatedData.totalPages - 2 && currentPage < paginatedData.totalPages - 4) {
+                    return (
+                      <PaginationItem key={`ellipsis-end`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )
+                  }
+                  return null
+                }
+
+                return (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(i)}
+                      isActive={currentPage === i}
+                      className="cursor-pointer"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={
+                    currentPage === paginatedData.totalPages - 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Edit dialog */}
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
