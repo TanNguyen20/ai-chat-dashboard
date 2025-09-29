@@ -1,12 +1,18 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
 import { AnalyticsDashboard, CreateAnalyticsDashboard } from "@/types/analytics"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/analytics`)
 
 export class AnalyticsService {
   static async getAllAnalyticsDashboard(): Promise<Array<AnalyticsDashboard>> {
     const response = await api.get("")
+    return response
+  }
+
+  static async getAnalyticsDashboardPagination(params: PaginationRequestParams): Promise<Page<AnalyticsDashboard>> {
+    const response = await api.get("", { params })
     return response
   }
 
