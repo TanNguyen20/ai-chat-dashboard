@@ -126,7 +126,7 @@ export default function AnalyticsConfigPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response: PaginatedResponse<AnalyticsConfig> = await AnalyticsConfigService.getAllAnalyticsConfig({ page, size })
+      const response: PaginatedResponse<AnalyticsConfig> = await AnalyticsConfigService.getAnalyticsConfigPagination({ page, size })
       setConfigs(response.content)
       setFilteredConfigs(response.content)
       setCurrentPage(response.number)
