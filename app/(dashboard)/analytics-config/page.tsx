@@ -26,6 +26,15 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Role } from "@/const/role"
 import { useAuth } from "@/contexts/Authentication"
@@ -46,8 +55,6 @@ import {
   Search,
   Server,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react"
 import type React from "react"
 import { useEffect, useState } from "react"
@@ -568,60 +575,78 @@ export default function AnalyticsConfigPage() {
               </div>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="flex justify-center mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            if (currentPage > 0) {
+                              handlePageChange(currentPage - 1)
+                            }
+                          }}
+                          className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Page {currentPage + 1} of {totalPages} ({totalElements} total)
-                    </span>
-                  </div>
+                      {Array.from({ length: totalPages }, (_, i) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage =
+                          i === 0 || // First page
+                          i === totalPages - 1 || // Last page
+                          Math.abs(i - currentPage) <= 1 // Current page and adjacent pages
 
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum: number
-                      if (totalPages <= 5) {
-                        pageNum = i
-                      } else if (currentPage < 3) {
-                        pageNum = i
-                      } else if (currentPage > totalPages - 4) {
-                        pageNum = totalPages - 5 + i
-                      } else {
-                        pageNum = currentPage - 2 + i
-                      }
+                        if (!showPage) {
+                          // Show ellipsis if there's a gap
+                          if (i === 1 && currentPage > 3) {
+                            return (
+                              <PaginationItem key={`ellipsis-start`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )
+                          }
+                          if (i === totalPages - 2 && currentPage < totalPages - 4) {
+                            return (
+                              <PaginationItem key={`ellipsis-end`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )
+                          }
+                          return null
+                        }
 
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={currentPage === pageNum ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {pageNum + 1}
-                        </Button>
-                      )
-                    })}
-                  </div>
+                        return (
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handlePageChange(i)
+                              }}
+                              isActive={currentPage === i}
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            if (currentPage < totalPages - 1) {
+                              handlePageChange(currentPage + 1)
+                            }
+                          }}
+                          className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </>
