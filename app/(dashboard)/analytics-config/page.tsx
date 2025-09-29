@@ -58,35 +58,7 @@ import {
 } from "lucide-react"
 import type React from "react"
 import { useEffect, useState } from "react"
-
-interface PaginatedResponse<T> {
-  content: T[]
-  pageable: {
-    pageNumber: number
-    pageSize: number
-    sort: {
-      empty: boolean
-      unsorted: boolean
-      sorted: boolean
-    }
-    offset: number
-    paged: boolean
-    unpaged: boolean
-  }
-  last: boolean
-  totalPages: number
-  totalElements: number
-  size: number
-  number: number
-  sort: {
-    empty: boolean
-    unsorted: boolean
-    sorted: boolean
-  }
-  first: boolean
-  numberOfElements: number
-  empty: boolean
-}
+import { Page } from "@/types/pagination"
 
 export default function AnalyticsConfigPage() {
   const { user } = useAuth()
@@ -133,7 +105,7 @@ export default function AnalyticsConfigPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response: PaginatedResponse<AnalyticsConfig> = await AnalyticsConfigService.getAnalyticsConfigPagination({ page, size })
+      const response = await AnalyticsConfigService.getAnalyticsConfigPagination({ page, size })
       setConfigs(response.content)
       setFilteredConfigs(response.content)
       setCurrentPage(response.number)
