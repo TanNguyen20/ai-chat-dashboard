@@ -1,12 +1,13 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
 import type { AnalyticsConfig, CreateAnalyticsConfig, UpdateAnalyticsConfig } from "@/types/analyticsConfig"
+import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/analytics-config`)
 
 export class AnalyticsConfigService {
-  static async getAllAnalyticsConfig(): Promise<Array<AnalyticsConfig>> {
-    const response = await api.get("")
+  static async getAllAnalyticsConfig(params: PaginationRequestParams): Promise<Page<AnalyticsConfig>> {
+    const response = await api.get("", { params })
     return response
   }
 
