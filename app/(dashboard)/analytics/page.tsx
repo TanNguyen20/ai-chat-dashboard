@@ -66,35 +66,6 @@ import {
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
-interface PaginatedResponse<T> {
-  content: T[]
-  pageable: {
-    pageNumber: number
-    pageSize: number
-    sort: {
-      empty: boolean
-      unsorted: boolean
-      sorted: boolean
-    }
-    offset: number
-    paged: boolean
-    unpaged: boolean
-  }
-  last: boolean
-  totalPages: number
-  totalElements: number
-  size: number
-  number: number
-  sort: {
-    empty: boolean
-    unsorted: boolean
-    sorted: boolean
-  }
-  first: boolean
-  numberOfElements: number
-  empty: boolean
-}
-
 export default function AnalyticsListPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -150,7 +121,7 @@ export default function AnalyticsListPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response: PaginatedResponse<AnalyticsDashboard> = await AnalyticsService.getAnalyticsDashboardPagination({ page,size })
+      const response = await AnalyticsService.getAnalyticsDashboardPagination({ page,size })
       setDashboards(response.content)
       setFilteredDashboards(response.content)
       setCurrentPage(response.number)
