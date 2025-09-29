@@ -28,6 +28,15 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Role } from "@/const/role"
@@ -57,6 +66,35 @@ import {
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
+interface PaginatedResponse<T> {
+  content: T[]
+  pageable: {
+    pageNumber: number
+    pageSize: number
+    sort: {
+      empty: boolean
+      unsorted: boolean
+      sorted: boolean
+    }
+    offset: number
+    paged: boolean
+    unpaged: boolean
+  }
+  last: boolean
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  sort: {
+    empty: boolean
+    unsorted: boolean
+    sorted: boolean
+  }
+  first: boolean
+  numberOfElements: number
+  empty: boolean
+}
+
 export default function AnalyticsListPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -67,6 +105,11 @@ export default function AnalyticsListPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [analyticsConfigs, setAnalyticsConfigs] = useState<AnalyticsConfig[]>([])
+
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
   // Create dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -103,13 +146,16 @@ export default function AnalyticsListPage() {
   // Check if user has access to analytics
   const hasAccess = hasRole(user!, Role.USER)
 
-  const fetchDashboards = async () => {
+  const fetchDashboards = async (page: number = currentPage, size: number = pageSize) => {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await AnalyticsService.getAllAnalyticsDashboard()
-      setDashboards(data)
-      setFilteredDashboards(data)
+      const response: PaginatedResponse<AnalyticsDashboard> = await AnalyticsService.getAnalyticsDashboardPagination({ page,size })
+      setDashboards(response.content)
+      setFilteredDashboards(response.content)
+      setCurrentPage(response.number)
+      setTotalPages(response.totalPages)
+      setTotalElements(response.totalElements)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch analytics dashboards"
       setError(errorMessage)
@@ -154,6 +200,19 @@ export default function AnalyticsListPage() {
     setFilteredDashboards(filtered)
   }, [searchQuery, dashboards])
 
+  const handlePageChange = (page: number) => {
+    if (page >= 0 && page < totalPages) {
+      setCurrentPage(page)
+      fetchDashboards(page, pageSize)
+    }
+  }
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize)
+    setCurrentPage(0) // Reset to first page when changing page size
+    fetchDashboards(0, newSize)
+  }
+
   const handleCreateAnalytics = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.dashboardId || !formData.dashboardHost || !formData.dashboardTitle || !formData.analyticsConfigId) {
@@ -163,7 +222,7 @@ export default function AnalyticsListPage() {
     setIsCreating(true)
     try {
       await AnalyticsService.createAnalyticsDashboard(formData)
-      fetchDashboards()
+      fetchDashboards(currentPage, pageSize)
       setCreateDialogOpen(false)
       // Reset form
       setFormData({
@@ -213,7 +272,7 @@ export default function AnalyticsListPage() {
     setIsEditing(true)
     try {
       await AnalyticsService.updateAnalyticsDashboard(editingDashboard.id, editFormData)
-      fetchDashboards()
+      fetchDashboards(currentPage, pageSize)
       setEditDialogOpen(false)
       setEditingDashboard(null)
       // Reset form
@@ -238,7 +297,10 @@ export default function AnalyticsListPage() {
     setDeletingId(id)
     try {
       await AnalyticsService.deleteAnalyticsDashboard(id)
-      fetchDashboards()
+      const newTotalElements = totalElements - 1
+      const newTotalPages = Math.ceil(newTotalElements / pageSize)
+      const targetPage = currentPage >= newTotalPages ? Math.max(0, newTotalPages - 1) : currentPage
+      fetchDashboards(targetPage, pageSize)
     } catch (error) {
       console.error("Failed to delete dashboard:", error)
     } finally {
@@ -318,6 +380,86 @@ export default function AnalyticsListPage() {
     }))
   }
 
+  const renderPaginationItems = () => {
+    const items = []
+    const maxVisiblePages = 5
+    const startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1)
+
+    // Previous button
+    items.push(
+      <PaginationItem key="prev">
+        <PaginationPrevious
+          onClick={() => handlePageChange(currentPage - 1)}
+          className={currentPage === 0 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        />
+      </PaginationItem>,
+    )
+
+    // First page and ellipsis
+    if (startPage > 0) {
+      items.push(
+        <PaginationItem key={0}>
+          <PaginationLink onClick={() => handlePageChange(0)} isActive={currentPage === 0} className="cursor-pointer">
+            1
+          </PaginationLink>
+        </PaginationItem>,
+      )
+      if (startPage > 1) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>,
+        )
+      }
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i} className="cursor-pointer">
+            {i + 1}
+          </PaginationLink>
+        </PaginationItem>,
+      )
+    }
+
+    // Last page and ellipsis
+    if (endPage < totalPages - 1) {
+      if (endPage < totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>,
+        )
+      }
+      items.push(
+        <PaginationItem key={totalPages - 1}>
+          <PaginationLink
+            onClick={() => handlePageChange(totalPages - 1)}
+            isActive={currentPage === totalPages - 1}
+            className="cursor-pointer"
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>,
+      )
+    }
+
+    // Next button
+    items.push(
+      <PaginationItem key="next">
+        <PaginationNext
+          onClick={() => handlePageChange(currentPage + 1)}
+          className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        />
+      </PaginationItem>,
+    )
+
+    return items
+  }
+
   if (!hasAccess) {
     return (
       <div className="flex flex-col gap-4 p-3 sm:p-4">
@@ -389,7 +531,12 @@ export default function AnalyticsListPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
-          <Button onClick={fetchDashboards} variant="outline" size="sm" className="flex-1 sm:flex-none bg-transparent">
+          <Button
+            onClick={() => fetchDashboards(currentPage, pageSize)}
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none bg-transparent"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             <span className="sm:inline">Refresh</span>
           </Button>
@@ -589,6 +736,27 @@ export default function AnalyticsListPage() {
         </div>
       </div>
 
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Items per page:</span>
+          <Select value={pageSize.toString()} onValueChange={(value) => handlePageSizeChange(Number.parseInt(value))}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
+          {totalElements} results
+        </div>
+      </div>
+
       {/* Error State */}
       {error && (
         <Alert variant="destructive">
@@ -608,12 +776,12 @@ export default function AnalyticsListPage() {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold sm:text-2xl">{dashboards.length}</div>
+                <div className="text-xl font-bold sm:text-2xl">{totalElements}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Filtered Results</CardTitle>
+                <CardTitle className="text-sm font-medium">Current Page Results</CardTitle>
                 <Filter className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -622,12 +790,12 @@ export default function AnalyticsListPage() {
             </Card>
             <Card className="sm:col-span-2 lg:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Unique Hosts</CardTitle>
+                <CardTitle className="text-sm font-medium">Current Page</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold sm:text-2xl">
-                  {new Set(dashboards.map((d) => d.dashboardHost)).size}
+                  {currentPage + 1} of {totalPages}
                 </div>
               </CardContent>
             </Card>
@@ -659,144 +827,154 @@ export default function AnalyticsListPage() {
               </CardContent>
             </Card>
           ) : (
-            /* Improved mobile card layout */
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4"
-                  : "space-y-3 sm:space-y-4"
-              }
-            >
-              {filteredDashboards.map((dashboard) => (
-                <Card key={dashboard.id} className="hover:shadow-md transition-shadow cursor-pointer group">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1" onClick={() => handleNavigateToDetail(dashboard.id)}>
-                        <CardTitle className="text-base flex items-center gap-2 group-hover:text-primary transition-colors sm:text-lg">
-                          <BarChart3 className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                          <span className="truncate" title={dashboard.dashboardTitle}>
-                            {dashboard.dashboardTitle}
-                          </span>
-                        </CardTitle>
-                        <CardDescription
-                          className="mt-1 text-xs truncate sm:text-sm"
-                          title={`ID: ${dashboard.dashboardId}`}
-                        >
-                          ID: {dashboard.dashboardId}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-8 w-8 p-0 sm:h-9 sm:w-9"
-                        >
-                          <a
-                            href={dashboard.dashboardHost}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center"
+            <>
+              {/* Improved mobile card layout */}
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4"
+                    : "space-y-3 sm:space-y-4"
+                }
+              >
+                {filteredDashboards.map((dashboard) => (
+                  <Card key={dashboard.id} className="hover:shadow-md transition-shadow cursor-pointer group">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1" onClick={() => handleNavigateToDetail(dashboard.id)}>
+                          <CardTitle className="text-base flex items-center gap-2 group-hover:text-primary transition-colors sm:text-lg">
+                            <BarChart3 className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                            <span className="truncate" title={dashboard.dashboardTitle}>
+                              {dashboard.dashboardTitle}
+                            </span>
+                          </CardTitle>
+                          <CardDescription
+                            className="mt-1 text-xs truncate sm:text-sm"
+                            title={`ID: ${dashboard.dashboardId}`}
                           >
-                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </a>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleEditDashboard(dashboard)
-                          }}
-                          className="h-8 w-8 p-0 sm:h-9 sm:w-9"
-                        >
-                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 sm:h-9 sm:w-9"
-                              onClick={(e) => e.stopPropagation()}
+                            ID: {dashboard.dashboardId}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                          >
+                            <a
+                              href={dashboard.dashboardHost}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center"
                             >
-                              {deletingId === dashboard.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
-                              ) : (
-                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-md sm:mx-auto sm:w-full">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-base sm:text-lg">
-                                Delete Analytics Dashboard
-                              </AlertDialogTitle>
-                              <AlertDialogDescription className="text-sm">
-                                Are you sure you want to delete "{dashboard.dashboardTitle}"? This action cannot be
-                                undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter className="flex flex-col gap-2 sm:flex-row">
-                              <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteAnalytics(dashboard.id)}
-                                className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
-                                disabled={deletingId === dashboard.id}
+                              <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </a>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditDashboard(dashboard)
+                            }}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                          >
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 sm:h-9 sm:w-9"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                {deletingId === dashboard.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                {deletingId === dashboard.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-md sm:mx-auto sm:w-full">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-base sm:text-lg">
+                                  Delete Analytics Dashboard
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-sm">
+                                  Are you sure you want to delete "{dashboard.dashboardTitle}"? This action cannot be
+                                  undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter className="flex flex-col gap-2 sm:flex-row">
+                                <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteAnalytics(dashboard.id)}
+                                  className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
+                                  disabled={deletingId === dashboard.id}
+                                >
+                                  {deletingId === dashboard.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent onClick={() => handleNavigateToDetail(dashboard.id)} className="min-w-0 space-y-3">
-                    <div
-                      className="text-xs text-muted-foreground truncate sm:text-sm"
-                      title={`Host: ${dashboard.dashboardHost}`}
-                    >
-                      <strong>Host:</strong> {dashboard.dashboardHost}
-                    </div>
+                    </CardHeader>
+                    <CardContent onClick={() => handleNavigateToDetail(dashboard.id)} className="min-w-0 space-y-3">
+                      <div
+                        className="text-xs text-muted-foreground truncate sm:text-sm"
+                        title={`Host: ${dashboard.dashboardHost}`}
+                      >
+                        <strong>Host:</strong> {dashboard.dashboardHost}
+                      </div>
 
-                    {dashboard.roles.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
-                          <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
-                          Roles
+                      {dashboard.roles.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
+                            <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+                            Roles
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {dashboard.roles.map((role) => (
+                              <Badge key={role} variant="secondary" className="text-xs">
+                                {role}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {dashboard.roles.map((role) => (
-                            <Badge key={role} variant="secondary" className="text-xs">
-                              {role}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {dashboard.users.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
-                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                          Users
+                      {dashboard.users.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-medium sm:text-sm">
+                            <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                            Users
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {dashboard.users.map((user) => (
+                              <Badge key={user} variant="outline" className="text-xs">
+                                {user}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {dashboard.users.map((user) => (
-                            <Badge key={user} variant="outline" className="text-xs">
-                              {user}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-6">
+                  <Pagination>
+                    <PaginationContent>{renderPaginationItems()}</PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
