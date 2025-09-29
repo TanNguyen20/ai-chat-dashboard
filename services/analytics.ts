@@ -12,7 +12,7 @@ export class AnalyticsService {
   }
 
   static async getAnalyticsDashboardPagination(params: PaginationRequestParams): Promise<Page<AnalyticsDashboard>> {
-    const response = await api.get("", { params })
+    const response = await api.get("/pagination", { params })
     return response
   }
 
