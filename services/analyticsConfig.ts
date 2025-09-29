@@ -6,8 +6,13 @@ import { Page, PaginationRequestParams } from "@/types/pagination"
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/analytics-config`)
 
 export class AnalyticsConfigService {
-  static async getAllAnalyticsConfig(params: PaginationRequestParams): Promise<Page<AnalyticsConfig>> {
-    const response = await api.get("", { params })
+  static async getAllAnalyticsConfig(): Promise<Array<AnalyticsConfig>> {
+    const response = await api.get("")
+    return response
+  }
+  
+  static async getAnalyticsConfigPagination(params: PaginationRequestParams): Promise<Page<AnalyticsConfig>> {
+    const response = await api.get("/pagination", { params })
     return response
   }
 
