@@ -46,9 +46,40 @@ import {
   Search,
   Server,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import type React from "react"
 import { useEffect, useState } from "react"
+
+interface PaginatedResponse<T> {
+  content: T[]
+  pageable: {
+    pageNumber: number
+    pageSize: number
+    sort: {
+      empty: boolean
+      unsorted: boolean
+      sorted: boolean
+    }
+    offset: number
+    paged: boolean
+    unpaged: boolean
+  }
+  last: boolean
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  sort: {
+    empty: boolean
+    unsorted: boolean
+    sorted: boolean
+  }
+  first: boolean
+  numberOfElements: number
+  empty: boolean
+}
 
 export default function AnalyticsConfigPage() {
   const { user } = useAuth()
@@ -58,6 +89,11 @@ export default function AnalyticsConfigPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
   // Create dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -86,13 +122,16 @@ export default function AnalyticsConfigPage() {
   // Check if user has access to analytics config
   const hasAccess = hasRole(user!, Role.ADMIN)
 
-  const fetchConfigs = async () => {
+  const fetchConfigs = async (page: number = currentPage, size: number = pageSize) => {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await AnalyticsConfigService.getAllAnalyticsConfig()
-      setConfigs(data)
-      setFilteredConfigs(data)
+      const response: PaginatedResponse<AnalyticsConfig> = await AnalyticsConfigService.getAllAnalyticsConfig({ page, size })
+      setConfigs(response.content)
+      setFilteredConfigs(response.content)
+      setCurrentPage(response.number)
+      setTotalPages(response.totalPages)
+      setTotalElements(response.totalElements)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch analytics configs"
       setError(errorMessage)
@@ -120,6 +159,19 @@ export default function AnalyticsConfigPage() {
     setFilteredConfigs(filtered)
   }, [searchQuery, configs])
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage)
+      fetchConfigs(newPage, pageSize)
+    }
+  }
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize)
+    setCurrentPage(0)
+    fetchConfigs(0, newSize)
+  }
+
   const handleCreateConfig = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!createFormData.hostname || !createFormData.username || !createFormData.password) {
@@ -129,7 +181,7 @@ export default function AnalyticsConfigPage() {
     setIsCreating(true)
     try {
       await AnalyticsConfigService.createAnalyticsConfig(createFormData)
-      fetchConfigs()
+      fetchConfigs(currentPage, pageSize)
       setCreateDialogOpen(false)
       // Reset form
       setCreateFormData({
@@ -165,7 +217,7 @@ export default function AnalyticsConfigPage() {
     setIsEditing(true)
     try {
       await AnalyticsConfigService.updateAnalyticsConfig(editingConfig.id, editFormData)
-      fetchConfigs()
+      fetchConfigs(currentPage, pageSize)
       setEditDialogOpen(false)
       setEditingConfig(null)
       // Reset form
@@ -186,7 +238,10 @@ export default function AnalyticsConfigPage() {
     setDeletingId(id)
     try {
       await AnalyticsConfigService.deleteAnalyticsConfig(id)
-      fetchConfigs()
+      const newTotalElements = totalElements - 1
+      const newTotalPages = Math.ceil(newTotalElements / pageSize)
+      const targetPage = currentPage >= newTotalPages ? Math.max(0, newTotalPages - 1) : currentPage
+      fetchConfigs(targetPage, pageSize)
     } catch (error) {
       console.error("Failed to delete config:", error)
     } finally {
@@ -251,7 +306,12 @@ export default function AnalyticsConfigPage() {
           <p className="text-muted-foreground">Manage analytics server configurations and credentials</p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button onClick={fetchConfigs} variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button
+            onClick={() => fetchConfigs(currentPage, pageSize)}
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -380,12 +440,12 @@ export default function AnalyticsConfigPage() {
                 <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{configs.length}</div>
+                <div className="text-2xl font-bold">{totalElements}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Filtered Results</CardTitle>
+                <CardTitle className="text-sm font-medium">Current Page Results</CardTitle>
                 <Filter className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -394,11 +454,20 @@ export default function AnalyticsConfigPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Servers</CardTitle>
+                <CardTitle className="text-sm font-medium">Page Size</CardTitle>
                 <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{configs.length}</div>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="text-2xl font-bold bg-transparent border-none outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
               </CardContent>
             </Card>
           </div>
@@ -429,73 +498,133 @@ export default function AnalyticsConfigPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-              {filteredConfigs.map((config) => (
-                <Card key={config.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg flex items-center gap-2 break-words">
-                          <Server className="h-5 w-5" />
-                          Configuration #{config.id}
-                        </CardTitle>
-                        <CardDescription className="mt-1">Analytics Server</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEditConfig(config)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              {deletingId === config.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Analytics Configuration</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this configuration? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteConfig(config.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                disabled={deletingId === config.id}
+            <>
+              <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+                {filteredConfigs.map((config) => (
+                  <Card key={config.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg flex items-center gap-2 break-words">
+                            <Server className="h-5 w-5" />
+                            Configuration #{config.id}
+                          </CardTitle>
+                          <CardDescription className="mt-1">Analytics Server</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditConfig(config)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               >
-                                {deletingId === config.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                {deletingId === config.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Analytics Configuration</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this configuration? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteConfig(config.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  disabled={deletingId === config.id}
+                                >
+                                  {deletingId === config.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="text-sm">
-                        <strong>Hostname:</strong>
-                        <p className="text-muted-foreground break-all">{config.hostname}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-sm">
+                          <strong>Hostname:</strong>
+                          <p className="text-muted-foreground break-all">{config.hostname}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          ID: {config.id}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        ID: {config.id}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage + 1} of {totalPages} ({totalElements} total)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number
+                      if (totalPages <= 5) {
+                        pageNum = i
+                      } else if (currentPage < 3) {
+                        pageNum = i
+                      } else if (currentPage > totalPages - 4) {
+                        pageNum = totalPages - 5 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum + 1}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
