@@ -669,14 +669,14 @@ export function RoleAccessSettings() {
                         </thead>
                         <tbody>
                           {roleNames.map((role) => (
-                            <tr key={role} className="border-t">
+                            <tr key={role} className="border-t align-baselin">
                               <td className="py-2 pr-2">
                                 <Badge variant="secondary" className={roleColor(role)}>
                                   {prettyRoleLabel(role)}
                                 </Badge>
                               </td>
                               {(["create", "read", "update", "delete"] as CrudKey[]).map((perm) => (
-                                <td key={perm} className="px-2 py-2">
+                                <td key={perm} className="flex justify-center items-center">
                                   <div
                                     className={`w-3 h-3 rounded-full ${
                                       page.rolePermissions[role]?.[perm] ? "bg-green-500" : "bg-gray-300"
