@@ -44,7 +44,7 @@ import type {
 } from "@/types/pageAccess"
 import Loading from "./loading"
 import { useAuth } from "@/contexts/Authentication"
-import { Page, PaginationRequestParams } from "@/types/pagination"
+import type { Page, PaginationRequestParams } from "@/types/pagination"
 
 interface AppRoute {
   file: string
@@ -453,7 +453,7 @@ export function RoleAccessSettings() {
                   </Badge>
                 </td>
                 {perms.map((perm) => (
-                  <td key={perm} className="px-2 py-2 text-center">
+                  <td key={perm} className="px-2 py-2">
                     <Checkbox
                       checked={rolePermissions[role]?.[perm] ?? false}
                       onCheckedChange={() => onToggle(role, perm)}
@@ -676,12 +676,14 @@ export function RoleAccessSettings() {
                                 </Badge>
                               </td>
                               {(["create", "read", "update", "delete"] as CrudKey[]).map((perm) => (
-                                <td key={perm} style={{ textAlign: "-webkit-center" }}>
-                                  <div
-                                    className={`w-3 h-3 rounded-full ${
-                                      page.rolePermissions[role]?.[perm] ? "bg-green-500" : "bg-gray-300"
-                                    }`}
-                                  />
+                                <td key={perm} className="px-2 py-2">
+                                  <div className="flex items-center justify-center">
+                                    <div
+                                      className={`w-3 h-3 rounded-full ${
+                                        page.rolePermissions[role]?.[perm] ? "bg-green-500" : "bg-gray-300"
+                                      }`}
+                                    />
+                                  </div>
                                 </td>
                               ))}
                             </tr>
