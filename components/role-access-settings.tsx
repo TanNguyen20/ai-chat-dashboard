@@ -676,7 +676,7 @@ export function RoleAccessSettings() {
                                 </Badge>
                               </td>
                               {(["create", "read", "update", "delete"] as CrudKey[]).map((perm) => (
-                                <td key={perm} className="">
+                                <td key={perm} style={{ textAlign: "-webkit-center" }}>
                                   <div
                                     className={`w-3 h-3 rounded-full ${
                                       page.rolePermissions[role]?.[perm] ? "bg-green-500" : "bg-gray-300"
