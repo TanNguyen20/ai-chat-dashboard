@@ -41,6 +41,7 @@ import {
   Settings,
   Settings2Icon,
   Shield,
+  TrendingUpDown,
   User,
   Users,
 } from "lucide-react";
@@ -74,6 +75,12 @@ export const navigationItems = [
     url: "/analytics-config",
     icon: Settings2Icon,
     breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Analytics Config" }],
+  },
+  {
+    title: "Stock Forecast",
+    url: "/stock",
+    icon: TrendingUpDown,
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Stock Forecast" }],
   },
   {
     title: "Users",
