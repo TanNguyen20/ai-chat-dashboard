@@ -39,7 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/Authentication"
 import { toast } from "@/hooks/use-toast"
 import { ChatbotService, type Chatbot, type ChatbotRequest } from "@/services/chatbot"
-import { Page } from "@/types/pagination"
+import type { Page } from "@/types/pagination"
 import {
   Bot,
   Calendar,
@@ -372,25 +372,27 @@ export default function ChatbotPage() {
     }
 
     return (
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 justify-start items-center space-x-2">
-          <p className="text-sm text-muted-foreground">
-            Showing {paginationData.numberOfElements} of {paginationData.totalElements} results
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <p className="text-muted-foreground whitespace-nowrap">
+            Showing {paginationData.numberOfElements} of {paginationData.totalElements}
           </p>
-          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground">per page</span>
+          <div className="flex items-center gap-2">
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-16 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground whitespace-nowrap">per page</span>
+          </div>
         </div>
-        <div className="flex flex-1 justify-end items-center">
+        <div className="flex justify-center sm:justify-end">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -425,7 +427,6 @@ export default function ChatbotPage() {
             </PaginationContent>
           </Pagination>
         </div>
-
       </div>
     )
   }
