@@ -372,12 +372,12 @@ export default function ChatbotPage() {
     }
 
     return (
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <p className="text-muted-foreground whitespace-nowrap">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-w-full">
+        <div className="flex flex-wrap items-center gap-2 text-sm min-w-0">
+          <p className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
             Showing {paginationData.numberOfElements} of {paginationData.totalElements}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
               <SelectTrigger className="w-16 h-8">
                 <SelectValue />
@@ -389,12 +389,12 @@ export default function ChatbotPage() {
                 <SelectItem value="50">50</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-muted-foreground whitespace-nowrap">per page</span>
+            <span className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">per page</span>
           </div>
         </div>
-        <div className="flex justify-center sm:justify-end">
+        <div className="flex justify-center sm:justify-end overflow-x-auto max-w-full">
           <Pagination>
-            <PaginationContent>
+            <PaginationContent className="flex-nowrap">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => !first && handlePageChange(currentPageNumber - 1)}
@@ -440,7 +440,7 @@ export default function ChatbotPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-3 sm:p-4">
+    <div className="flex-1 space-y-4 p-3 sm:p-4 max-w-full overflow-x-hidden">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loading ? (
           <>
@@ -529,12 +529,12 @@ export default function ChatbotPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-wrap justify-between items-start sm:items-center gap-3">
+            <div className="min-w-0 flex-1">
               <CardTitle>My Chatbots</CardTitle>
               <CardDescription>Manage your chatbots and their configurations</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -543,16 +543,16 @@ export default function ChatbotPage() {
                 className="flex items-center space-x-2 bg-transparent"
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span>Refresh</span>
+                <span className="hidden xs:inline sm:inline">Refresh</span>
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={openAddDialog} className="flex items-center space-x-2">
                     <Plus className="h-4 w-4" />
-                    <span>Add Chatbot</span>
+                    <span className="hidden xs:inline sm:inline">Add Chatbot</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4">
                   <DialogHeader>
                     <DialogTitle>Create New Chatbot</DialogTitle>
                     <DialogDescription>
@@ -613,10 +613,14 @@ export default function ChatbotPage() {
                         {isCreating ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating Chatbot...
+                            <span className="hidden sm:inline">Creating Chatbot...</span>
+                            <span className="sm:hidden">Creating...</span>
                           </>
                         ) : (
-                          "Create Chatbot"
+                          <>
+                            <span className="hidden sm:inline">Create Chatbot</span>
+                            <span className="sm:hidden">Create</span>
+                          </>
                         )}
                       </Button>
                     </div>
@@ -684,12 +688,14 @@ export default function ChatbotPage() {
                 {chatbots.map((chatbot) => (
                   <Card key={chatbot.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${getThemeColorClass(chatbot.themeColor)}`} />
-                          {chatbot.name}
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                        <CardTitle className="text-lg flex items-center gap-2 min-w-0 truncate">
+                          <div
+                            className={`w-3 h-3 rounded-full flex-shrink-0 ${getThemeColorClass(chatbot.themeColor)}`}
+                          />
+                          <span className="truncate">{chatbot.name}</span>
                         </CardTitle>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge variant="secondary">Active</Badge>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -715,21 +721,21 @@ export default function ChatbotPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Globe className="h-4 w-4" />
-                        <span className="truncate">{chatbot.allowedHost}</span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                        <Globe className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate min-w-0">{chatbot.allowedHost}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Palette className="h-4 w-4" />
+                        <Palette className="h-4 w-4 flex-shrink-0" />
                         <span className="capitalize">{chatbot.themeColor}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Bot className="h-4 w-4" />
-                        <span className="font-mono text-xs">{maskApiKey(chatbot.apiKey)}</span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                        <Bot className="h-4 w-4 flex-shrink-0" />
+                        <span className="font-mono text-xs truncate min-w-0">{maskApiKey(chatbot.apiKey)}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 hover:bg-muted"
+                          className="h-6 w-6 p-0 hover:bg-muted flex-shrink-0"
                           onClick={() => copyApiKey(chatbot.apiKey, chatbot.id)}
                         >
                           {copiedApiKeys.has(chatbot.id) ? (
@@ -739,9 +745,9 @@ export default function ChatbotPage() {
                           )}
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>Created {formatDate(chatbot.createdAt)}</span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                        <Calendar className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate min-w-0">Created {formatDate(chatbot.createdAt)}</span>
                       </div>
                       <div className="pt-2">
                         <Button
@@ -765,7 +771,7 @@ export default function ChatbotPage() {
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4">
           <DialogHeader>
             <DialogTitle>Edit Chatbot</DialogTitle>
             <DialogDescription>Update your chatbot's name, allowed hosts, and theme color.</DialogDescription>
@@ -824,10 +830,14 @@ export default function ChatbotPage() {
                 {isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating Chatbot...
+                    <span className="hidden sm:inline">Updating Chatbot...</span>
+                    <span className="sm:hidden">Updating...</span>
                   </>
                 ) : (
-                  "Update Chatbot"
+                  <>
+                    <span className="hidden sm:inline">Update Chatbot</span>
+                    <span className="sm:hidden">Update</span>
+                  </>
                 )}
               </Button>
             </div>
