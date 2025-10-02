@@ -771,7 +771,7 @@ export default function ChatbotPage() {
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Chatbot</DialogTitle>
             <DialogDescription>Update your chatbot's name, allowed hosts, and theme color.</DialogDescription>
@@ -830,14 +830,14 @@ export default function ChatbotPage() {
                 {isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span className="hidden sm:inline">Updating Chatbot...</span>
-                    <span className="sm:hidden">Updating...</span>
+                    Updating Chatbot...
+
                   </>
                 ) : (
-                  <>
-                    <span className="hidden sm:inline">Update Chatbot</span>
-                    <span className="sm:hidden">Update</span>
-                  </>
+                  "Update Chatbot"
+
+
+
                 )}
               </Button>
             </div>
