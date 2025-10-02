@@ -549,10 +549,10 @@ export default function ChatbotPage() {
                 <DialogTrigger asChild>
                   <Button onClick={openAddDialog} className="flex items-center space-x-2">
                     <Plus className="h-4 w-4" />
-                    <span className="hidden xs:inline sm:inline">Add Chatbot</span>
+                    <span>Add Chatbot</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4">
+                <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle>Create New Chatbot</DialogTitle>
                     <DialogDescription>
@@ -613,14 +613,14 @@ export default function ChatbotPage() {
                         {isCreating ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span className="hidden sm:inline">Creating Chatbot...</span>
-                            <span className="sm:hidden">Creating...</span>
+                            Creating Chatbot...
+
                           </>
                         ) : (
-                          <>
-                            <span className="hidden sm:inline">Create Chatbot</span>
-                            <span className="sm:hidden">Create</span>
-                          </>
+                          "Create Chatbot"
+
+
+
                         )}
                       </Button>
                     </div>
