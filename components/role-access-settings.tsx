@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useToast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 import {
   Dialog,
   DialogContent,
@@ -179,6 +181,7 @@ const PermissionMatrixSkeleton = () => (
 /* ---------- component ---------- */
 
 export function RoleAccessSettings() {
+  const { toast } = useToast()
   const [routes, setRoutes] = useState<AppRoute[]>([])
   const [loadingRoutes, setLoadingRoutes] = useState(false)
 
@@ -196,6 +199,7 @@ export function RoleAccessSettings() {
 
   const [isAddingPage, setIsAddingPage] = useState(false)
   const [isUpdatingPage, setIsUpdatingPage] = useState(false)
+  const [deletingPageId, setDeletingPageId] = useState<number | null>(null)
 
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
@@ -205,7 +209,16 @@ export function RoleAccessSettings() {
 
   const pages = paginatedData?.content || []
 
-  /* ---- load routes ---- */
+  const handleRouteSelect = (url: string) => {
+    setNewPage({ ...newPage, url })
+  }
+
+  const handleEditRouteSelect = (url: string) => {
+    if (editingPage) {
+      setEditingPage({ ...editingPage, url })
+    }
+  }
+
   useEffect(() => {
     const fetchRoutes = async () => {
       setLoadingRoutes(true)
@@ -221,22 +234,20 @@ export function RoleAccessSettings() {
     fetchRoutes()
   }, [])
 
-  /* ---- load roles (interceptor already returns data) ---- */
   useEffect(() => {
     const loadRoles = async () => {
       try {
-        const data = await RoleService.getAllRole() // <- returns Role[] directly
+        const data = await RoleService.getAllRole()
         const sorted = [...data].sort((a, b) => (a.name > b.name ? 1 : -1))
         setRoles(sorted)
       } catch (e) {
         console.error("Failed to load roles:", e)
-        setRoles([]) // avoid null
+        setRoles([])
       }
     }
     loadRoles()
   }, [])
 
-  /* ---- load pages with pagination ---- */
   const loadPages = async () => {
     if (roles === null) return
     setLoadingPages(true)
@@ -244,7 +255,6 @@ export function RoleAccessSettings() {
       const paginationParams: PaginationRequestParams = { page: currentPage, size: pageSize }
       const response = await PageAccessService.listWithPagination(paginationParams)
 
-      // Normalize the role permissions for each page
       const normalizedContent = response.content.map((p) => ({
         ...p,
         rolePermissions: ensureRoles(roleNames, p.rolePermissions),
@@ -268,7 +278,6 @@ export function RoleAccessSettings() {
 
   useEffect(() => {
     loadPages()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roles, currentPage, pageSize])
 
   const handleRefresh = () => {
@@ -281,8 +290,6 @@ export function RoleAccessSettings() {
     return fileName.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
   }
 
-  /* ---------- add / update / delete ---------- */
-
   const handleAddPage = async () => {
     if (!newPage.url || !newPage.description) return
     setIsAddingPage(true)
@@ -292,7 +299,7 @@ export function RoleAccessSettings() {
         description: newPage.description,
         rolePermissions: ensureRoles(roleNames, newPage.rolePermissions),
       }
-      const created = await PageAccessService.create(payload) // <- created PageAccess
+      const created = await PageAccessService.create(payload)
       const normalized = { ...created, rolePermissions: ensureRoles(roleNames, created.rolePermissions) }
 
       if (paginatedData) {
@@ -308,13 +315,18 @@ export function RoleAccessSettings() {
       setIsAddDialogOpen(false)
     } catch (e) {
       console.error("Create page failed:", e)
-      alert("Failed to create page")
+      toast({
+        title: "Create failed",
+        description: "Failed to create the page. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsAddingPage(false)
     }
   }
 
   const handleDeletePage = async (id: number) => {
+    setDeletingPageId(id)
     try {
       await PageAccessService.delete(id)
 
@@ -326,9 +338,20 @@ export function RoleAccessSettings() {
           totalElements: paginatedData.totalElements - 1,
         })
       }
+
+      toast({
+        title: "Page deleted",
+        description: "The page access configuration has been successfully removed.",
+      })
     } catch (e) {
       console.error("Delete page failed:", e)
-      alert("Failed to delete page")
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the page. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingPageId(null)
     }
   }
 
@@ -362,7 +385,11 @@ export function RoleAccessSettings() {
       setEditingPage(null)
     } catch (e) {
       console.error("Update page failed:", e)
-      alert("Failed to update page")
+      toast({
+        title: "Update failed",
+        description: "Failed to update the page. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsUpdatingPage(false)
     }
@@ -374,10 +401,8 @@ export function RoleAccessSettings() {
 
   const handlePageSizeChange = (size: string) => {
     setPageSize(Number.parseInt(size))
-    setCurrentPage(0) // Reset to first page when changing page size
+    setCurrentPage(0)
   }
-
-  /* ---------- toggles ---------- */
 
   const toggleNewPageRolePermission = (roleName: string, perm: CrudKey) => {
     const rp = ensureRoles(roleNames, newPage.rolePermissions)
@@ -404,33 +429,6 @@ export function RoleAccessSettings() {
     rp[roleName] = { create: value, read: value, update: value, delete: value }
     setEditingPage({ ...editingPage, rolePermissions: { ...rp } })
   }
-
-  /* ---------- route selects ---------- */
-
-  const handleRouteSelect = (routeUrl: string) => {
-    const selectedRoute = routes.find((route) => route.next === routeUrl)
-    if (selectedRoute) {
-      setNewPage({
-        ...newPage,
-        url: routeUrl,
-        description: getRouteDescription(selectedRoute),
-      })
-    }
-  }
-
-  const handleEditRouteSelect = (routeUrl: string) => {
-    if (!editingPage) return
-    const selectedRoute = routes.find((route) => route.next === routeUrl)
-    if (selectedRoute) {
-      setEditingPage({
-        ...editingPage,
-        url: routeUrl,
-        description: getRouteDescription(selectedRoute),
-      })
-    }
-  }
-
-  /* ---------- permission matrix ---------- */
 
   const PermissionMatrix = ({
     rolePermissions,
@@ -493,15 +491,14 @@ export function RoleAccessSettings() {
     )
   }
 
-  /* ---------- render ---------- */
-
   if (isAuthLoading) {
     return <Loading />
   }
 
   return (
     <div>
-      {/* Header */}
+      <Toaster />
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
@@ -616,7 +613,6 @@ export function RoleAccessSettings() {
         </div>
       </div>
 
-      {/* Pages */}
       <div className="space-y-4">
         {loadingPages === null || loadingPages === true ? (
           <div className="space-y-4">
@@ -643,8 +639,12 @@ export function RoleAccessSettings() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" disabled={deletingPageId === page.id}>
+                          {deletingPageId === page.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <MoreVertical className="h-4 w-4" />
+                          )}
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -652,7 +652,11 @@ export function RoleAccessSettings() {
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeletePage(page.id)} className="text-destructive">
+                        <DropdownMenuItem
+                          onClick={() => handleDeletePage(page.id)}
+                          className="text-destructive"
+                          disabled={deletingPageId !== null}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -736,11 +740,9 @@ export function RoleAccessSettings() {
               </PaginationItem>
 
               {Array.from({ length: paginatedData.totalPages }, (_, i) => {
-                // Show first page, last page, current page, and pages around current page
                 const showPage = i === 0 || i === paginatedData.totalPages - 1 || Math.abs(i - currentPage) <= 1
 
                 if (!showPage) {
-                  // Show ellipsis if there's a gap
                   if (i === 1 && currentPage > 3) {
                     return (
                       <PaginationItem key={`ellipsis-start`}>
@@ -784,7 +786,6 @@ export function RoleAccessSettings() {
         </div>
       )}
 
-      {/* Edit dialog */}
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
