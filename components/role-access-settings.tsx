@@ -521,6 +521,7 @@ export function RoleAccessSettings() {
             title="Refresh page data"
           >
             <RefreshCw className={`h-4 w-4 ${loadingPages === true ? "animate-spin" : ""}`} />
+            <span className="hidden xs:inline sm:inline">Refresh</span>
           </Button>
 
           <div className="flex items-center gap-2">
