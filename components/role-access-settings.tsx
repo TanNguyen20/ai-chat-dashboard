@@ -28,7 +28,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Trash2, Edit, Plus, MoreVertical } from "lucide-react"
+import { Trash2, Edit, Plus, MoreVertical, RefreshCw, Loader2 } from "lucide-react"
 
 import { RoleService } from "@/services/role"
 import type { Role as BERole } from "@/types/role"
@@ -194,6 +194,9 @@ export function RoleAccessSettings() {
   const [editingPage, setEditingPage] = useState<BEPage | null>(null)
   const { isLoading: isAuthLoading } = useAuth()
 
+  const [isAddingPage, setIsAddingPage] = useState(false)
+  const [isUpdatingPage, setIsUpdatingPage] = useState(false)
+
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
     description: "",
@@ -234,38 +237,43 @@ export function RoleAccessSettings() {
   }, [])
 
   /* ---- load pages with pagination ---- */
-  useEffect(() => {
+  const loadPages = async () => {
     if (roles === null) return
-    const loadPages = async () => {
-      setLoadingPages(true)
-      try {
-        const paginationParams: PaginationRequestParams = { page: currentPage, size: pageSize }
-        const response = await PageAccessService.listWithPagination(paginationParams)
+    setLoadingPages(true)
+    try {
+      const paginationParams: PaginationRequestParams = { page: currentPage, size: pageSize }
+      const response = await PageAccessService.listWithPagination(paginationParams)
 
-        // Normalize the role permissions for each page
-        const normalizedContent = response.content.map((p) => ({
-          ...p,
-          rolePermissions: ensureRoles(roleNames, p.rolePermissions),
-        }))
+      // Normalize the role permissions for each page
+      const normalizedContent = response.content.map((p) => ({
+        ...p,
+        rolePermissions: ensureRoles(roleNames, p.rolePermissions),
+      }))
 
-        setPaginatedData({
-          ...response,
-          content: normalizedContent,
-        })
+      setPaginatedData({
+        ...response,
+        content: normalizedContent,
+      })
 
-        setNewPage((prev) => ({
-          ...prev,
-          rolePermissions: ensureRoles(roleNames, prev.rolePermissions),
-        }))
-      } catch (e) {
-        console.error("Failed to load pages:", e)
-      } finally {
-        setLoadingPages(false)
-      }
+      setNewPage((prev) => ({
+        ...prev,
+        rolePermissions: ensureRoles(roleNames, prev.rolePermissions),
+      }))
+    } catch (e) {
+      console.error("Failed to load pages:", e)
+    } finally {
+      setLoadingPages(false)
     }
+  }
+
+  useEffect(() => {
     loadPages()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roles, currentPage, pageSize])
+
+  const handleRefresh = () => {
+    loadPages()
+  }
 
   const getRouteDescription = (route: AppRoute) => {
     const segments = route.file.split("/")
@@ -277,6 +285,7 @@ export function RoleAccessSettings() {
 
   const handleAddPage = async () => {
     if (!newPage.url || !newPage.description) return
+    setIsAddingPage(true)
     try {
       const payload: UpsertPageRequest = {
         url: newPage.url,
@@ -300,6 +309,8 @@ export function RoleAccessSettings() {
     } catch (e) {
       console.error("Create page failed:", e)
       alert("Failed to create page")
+    } finally {
+      setIsAddingPage(false)
     }
   }
 
@@ -330,6 +341,7 @@ export function RoleAccessSettings() {
 
   const handleUpdatePage = async () => {
     if (!editingPage) return
+    setIsUpdatingPage(true)
     try {
       const payload: UpsertPageRequest = {
         url: editingPage.url,
@@ -351,6 +363,8 @@ export function RoleAccessSettings() {
     } catch (e) {
       console.error("Update page failed:", e)
       alert("Failed to update page")
+    } finally {
+      setIsUpdatingPage(false)
     }
   }
 
@@ -502,6 +516,16 @@ export function RoleAccessSettings() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={loadingPages === true}
+            title="Refresh page data"
+          >
+            <RefreshCw className={`h-4 w-4 ${loadingPages === true ? "animate-spin" : ""}`} />
+          </Button>
+
           <div className="flex items-center gap-2">
             <Label htmlFor="pageSize" className="text-sm">
               Show:
@@ -579,11 +603,12 @@ export function RoleAccessSettings() {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isAddingPage}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0}>
-                  Add Page
+                <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0 || isAddingPage}>
+                  {isAddingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isAddingPage ? "Adding..." : "Add Page"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -808,10 +833,13 @@ export function RoleAccessSettings() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPage(null)}>
+            <Button variant="outline" onClick={() => setEditingPage(null)} disabled={isUpdatingPage}>
               Cancel
             </Button>
-            <Button onClick={handleUpdatePage}>Update Page</Button>
+            <Button onClick={handleUpdatePage} disabled={isUpdatingPage}>
+              {isUpdatingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isUpdatingPage ? "Updating..." : "Update Page"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
