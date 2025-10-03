@@ -513,15 +513,9 @@ export function RoleAccessSettings() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={loadingPages === true}
-            title="Refresh page data"
-          >
-            <RefreshCw className={`h-4 w-4 ${loadingPages === true ? "animate-spin" : ""}`} />
-            <span className="hidden xs:inline sm:inline">Refresh</span>
+          <Button variant="outline" onClick={handleRefresh} disabled={loadingPages === true}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loadingPages === true ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
 
           <div className="flex items-center gap-2">
