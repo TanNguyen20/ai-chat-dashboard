@@ -207,7 +207,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
                 sideOffset={4}
               >
                 <DropdownMenuItem>
-                  <Link href="/settings" className="flex justify-center items-center" >
+                  <Link href="/profile" className="flex justify-center items-center" >
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
