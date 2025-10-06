@@ -14,8 +14,6 @@ interface PersonalInfoSectionProps {
     fullName: string
     email: string
     bio: string
-    location: string
-    website: string
   }
   isEditing: boolean
   onEdit: () => void
@@ -27,9 +25,7 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
   const [formData, setFormData] = useState({
     fullName: user.fullName,
     email: user.email,
-    bio: user.bio,
-    location: user.location,
-    website: user.website,
+    bio: user.bio
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -97,33 +93,6 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
               rows={3}
               className="resize-none"
             />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                disabled={!isEditing}
-                placeholder="City, Country"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                name="website"
-                type="url"
-                value={formData.website}
-                onChange={handleChange}
-                disabled={!isEditing}
-                placeholder="https://yourwebsite.com"
-              />
-            </div>
           </div>
 
           {isEditing && (
