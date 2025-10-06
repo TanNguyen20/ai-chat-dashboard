@@ -211,8 +211,10 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowLogoutDialog(true)}>
