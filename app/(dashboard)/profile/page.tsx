@@ -11,7 +11,7 @@ const mockUser = {
   id: "1",
   fullName: "Alex Johnson",
   email: "alex.johnson@example.com",
-  avatar: "/professional-avatar.png",
+  avatar: "/professional-avatar.jpg",
   bio: "Product designer and developer passionate about creating beautiful user experiences.",
   location: "San Francisco, CA",
   website: "https://alexjohnson.dev",
