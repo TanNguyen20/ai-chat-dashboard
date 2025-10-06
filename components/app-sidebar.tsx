@@ -45,13 +45,22 @@ import {
   User,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   showLogoutDialog: boolean;
   setShowLogoutDialog: (show: boolean) => void;
 }
 
-export const navigationItems = [
+type BreadcrumbCrumb = { title: string; href?: string };
+type NavigationItem = {
+  title?: string;
+  url?: string;
+  icon?: LucideIcon;
+  breadcrumb?: BreadcrumbCrumb[];
+};
+
+export const navigationItems: NavigationItem[] = [
   {
     title: "Dashboard",
     url: "/",
@@ -121,10 +130,17 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
 
   const { canRead, isChecking } = usePermission();
 
+  // Type guard for items that have all sidebar-required fields
+  const isSidebarItem = (
+    item: NavigationItem
+  ): item is Required<Pick<NavigationItem, "title" | "url" | "icon">> & NavigationItem =>
+    !!item.title && !!item.url && !!item.icon;
+
   // Hide items while permissions are still resolving (optional)
+  // Also ensure we only show items with title/url/icon and that user can read url
   const filteredNavItems = isChecking
     ? []
-    : navigationItems.filter((item) => canRead(item.url));
+    : navigationItems.filter(isSidebarItem).filter((item) => canRead(item.url));
 
   const getUserInitials = (username: string) =>
     username
@@ -164,7 +180,7 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link href={item.url} onClick={handleNavClick}>
                       <item.icon className="size-4" />
@@ -207,13 +223,13 @@ export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: 
                 sideOffset={4}
               >
                 <DropdownMenuItem>
-                  <Link href="/profile" className="flex justify-center items-center" >
+                  <Link href="/profile" className="flex justify-center items-center">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href="/settings" className="flex justify-center items-center" >
+                  <Link href="/settings" className="flex justify-center items-center">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
