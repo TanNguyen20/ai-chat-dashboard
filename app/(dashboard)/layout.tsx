@@ -49,7 +49,12 @@ export default function DashboardLayout({
   }
 
   const getBreadcrumbs = () => {
-    return navigationItems.find((item) => item.url === pathname)?.breadcrumb || [{ title: "Dashboard", href: "/" }, { title: "Page" }]
+    return (
+      navigationItems.find((item) => item.url === pathname)?.breadcrumb || [
+        { title: "Dashboard", href: "/" },
+        { title: "Page" },
+      ]
+    )
   }
 
   if (isLoading) {
