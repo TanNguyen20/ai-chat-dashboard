@@ -122,6 +122,7 @@ export const navigationItems: NavigationItem[] = [
     breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Settings" }],
   },
   {
+    url: "/profile",
     breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Profile" }],
   },
 ];
