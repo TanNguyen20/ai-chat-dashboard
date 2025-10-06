@@ -121,6 +121,9 @@ export const navigationItems: NavigationItem[] = [
     icon: Settings,
     breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Settings" }],
   },
+  {
+    breadcrumb: [{ title: "Dashboard", href: "/" }, { title: "Profile" }],
+  },
 ];
 
 export function AppSidebar({ showLogoutDialog, setShowLogoutDialog, ...props }: AppSidebarProps) {
