@@ -77,7 +77,7 @@ interface PaginatedUsersResponse {
     unsorted: boolean
   }
   first: boolean
-  numberOfElements: boolean
+  numberOfElements: number
   empty: boolean
 }
 
