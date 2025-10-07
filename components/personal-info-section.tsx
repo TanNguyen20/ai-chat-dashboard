@@ -7,13 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 
 interface PersonalInfoSectionProps {
   user: {
     fullName: string
     email: string
-    bio: string
   }
   isEditing: boolean
   onEdit: () => void
@@ -24,8 +22,7 @@ interface PersonalInfoSectionProps {
 export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave }: PersonalInfoSectionProps) {
   const [formData, setFormData] = useState({
     fullName: user.fullName,
-    email: user.email,
-    bio: user.bio
+    email: user.email
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,20 +76,6 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
                 placeholder="your.email@example.com"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              disabled={!isEditing}
-              placeholder="Tell us about yourself"
-              rows={3}
-              className="resize-none"
-            />
           </div>
 
           {isEditing && (

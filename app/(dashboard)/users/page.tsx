@@ -52,35 +52,6 @@ interface EditUser {
   roles: string[]
 }
 
-interface PaginatedUsersResponse {
-  content: User[]
-  pageable: {
-    pageNumber: number
-    pageSize: number
-    sort: {
-      empty: boolean
-      sorted: boolean
-      unsorted: boolean
-    }
-    offset: number
-    paged: boolean
-    unpaged: boolean
-  }
-  last: boolean
-  totalPages: number
-  totalElements: number
-  size: number
-  number: number
-  sort: {
-    empty: boolean
-    sorted: boolean
-    unsorted: boolean
-  }
-  first: boolean
-  numberOfElements: number
-  empty: boolean
-}
-
 export default function UsersPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
@@ -136,7 +107,7 @@ export default function UsersPage() {
       if (!loading) {
         setRefreshing(true)
       }
-      const response: PaginatedUsersResponse = await UserService.getAllUser({ page: currentPage, size: pageSize })
+      const response = await UserService.getAllUser({ page: currentPage, size: pageSize })
       setUsers(response.content)
       setTotalPages(response.totalPages)
       setTotalElements(response.totalElements)

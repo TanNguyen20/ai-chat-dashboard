@@ -1,39 +1,68 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ProfileHeader } from "@/components/profile-header"
 import { PersonalInfoSection } from "@/components/personal-info-section"
 import { SecuritySection } from "@/components/security-section"
 import { PreferencesSection } from "@/components/preferences-section"
+import { useAuth } from "@/contexts/Authentication"
+import { User, UserProfileInfo } from "@/types/user"
+import { getHighestRole } from "@/utils/commons"
+import { UserService } from "@/services/user"
 
-// Mock user data
-const mockUser = {
-  id: "1",
-  fullName: "Alex Johnson",
-  email: "alex.johnson@example.com",
-  avatar: "/professional-avatar.jpg",
-  bio: "Product designer and developer passionate about creating beautiful user experiences.",
-  location: "San Francisco, CA",
-  website: "https://alexjohnson.dev",
-  joinedDate: "January 2024",
-  timezone: "America/Los_Angeles",
-  language: "English",
-  emailNotifications: true,
-  marketingEmails: false,
+const convertUserAuthToProfileInfo = (userAuth: User): UserProfileInfo => {
+  return {
+    id: userAuth.id,
+    fullName: userAuth.fullName || "",
+    email: userAuth.email || "",
+    avatar: "/professional-avatar.jpg",
+    bio: `Permissons: ${getHighestRole(userAuth)}`,
+    location: "Vietnam, Ho Chi Minh",
+    joinedDate: userAuth.createdAt,
+    timezone: "Vietnam/Ho_Chi_Minh",
+    language: "English",
+    emailNotifications: true,
+    marketingEmails: false,
+  }
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(mockUser)
+  const { user: userAuth } = useAuth()
+  const [user, setUser] = useState<UserProfileInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
 
-  const handleSave = (updates: Partial<typeof mockUser>) => {
-    setUser({ ...user, ...updates })
+  useEffect(() => {
+    if (userAuth) {
+      setUser(convertUserAuthToProfileInfo(userAuth))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(userAuth)])
+
+  const handleSave = async (updates: Partial<UserProfileInfo>) => {
+    if (!user) return
+
+    // Optimistic update
+    const prev = user
+    const next = { ...user, ...updates }
+    setUser(next)
     setIsEditing(false)
-    // In a real app, this would make an API call to save the data
-    console.log("[v0] Saving user data:", updates)
+
+    try {
+      // Only send fields backend expects
+      await UserService.updateProfileInfo({
+        email: updates.email ?? prev.email,
+        fullName: updates.fullName ?? prev.fullName,
+      })
+      console.log("[profile] Saved user data to backend:", updates)
+    } catch (error) {
+      console.error("[profile] Failed to save user data:", error)
+      // Roll back if the request fails
+      setUser(prev)
+      setIsEditing(true)
+    }
   }
 
-  return (
+  return user && (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">

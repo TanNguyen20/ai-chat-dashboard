@@ -6,15 +6,10 @@ import { useState, useRef } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Camera } from "lucide-react"
+import { UserProfileInfo } from "@/types/user"
 
 interface ProfileHeaderProps {
-  user: {
-    fullName: string
-    email: string
-    avatar: string
-    bio: string
-    joinedDate: string
-  }
+  user: UserProfileInfo
   onSave: (updates: { avatar?: string }) => void
 }
 

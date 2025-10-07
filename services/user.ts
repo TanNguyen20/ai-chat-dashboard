@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/const/api"
 import AxiosClient from "./apiConfig"
-import type { User, UserInfoRequest } from "@/types/user"
+import type { User, UserInfoRequest, UserProfileInfoRequest } from "@/types/user"
 import { Page, PaginationRequestParams } from "@/types/pagination"
 
 const api = AxiosClient.getInstance(`${BASE_URL.AI_CHAT_SERVICE}/users`)
@@ -67,6 +67,11 @@ export class UserService {
       "currentPassword": currentPassword,
       "newPassword": newPassword,
     })
+    return response
+  }
+
+  static async updateProfileInfo(data: UserProfileInfoRequest): Promise<User> {
+    const response = await api.put(`/me`, data)
     return response
   }
 }
