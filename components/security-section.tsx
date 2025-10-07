@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { UserService } from "@/services/user" // <-- adjust path if needed
 
 export function SecuritySection() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -24,7 +25,7 @@ export function SecuritySection() {
   })
   const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (passwords.new !== passwords.confirm) {
@@ -45,15 +46,27 @@ export function SecuritySection() {
       return
     }
 
-    // In a real app, this would make an API call
-    console.log("[v0] Password change requested")
-    toast({
-      title: "Success",
-      description: "Your password has been updated",
-    })
+    try {
+      await UserService.updatePassword(passwords.current, passwords.new)
 
-    setPasswords({ current: "", new: "", confirm: "" })
-    setIsChangingPassword(false)
+      toast({
+        title: "Success",
+        description: "Your password has been updated",
+      })
+
+      setPasswords({ current: "", new: "", confirm: "" })
+      setIsChangingPassword(false)
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update password"
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      })
+    }
   }
 
   const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
