@@ -57,7 +57,7 @@ export class UserService {
     return response
   }
 
-  static async updateUserPassword(userId, newPassword) {
+  static async updateUserPassword(userId: number, newPassword: string) {
     const response = await api.put(`/${userId}/password`, {newPassword})
     return response
   }
