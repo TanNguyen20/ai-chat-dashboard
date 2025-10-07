@@ -35,7 +35,7 @@ import { UserService } from "@/services/user"
 import type { Role } from "@/types/role"
 import type { User, UserInfoRequest } from "@/types/user"
 import { formatRoleName, hasRole } from "@/utils/commons"
-import { Edit, Plus, Trash2, UserCheck, UserCog, Users, UserX, RotateCcw, RefreshCw } from "lucide-react"
+import { Edit, Plus, Trash2, UserCheck, UserCog, Users, UserX, RotateCcw, RefreshCw, KeyRound } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface NewUser {
@@ -77,7 +77,7 @@ interface PaginatedUsersResponse {
     unsorted: boolean
   }
   first: boolean
-  numberOfElements: number
+  numberOfElements: boolean
   empty: boolean
 }
 
@@ -96,6 +96,8 @@ export default function UsersPage() {
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false)
   const [isUpdatingInfo, setIsUpdatingInfo] = useState(false)
   const [isDeletingUser, setIsDeletingUser] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
@@ -103,6 +105,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState("")
   const [newUser, setNewUser] = useState<NewUser>({
     username: "",
     email: "",
@@ -247,6 +250,32 @@ export default function UsersPage() {
       toast({ title: "Error", description: "Failed to update user info", variant: "destructive" })
     } finally {
       setIsUpdatingInfo(false)
+    }
+  }
+
+  const openChangePasswordDialog = (u: User) => {
+    setSelectedUser(u)
+    setNewPassword("")
+    setIsChangePasswordDialogOpen(true)
+  }
+
+  const handleChangePassword = async () => {
+    if (!selectedUser) return
+    if (!newPassword || newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" })
+      return
+    }
+    setIsChangingPassword(true)
+    try {
+      await UserService.updateUserPassword(selectedUser.id, newPassword)
+      setIsChangePasswordDialogOpen(false)
+      setSelectedUser(null)
+      setNewPassword("")
+      toast({ title: "Success", description: "Password changed successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to change password", variant: "destructive" })
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
@@ -602,7 +631,7 @@ export default function UsersPage() {
                               <Badge variant={status.variant}>{status.label}</Badge>
                             </div>
                           </div>
-                          <div className="flex shrink-0 gap-2">
+                          <div className="flex shrink-0 gap-2 flex-wrap">
                             <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -614,6 +643,11 @@ export default function UsersPage() {
                             {isSuperAdmin && (
                               <Button variant="outline" size="icon" onClick={() => openResetInfoDialog(u)}>
                                 <RotateCcw className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {isSuperAdmin && (
+                              <Button variant="outline" size="icon" onClick={() => openChangePasswordDialog(u)}>
+                                <KeyRound className="h-4 w-4" />
                               </Button>
                             )}
                             <Button
@@ -670,6 +704,15 @@ export default function UsersPage() {
                                 {isSuperAdmin && (
                                   <Button variant="outline" size="sm" onClick={() => openResetInfoDialog(userData)}>
                                     <RotateCcw className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {isSuperAdmin && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openChangePasswordDialog(userData)}
+                                  >
+                                    <KeyRound className="h-4 w-4" />
                                   </Button>
                                 )}
                                 <Button
@@ -932,6 +975,38 @@ export default function UsersPage() {
             </Button>
             <Button onClick={handleResetUserInfo} disabled={isUpdatingInfo}>
               {isUpdatingInfo ? "Updating Info..." : "Update Info"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for <span className="font-semibold">{selectedUser?.username}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleChangePassword} disabled={isChangingPassword}>
+              {isChangingPassword ? "Changing Password..." : "Change Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
