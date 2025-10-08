@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { Spinner } from "@/components/ui/spinner"
 
 interface PreferencesSectionProps {
   user: {
@@ -147,7 +146,6 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <>
-                  <Spinner className="mr-2 h-4 w-4" />
                   Saving...
                 </>
               ) : (
