@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { Spinner } from "@/components/ui/spinner"
 
 interface PreferencesSectionProps {
   user: {
@@ -26,6 +27,7 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
     marketingEmails: user.marketingEmails,
   })
   const [hasChanges, setHasChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
   const handleChange = (key: string, value: string | boolean) => {
@@ -33,14 +35,25 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
     setHasChanges(true)
   }
 
-  const handleSave = () => {
-    onSave(preferences)
-    setHasChanges(false)
-    toast({
-      title: "Success",
-      description: "Your preferences have been updated",
-    })
-    console.log("[v0] Preferences saved:", preferences)
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      await onSave(preferences)
+      setHasChanges(false)
+      toast({
+        title: "Success",
+        description: "Your preferences have been updated",
+      })
+      console.log("[v0] Preferences saved:", preferences)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save preferences",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -53,7 +66,11 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="timezone">Timezone</Label>
-            <Select value={preferences.timezone} onValueChange={(value) => handleChange("timezone", value)}>
+            <Select
+              value={preferences.timezone}
+              onValueChange={(value) => handleChange("timezone", value)}
+              disabled={isSaving}
+            >
               <SelectTrigger id="timezone">
                 <SelectValue />
               </SelectTrigger>
@@ -71,7 +88,11 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
 
           <div className="space-y-2">
             <Label htmlFor="language">Language</Label>
-            <Select value={preferences.language} onValueChange={(value) => handleChange("language", value)}>
+            <Select
+              value={preferences.language}
+              onValueChange={(value) => handleChange("language", value)}
+              disabled={isSaving}
+            >
               <SelectTrigger id="language">
                 <SelectValue />
               </SelectTrigger>
@@ -101,6 +122,7 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
               id="emailNotifications"
               checked={preferences.emailNotifications}
               onCheckedChange={(checked) => handleChange("emailNotifications", checked)}
+              disabled={isSaving}
             />
           </div>
 
@@ -115,15 +137,26 @@ export function PreferencesSection({ user, onSave }: PreferencesSectionProps) {
               id="marketingEmails"
               checked={preferences.marketingEmails}
               onCheckedChange={(checked) => handleChange("marketingEmails", checked)}
+              disabled={isSaving}
             />
           </div>
         </div>
 
         {hasChanges && (
           <div className="flex gap-3 border-t pt-6">
-            <Button onClick={handleSave}>Save Preferences</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  Saving...
+                </>
+              ) : (
+                "Save Preferences"
+              )}
+            </Button>
             <Button
               variant="outline"
+              disabled={isSaving}
               onClick={() => {
                 setPreferences({
                   timezone: user.timezone,
