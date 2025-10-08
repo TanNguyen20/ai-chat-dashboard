@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 
 interface PersonalInfoSectionProps {
   user: {
@@ -22,12 +23,18 @@ interface PersonalInfoSectionProps {
 export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave }: PersonalInfoSectionProps) {
   const [formData, setFormData] = useState({
     fullName: user.fullName,
-    email: user.email
+    email: user.email,
   })
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+    setIsSaving(true)
+    try {
+      await onSave(formData)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -59,7 +66,7 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                disabled={!isEditing}
+                disabled={!isEditing || isSaving}
                 placeholder="Enter your full name"
               />
             </div>
@@ -72,7 +79,7 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                disabled={!isEditing}
+                disabled={!isEditing || isSaving}
                 placeholder="your.email@example.com"
               />
             </div>
@@ -80,8 +87,17 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
 
           {isEditing && (
             <div className="flex gap-3 pt-2">
-              <Button type="submit">Save Changes</Button>
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
                 Cancel
               </Button>
             </div>
