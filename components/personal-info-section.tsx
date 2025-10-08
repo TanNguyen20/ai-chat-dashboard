@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Spinner } from "@/components/ui/spinner"
 
 interface PersonalInfoSectionProps {
   user: {
@@ -90,7 +89,6 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
               <Button type="submit" disabled={isSaving}>
                 {isSaving ? (
                   <>
-                    <Spinner className="mr-2 h-4 w-4" />
                     Saving...
                   </>
                 ) : (
