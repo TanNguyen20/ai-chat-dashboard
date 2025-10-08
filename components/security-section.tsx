@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { UserService } from "@/services/user" // <-- adjust path if needed
+import { UserService } from "@/services/user"
+import { Spinner } from "@/components/ui/spinner"
 
 export function SecuritySection() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -46,6 +48,7 @@ export function SecuritySection() {
       return
     }
 
+    setIsUpdating(true)
     try {
       await UserService.updatePassword(passwords.current, passwords.new)
 
@@ -57,15 +60,14 @@ export function SecuritySection() {
       setPasswords({ current: "", new: "", confirm: "" })
       setIsChangingPassword(false)
     } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to update password"
+      const message = error?.response?.data?.message || error?.message || "Failed to update password"
       toast({
         title: "Error",
         description: message,
         variant: "destructive",
       })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -103,12 +105,14 @@ export function SecuritySection() {
                   value={passwords.current}
                   onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
                   placeholder="Enter current password"
+                  disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility("current")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isUpdating}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -124,12 +128,14 @@ export function SecuritySection() {
                   value={passwords.new}
                   onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
                   placeholder="Enter new password"
+                  disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility("new")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isUpdating}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -146,12 +152,14 @@ export function SecuritySection() {
                   value={passwords.confirm}
                   onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                   placeholder="Confirm new password"
+                  disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility("confirm")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isUpdating}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -159,10 +167,20 @@ export function SecuritySection() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit">Update Password</Button>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
+                disabled={isUpdating}
                 onClick={() => {
                   setIsChangingPassword(false)
                   setPasswords({ current: "", new: "", confirm: "" })
