@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { UserService } from "@/services/user"
-import { Spinner } from "@/components/ui/spinner"
 
 export function SecuritySection() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -170,7 +169,6 @@ export function SecuritySection() {
               <Button type="submit" disabled={isUpdating}>
                 {isUpdating ? (
                   <>
-                    <Spinner className="mr-2 h-4 w-4" />
                     Updating...
                   </>
                 ) : (
