@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PersonalInfoSectionProps {
   user: {
@@ -56,51 +58,71 @@ export function PersonalInfoSection({ user, isEditing, onEdit, onCancel, onSave 
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                disabled={!isEditing || isSaving}
-                placeholder="Enter your full name"
-              />
+        {isSaving ? (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-10 w-full" />
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={!isEditing || isSaving}
-                placeholder="your.email@example.com"
-              />
+            <div className="flex gap-3 pt-2">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-20" />
             </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  disabled={!isEditing || isSaving}
+                  placeholder="Enter your full name"
+                />
+              </div>
 
-          {isEditing && (
-            <div className="flex gap-3 pt-2">
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
-                Cancel
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={!isEditing || isSaving}
+                  placeholder="your.email@example.com"
+                />
+              </div>
             </div>
-          )}
-        </form>
+
+            {isEditing && (
+              <div className="flex gap-3 pt-2">
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </form>
+        )}
       </CardContent>
     </Card>
   )
