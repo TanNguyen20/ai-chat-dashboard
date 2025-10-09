@@ -206,8 +206,8 @@ export function RoleAccessSettings() {
 
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
-    pageName: "",
-    pageIcon: "",
+    name: "",
+    icon: "",
     description: "",
     rolePermissions: {},
   })
@@ -296,13 +296,13 @@ export function RoleAccessSettings() {
   }
 
   const handleAddPage = async () => {
-    if (!newPage.url || !newPage.pageName || !newPage.description) return
+    if (!newPage.url || !newPage.name || !newPage.description) return
     setIsAddingPage(true)
     try {
       const payload: UpsertPageRequest = {
         url: newPage.url,
-        pageName: newPage.pageName,
-        pageIcon: newPage.pageIcon,
+        name: newPage.name,
+        icon: newPage.icon,
         description: newPage.description,
         rolePermissions: ensureRoles(roleNames, newPage.rolePermissions),
       }
@@ -318,7 +318,7 @@ export function RoleAccessSettings() {
         })
       }
 
-      setNewPage({ url: "", pageName: "", pageIcon: "", description: "", rolePermissions: ensureRoles(roleNames) })
+      setNewPage({ url: "", name: "", icon: "", description: "", rolePermissions: ensureRoles(roleNames) })
       setIsAddDialogOpen(false)
     } catch (e) {
       console.error("Create page failed:", e)
@@ -375,8 +375,8 @@ export function RoleAccessSettings() {
     try {
       const payload: UpsertPageRequest = {
         url: editingPage.url,
-        pageName: editingPage.pageName,
-        pageIcon: editingPage.pageIcon,
+        name: editingPage.name,
+        icon: editingPage.icon,
         description: editingPage.description,
         rolePermissions: ensureRoles(roleNames, editingPage.rolePermissions),
       }
@@ -559,18 +559,18 @@ export function RoleAccessSettings() {
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="pageName">Page Name</Label>
+                  <Label htmlFor="name">Page Name</Label>
                   <Input
-                    id="pageName"
+                    id="name"
                     placeholder="e.g., Dashboard, User Settings"
-                    value={newPage.pageName}
-                    onChange={(e) => setNewPage({ ...newPage, pageName: e.target.value })}
+                    value={newPage.name}
+                    onChange={(e) => setNewPage({ ...newPage, name: e.target.value })}
                   />
                 </div>
 
                 <IconPicker
-                  value={newPage.pageIcon}
-                  onSelect={(iconName) => setNewPage({ ...newPage, pageIcon: iconName })}
+                  value={newPage.icon}
+                  onSelect={(iconName) => setNewPage({ ...newPage, icon: iconName })}
                   label="Page Icon"
                 />
 
@@ -649,7 +649,7 @@ export function RoleAccessSettings() {
             const enabledRoles = roleNames.filter(
               (r) => page.rolePermissions[r] && anyPermissionTrue(page.rolePermissions[r]),
             )
-            const PageIcon = page.pageIcon ? (Icons[page.pageIcon as keyof typeof Icons] as LucideIcon) : null
+            const PageIcon = page.icon ? (Icons[page.icon as keyof typeof Icons] as LucideIcon) : null
 
             return (
               <Card key={page.id} className="border border-border">
@@ -659,7 +659,7 @@ export function RoleAccessSettings() {
                       <div className="flex items-center gap-2">
                         {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground" />}
                         <CardTitle className="text-lg font-medium text-card-foreground">
-                          {page.pageName || page.url}
+                          {page.name || page.url}
                         </CardTitle>
                       </div>
                       <CardDescription className="text-sm text-muted-foreground">{page.url}</CardDescription>
@@ -823,17 +823,17 @@ export function RoleAccessSettings() {
           {editingPage && roles && roleNames.length > 0 && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-pageName">Page Name</Label>
+                <Label htmlFor="edit-name">Page Name</Label>
                 <Input
-                  id="edit-pageName"
-                  value={editingPage.pageName || ""}
-                  onChange={(e) => setEditingPage({ ...editingPage, pageName: e.target.value })}
+                  id="edit-name"
+                  value={editingPage.name || ""}
+                  onChange={(e) => setEditingPage({ ...editingPage, name: e.target.value })}
                 />
               </div>
 
               <IconPicker
-                value={editingPage.pageIcon}
-                onSelect={(iconName) => setEditingPage({ ...editingPage, pageIcon: iconName })}
+                value={editingPage.icon}
+                onSelect={(iconName) => setEditingPage({ ...editingPage, icon: iconName })}
                 label="Page Icon"
               />
 
