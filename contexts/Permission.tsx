@@ -41,6 +41,8 @@ interface PermissionContextType {
   refresh: () => Promise<void>;
   /** True while checking/redirecting */
   isChecking: boolean;
+
+  pages: Array<PageAccess> | null
 }
 
 // ---- Context ----
@@ -125,7 +127,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
 
   const { user, isLoading: isAuthLoading } = useAuth();
 
-  const [pages, setPages] = useState<PageAccess[] | null>(null);
+  const [pages, setPages] = useState<Array<PageAccess>| null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [loadError, setLoadError] = useState(false); // remember fetch errors (fail closed)
 
@@ -245,8 +247,9 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       canRead,
       refresh: loadPages,
       isChecking,
+      pages
     }),
-    [permissions, getPermissionsFor, canRead, isChecking]
+    [permissions, getPermissionsFor, canRead, isChecking, pages]
   );
 
   // --- Show loading while auth is still resolving ---
