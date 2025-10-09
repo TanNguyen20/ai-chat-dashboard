@@ -251,7 +251,13 @@ export function IconPicker({ value, onSelect, label = "Icon" }: IconPickerProps)
               className="h-9"
             />
           </div>
-          <div className="max-h-72 overflow-y-auto">
+          <div
+            className="max-h-72 overflow-y-auto overscroll-contain"
+            style={{ overflowY: "auto", maxHeight: "18rem" }}
+            onWheel={(e) => {
+              e.stopPropagation()
+            }}
+          >
             <div className="grid grid-cols-6 gap-2 p-2">
               {filteredIcons.map((iconName) => {
                 const IconComponent = Icons[iconName as keyof typeof Icons] as LucideIcon
