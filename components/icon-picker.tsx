@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import * as Icons from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -252,7 +251,7 @@ export function IconPicker({ value, onSelect, label = "Icon" }: IconPickerProps)
               className="h-9"
             />
           </div>
-          <ScrollArea className="h-72">
+          <div className="max-h-72 overflow-y-auto">
             <div className="grid grid-cols-6 gap-2 p-2">
               {filteredIcons.map((iconName) => {
                 const IconComponent = Icons[iconName as keyof typeof Icons] as LucideIcon
@@ -274,7 +273,7 @@ export function IconPicker({ value, onSelect, label = "Icon" }: IconPickerProps)
                 )
               })}
             </div>
-          </ScrollArea>
+          </div>
           <div className="p-2 border-t text-xs text-muted-foreground text-center">
             {filteredIcons.length} icons shown
           </div>
