@@ -31,6 +31,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { Trash2, Edit, Plus, MoreVertical, RefreshCw, Loader2 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import * as Icons from "lucide-react"
 
 import { RoleService } from "@/services/role"
 import type { Role as BERole } from "@/types/role"
@@ -47,6 +49,7 @@ import type {
 import Loading from "./loading"
 import { useAuth } from "@/contexts/Authentication"
 import type { Page, PaginationRequestParams } from "@/types/pagination"
+import { IconPicker } from "./icon-picker"
 
 interface AppRoute {
   file: string
@@ -203,6 +206,8 @@ export function RoleAccessSettings() {
 
   const [newPage, setNewPage] = useState<UpsertPageRequest>({
     url: "",
+    pageName: "",
+    pageIcon: "",
     description: "",
     rolePermissions: {},
   })
@@ -291,11 +296,13 @@ export function RoleAccessSettings() {
   }
 
   const handleAddPage = async () => {
-    if (!newPage.url || !newPage.description) return
+    if (!newPage.url || !newPage.pageName || !newPage.description) return
     setIsAddingPage(true)
     try {
       const payload: UpsertPageRequest = {
         url: newPage.url,
+        pageName: newPage.pageName,
+        pageIcon: newPage.pageIcon,
         description: newPage.description,
         rolePermissions: ensureRoles(roleNames, newPage.rolePermissions),
       }
@@ -311,7 +318,7 @@ export function RoleAccessSettings() {
         })
       }
 
-      setNewPage({ url: "", description: "", rolePermissions: ensureRoles(roleNames) })
+      setNewPage({ url: "", pageName: "", pageIcon: "", description: "", rolePermissions: ensureRoles(roleNames) })
       setIsAddDialogOpen(false)
     } catch (e) {
       console.error("Create page failed:", e)
@@ -368,6 +375,8 @@ export function RoleAccessSettings() {
     try {
       const payload: UpsertPageRequest = {
         url: editingPage.url,
+        pageName: editingPage.pageName,
+        pageIcon: editingPage.pageIcon,
         description: editingPage.description,
         rolePermissions: ensureRoles(roleNames, editingPage.rolePermissions),
       }
@@ -542,13 +551,29 @@ export function RoleAccessSettings() {
                 Add Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Page</DialogTitle>
                 <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
+                <div>
+                  <Label htmlFor="pageName">Page Name</Label>
+                  <Input
+                    id="pageName"
+                    placeholder="e.g., Dashboard, User Settings"
+                    value={newPage.pageName}
+                    onChange={(e) => setNewPage({ ...newPage, pageName: e.target.value })}
+                  />
+                </div>
+
+                <IconPicker
+                  value={newPage.pageIcon}
+                  onSelect={(iconName) => setNewPage({ ...newPage, pageIcon: iconName })}
+                  label="Page Icon"
+                />
+
                 <div>
                   <Label htmlFor="url">Page URL</Label>
                   <Select value={newPage.url} onValueChange={handleRouteSelect}>
@@ -624,12 +649,20 @@ export function RoleAccessSettings() {
             const enabledRoles = roleNames.filter(
               (r) => page.rolePermissions[r] && anyPermissionTrue(page.rolePermissions[r]),
             )
+            const PageIcon = page.pageIcon ? (Icons[page.pageIcon as keyof typeof Icons] as LucideIcon) : null
+
             return (
               <Card key={page.id} className="border border-border">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg font-medium text-card-foreground">{page.url}</CardTitle>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground" />}
+                        <CardTitle className="text-lg font-medium text-card-foreground">
+                          {page.pageName || page.url}
+                        </CardTitle>
+                      </div>
+                      <CardDescription className="text-sm text-muted-foreground">{page.url}</CardDescription>
                       <CardDescription className="text-pretty">{page.description}</CardDescription>
                     </div>
                     <DropdownMenu>
@@ -782,13 +815,28 @@ export function RoleAccessSettings() {
       )}
 
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
             <DialogDescription>Update the page and per-role permissions</DialogDescription>
           </DialogHeader>
           {editingPage && roles && roleNames.length > 0 && (
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-pageName">Page Name</Label>
+                <Input
+                  id="edit-pageName"
+                  value={editingPage.pageName || ""}
+                  onChange={(e) => setEditingPage({ ...editingPage, pageName: e.target.value })}
+                />
+              </div>
+
+              <IconPicker
+                value={editingPage.pageIcon}
+                onSelect={(iconName) => setEditingPage({ ...editingPage, pageIcon: iconName })}
+                label="Page Icon"
+              />
+
               <div>
                 <Label htmlFor="edit-url">Page URL</Label>
                 <Select value={editingPage.url} onValueChange={handleEditRouteSelect}>
