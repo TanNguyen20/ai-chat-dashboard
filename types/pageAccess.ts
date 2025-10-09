@@ -5,12 +5,16 @@ export type RolePermissions = Record<RoleKey | string, CRUD>;
 export interface PageAccess {
   id: number;
   url: string;
+  pageName: string
+  pageIcon: string
   description: string;
   rolePermissions: RolePermissions;
 }
 
 export interface UpsertPageRequest {
   url: string;
+  pageName: string
+  pageIcon: string
   description: string;
   rolePermissions: RolePermissions;
 }
