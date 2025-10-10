@@ -569,7 +569,7 @@ export function RoleAccessSettings() {
                 Add Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle>Add New Page</DialogTitle>
                 <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
@@ -583,6 +583,7 @@ export function RoleAccessSettings() {
                     placeholder="e.g., Dashboard, User Settings"
                     value={newPage.name}
                     onChange={(e) => setNewPage({ ...newPage, name: e.target.value })}
+                    className="w-full"
                   />
                 </div>
 
@@ -595,7 +596,7 @@ export function RoleAccessSettings() {
                 <div>
                   <Label htmlFor="url">Page URL</Label>
                   <Select value={newPage.url} onValueChange={handleRouteSelect}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -618,10 +619,11 @@ export function RoleAccessSettings() {
                     placeholder="Brief description of the page"
                     value={newPage.description}
                     onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
+                    className="w-full"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 -mx-4 sm:mx-0 px-4 sm:px-0">
                   <Label className="text-sm font-medium">Per-Role Permissions</Label>
                   {roles === null ? (
                     <PermissionMatrixSkeleton />
@@ -637,11 +639,20 @@ export function RoleAccessSettings() {
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isAddingPage}>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                  disabled={isAddingPage}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0 || isAddingPage}>
+                <Button
+                  onClick={handleAddPage}
+                  disabled={!roles || roleNames.length === 0 || isAddingPage}
+                  className="w-full sm:w-auto"
+                >
                   {isAddingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isAddingPage ? "Adding..." : "Add Page"}
                 </Button>
@@ -847,7 +858,7 @@ export function RoleAccessSettings() {
       )}
 
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
             <DialogDescription>Update the page and per-role permissions</DialogDescription>
@@ -860,6 +871,7 @@ export function RoleAccessSettings() {
                   id="edit-name"
                   value={editingPage.name || ""}
                   onChange={(e) => setEditingPage({ ...editingPage, name: e.target.value })}
+                  className="w-full"
                 />
               </div>
 
@@ -872,7 +884,7 @@ export function RoleAccessSettings() {
               <div>
                 <Label htmlFor="edit-url">Page URL</Label>
                 <Select value={editingPage.url} onValueChange={handleEditRouteSelect}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a page URL" />
                   </SelectTrigger>
                   <SelectContent>
@@ -894,10 +906,11 @@ export function RoleAccessSettings() {
                   id="edit-description"
                   value={editingPage.description}
                   onChange={(e) => setEditingPage({ ...editingPage, description: e.target.value })}
+                  className="w-full"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 -mx-4 sm:mx-0 px-4 sm:px-0">
                 <Label className="text-sm font-medium">Per-Role Permissions</Label>
                 <PermissionMatrix
                   rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
@@ -908,11 +921,16 @@ export function RoleAccessSettings() {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPage(null)} disabled={isUpdatingPage}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditingPage(null)}
+              disabled={isUpdatingPage}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdatePage} disabled={isUpdatingPage}>
+            <Button onClick={handleUpdatePage} disabled={isUpdatingPage} className="w-full sm:w-auto">
               {isUpdatingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isUpdatingPage ? "Updating..." : "Update Page"}
             </Button>
