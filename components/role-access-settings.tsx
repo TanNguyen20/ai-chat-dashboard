@@ -139,7 +139,7 @@ const PageCardSkeleton = () => (
 
 const PermissionMatrixSkeleton = () => (
   <div className="w-full overflow-x-auto">
-    <table className="w-full border-collapse">
+    <table className="w-full border-collapse min-w-[500px]">
       <thead>
         <tr>
           <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
@@ -453,7 +453,7 @@ export function RoleAccessSettings() {
     const perms: CrudKey[] = ["create", "read", "update", "delete"]
     return (
       <div className="w-full overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse min-w-[500px]">
           <thead>
             <tr>
               <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
@@ -505,11 +505,11 @@ export function RoleAccessSettings() {
   }
 
   return (
-    <div>
+    <div className="max-w-full overflow-x-hidden">
       <Toaster />
 
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
           <p className="text-muted-foreground text-pretty">
             Assign <span className="font-medium">CRUD permissions per role</span>
@@ -521,14 +521,19 @@ export function RoleAccessSettings() {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleRefresh} disabled={loadingPages === true}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={loadingPages === true}
+            className="w-full sm:w-auto bg-transparent"
+          >
             <RefreshCw className={`h-4 w-4 mr-2 ${loadingPages === true ? "animate-spin" : ""}`} />
             Refresh
           </Button>
 
           <div className="flex items-center gap-2">
-            <Label htmlFor="pageSize" className="text-sm">
+            <Label htmlFor="pageSize" className="text-sm whitespace-nowrap">
               Show:
             </Label>
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
@@ -546,12 +551,12 @@ export function RoleAccessSettings() {
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" disabled={!roles || roleNames.length === 0}>
+              <Button className="gap-2 w-full sm:w-auto" disabled={!roles || roleNames.length === 0}>
                 <Plus className="h-4 w-4" />
                 Add Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Page</DialogTitle>
                 <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
@@ -654,20 +659,25 @@ export function RoleAccessSettings() {
             return (
               <Card key={page.id} className="border border-border">
                 <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground" />}
-                        <CardTitle className="text-lg font-medium text-card-foreground">
+                        {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
+                        <CardTitle className="text-lg font-medium text-card-foreground break-words">
                           {page.name || page.url}
                         </CardTitle>
                       </div>
-                      <CardDescription className="text-sm text-muted-foreground">{page.url}</CardDescription>
-                      <CardDescription className="text-pretty">{page.description}</CardDescription>
+                      <CardDescription className="text-sm text-muted-foreground break-all">{page.url}</CardDescription>
+                      <CardDescription className="text-pretty break-words">{page.description}</CardDescription>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" disabled={deletingPageId === page.id}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingPageId === page.id}
+                          className="flex-shrink-0"
+                        >
                           {deletingPageId === page.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
@@ -713,7 +723,7 @@ export function RoleAccessSettings() {
                       CRUD Permission Matrix
                     </Label>
                     <div className="w-full overflow-x-auto">
-                      <table className="w-full border-collapse">
+                      <table className="w-full border-collapse min-w-[400px]">
                         <thead>
                           <tr>
                             <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
@@ -757,7 +767,7 @@ export function RoleAccessSettings() {
       </div>
 
       {paginatedData && paginatedData.totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex justify-center overflow-x-auto">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -815,7 +825,7 @@ export function RoleAccessSettings() {
       )}
 
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
             <DialogDescription>Update the page and per-role permissions</DialogDescription>
