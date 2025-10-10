@@ -453,7 +453,7 @@ export function RoleAccessSettings() {
     const perms: CrudKey[] = ["create", "read", "update", "delete"]
     return (
       <div className="w-full overflow-x-auto">
-        <table className="w-full border-collapse min-w-[320px]">
+        <table className="w-full border-collapse min-w-[280px]">
           <thead>
             <tr>
               <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-1 w-20 sm:w-auto">Role</th>
@@ -569,7 +569,7 @@ export function RoleAccessSettings() {
                 Add Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
               <DialogHeader>
                 <DialogTitle>Add New Page</DialogTitle>
                 <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
@@ -623,19 +623,21 @@ export function RoleAccessSettings() {
                   />
                 </div>
 
-                <div className="space-y-2 -mx-4 sm:mx-0 px-4 sm:px-0">
-                  <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                  {roles === null ? (
-                    <PermissionMatrixSkeleton />
-                  ) : roles && roleNames.length > 0 ? (
-                    <PermissionMatrix
-                      rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
-                      onToggle={toggleNewPageRolePermission}
-                      onSetAll={setAllNewPageRole}
-                    />
-                  ) : (
-                    <div className="text-sm text-muted-foreground">No roles available</div>
-                  )}
+                <div className="space-y-2 -mx-3 sm:mx-0">
+                  <Label className="text-sm font-medium px-3 sm:px-0 block">Per-Role Permissions</Label>
+                  <div className="overflow-x-auto px-3 sm:px-0">
+                    {roles === null ? (
+                      <PermissionMatrixSkeleton />
+                    ) : roles && roleNames.length > 0 ? (
+                      <PermissionMatrix
+                        rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
+                        onToggle={toggleNewPageRolePermission}
+                        onSetAll={setAllNewPageRole}
+                      />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No roles available</div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -858,7 +860,7 @@ export function RoleAccessSettings() {
       )}
 
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
             <DialogDescription>Update the page and per-role permissions</DialogDescription>
@@ -910,14 +912,16 @@ export function RoleAccessSettings() {
                 />
               </div>
 
-              <div className="space-y-2 -mx-4 sm:mx-0 px-4 sm:px-0">
-                <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                <PermissionMatrix
-                  rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
-                  onToggle={toggleEditPageRolePermission}
-                  onSetAll={setAllEditPageRole}
-                  compact
-                />
+              <div className="space-y-2 -mx-3 sm:mx-0">
+                <Label className="text-sm font-medium px-3 sm:px-0 block">Per-Role Permissions</Label>
+                <div className="overflow-x-auto px-3 sm:px-0">
+                  <PermissionMatrix
+                    rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
+                    onToggle={toggleEditPageRolePermission}
+                    onSetAll={setAllEditPageRole}
+                    compact
+                  />
+                </div>
               </div>
             </div>
           )}
