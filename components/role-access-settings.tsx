@@ -139,7 +139,7 @@ const PageCardSkeleton = () => (
 
 const PermissionMatrixSkeleton = () => (
   <div className="w-full overflow-x-auto">
-    <table className="w-full border-collapse">
+    <table className="w-full border-collapse min-w-[320px]">
       <thead>
         <tr>
           <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
@@ -453,28 +453,31 @@ export function RoleAccessSettings() {
     const perms: CrudKey[] = ["create", "read", "update", "delete"]
     return (
       <div className="w-full overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse min-w-[280px]">
           <thead>
             <tr>
-              <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
+              <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-1 w-20 sm:w-auto">Role</th>
               {perms.map((p) => (
-                <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-2 capitalize">
+                <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-1 capitalize">
                   {p}
                 </th>
               ))}
-              <th className="text-xs font-medium text-muted-foreground pb-2 pl-2">All</th>
+              <th className="text-xs font-medium text-muted-foreground pb-2 pl-1">All</th>
             </tr>
           </thead>
           <tbody>
             {roleNames.map((role) => (
               <tr key={role} className="border-t">
-                <td className="py-2 pr-2">
-                  <Badge variant="secondary" className={roleColor(role)}>
+                <td className="py-2 pr-1">
+                  <Badge
+                    variant="secondary"
+                    className={`${roleColor(role)} text-xs truncate max-w-[80px] sm:max-w-none`}
+                  >
                     {prettyRoleLabel(role)}
                   </Badge>
                 </td>
                 {perms.map((perm) => (
-                  <td key={perm} className="px-2 py-2">
+                  <td key={perm} className="px-1 py-2">
                     <Checkbox
                       checked={rolePermissions[role]?.[perm] ?? false}
                       onCheckedChange={() => onToggle(role, perm)}
@@ -482,12 +485,22 @@ export function RoleAccessSettings() {
                     />
                   </td>
                 ))}
-                <td className="pl-2 py-2">
-                  <div className="flex gap-2">
-                    <Button variant="outline" size={compact ? "sm" : "sm"} onClick={() => onSetAll(role, true)}>
+                <td className="pl-1 py-2">
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size={compact ? "sm" : "sm"}
+                      className="text-xs px-2 bg-transparent"
+                      onClick={() => onSetAll(role, true)}
+                    >
                       Enable
                     </Button>
-                    <Button variant="ghost" size={compact ? "sm" : "sm"} onClick={() => onSetAll(role, false)}>
+                    <Button
+                      variant="ghost"
+                      size={compact ? "sm" : "sm"}
+                      className="text-xs px-2"
+                      onClick={() => onSetAll(role, false)}
+                    >
                       Clear
                     </Button>
                   </div>
@@ -505,7 +518,7 @@ export function RoleAccessSettings() {
   }
 
   return (
-    <div>
+    <div className="max-w-full overflow-x-hidden">
       <Toaster />
 
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
@@ -553,7 +566,7 @@ export function RoleAccessSettings() {
                 Add Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
               <DialogHeader>
                 <DialogTitle>Add New Page</DialogTitle>
                 <DialogDescription>Pick a page and configure role-specific permissions</DialogDescription>
@@ -567,6 +580,7 @@ export function RoleAccessSettings() {
                     placeholder="e.g., Dashboard, User Settings"
                     value={newPage.name}
                     onChange={(e) => setNewPage({ ...newPage, name: e.target.value })}
+                    className="w-full"
                   />
                 </div>
 
@@ -579,7 +593,7 @@ export function RoleAccessSettings() {
                 <div>
                   <Label htmlFor="url">Page URL</Label>
                   <Select value={newPage.url} onValueChange={handleRouteSelect}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={loadingRoutes ? "Loading routes..." : "Select a page URL"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -602,30 +616,42 @@ export function RoleAccessSettings() {
                     placeholder="Brief description of the page"
                     value={newPage.description}
                     onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
+                    className="w-full"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                  {roles === null ? (
-                    <PermissionMatrixSkeleton />
-                  ) : roles && roleNames.length > 0 ? (
-                    <PermissionMatrix
-                      rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
-                      onToggle={toggleNewPageRolePermission}
-                      onSetAll={setAllNewPageRole}
-                    />
-                  ) : (
-                    <div className="text-sm text-muted-foreground">No roles available</div>
-                  )}
+                <div className="space-y-2 -mx-3 sm:mx-0">
+                  <Label className="text-sm font-medium px-3 sm:px-0 block">Per-Role Permissions</Label>
+                  <div className="overflow-x-auto px-3 sm:px-0">
+                    {roles === null ? (
+                      <PermissionMatrixSkeleton />
+                    ) : roles && roleNames.length > 0 ? (
+                      <PermissionMatrix
+                        rolePermissions={ensureRoles(roleNames, newPage.rolePermissions)}
+                        onToggle={toggleNewPageRolePermission}
+                        onSetAll={setAllNewPageRole}
+                      />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No roles available</div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isAddingPage}>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                  disabled={isAddingPage}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleAddPage} disabled={!roles || roleNames.length === 0 || isAddingPage}>
+                <Button
+                  onClick={handleAddPage}
+                  disabled={!roles || roleNames.length === 0 || isAddingPage}
+                  className="w-full sm:w-auto"
+                >
                   {isAddingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isAddingPage ? "Adding..." : "Add Page"}
                 </Button>
@@ -656,20 +682,29 @@ export function RoleAccessSettings() {
             return (
               <Card key={page.id} className="border border-border">
                 <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 flex-1 min-w-0 max-w-full">
                       <div className="flex items-center gap-2">
-                        {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground" />}
-                        <CardTitle className="text-lg font-medium text-card-foreground">
+                        {PageIcon && <PageIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
+                        <CardTitle className="text-lg font-medium text-card-foreground break-words max-w-full">
                           {page.name || page.url}
                         </CardTitle>
                       </div>
-                      <CardDescription className="text-sm text-muted-foreground">{page.url}</CardDescription>
-                      <CardDescription className="text-pretty">{page.description}</CardDescription>
+                      <CardDescription className="text-sm text-muted-foreground break-all max-w-full overflow-hidden">
+                        {page.url}
+                      </CardDescription>
+                      <CardDescription className="text-pretty break-words max-w-full">
+                        {page.description}
+                      </CardDescription>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" disabled={deletingPageId === page.id}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingPageId === page.id}
+                          className="flex-shrink-0"
+                        >
                           {deletingPageId === page.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
@@ -700,7 +735,7 @@ export function RoleAccessSettings() {
                     <div className="flex flex-wrap gap-2">
                       {roles && enabledRoles.length > 0 ? (
                         enabledRoles.map((r) => (
-                          <Badge key={r} variant="secondary" className={roleColor(r)}>
+                          <Badge key={r} variant="secondary" className={`${roleColor(r)} max-w-full truncate`}>
                             {prettyRoleLabel(r)}
                           </Badge>
                         ))
@@ -714,13 +749,15 @@ export function RoleAccessSettings() {
                     <Label className="text-sm font-medium text-card-foreground mb-1 block">
                       CRUD Permission Matrix
                     </Label>
-                    <div className="w-full overflow-x-auto">
-                      <table className="w-full border-collapse">
+                    <div className="w-full overflow-x-auto -mx-2 px-2">
+                      <table className="w-full border-collapse min-w-[320px]">
                         <thead>
                           <tr>
-                            <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-2">Role</th>
+                            <th className="text-left text-xs font-medium text-muted-foreground pb-2 pr-1 w-20 sm:w-auto">
+                              Role
+                            </th>
                             {(["create", "read", "update", "delete"] as CrudKey[]).map((p) => (
-                              <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-2 capitalize">
+                              <th key={p} className="text-xs font-medium text-muted-foreground pb-2 px-1 capitalize">
                                 {p}
                               </th>
                             ))}
@@ -729,13 +766,16 @@ export function RoleAccessSettings() {
                         <tbody>
                           {roleNames.map((role) => (
                             <tr key={role} className="border-t align-baseline">
-                              <td className="py-2 pr-2">
-                                <Badge variant="secondary" className={roleColor(role)}>
+                              <td className="py-2 pr-1">
+                                <Badge
+                                  variant="secondary"
+                                  className={`${roleColor(role)} text-xs truncate max-w-[80px] sm:max-w-none`}
+                                >
                                   {prettyRoleLabel(role)}
                                 </Badge>
                               </td>
                               {(["create", "read", "update", "delete"] as CrudKey[]).map((perm) => (
-                                <td key={perm} className="px-2 py-2">
+                                <td key={perm} className="px-1 py-2">
                                   <div className="flex items-center justify-center">
                                     <div
                                       className={`w-3 h-3 rounded-full ${
@@ -759,7 +799,7 @@ export function RoleAccessSettings() {
       </div>
 
       {paginatedData && paginatedData.totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex justify-center overflow-x-auto">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -817,7 +857,7 @@ export function RoleAccessSettings() {
       )}
 
       <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Page Access</DialogTitle>
             <DialogDescription>Update the page and per-role permissions</DialogDescription>
@@ -830,6 +870,7 @@ export function RoleAccessSettings() {
                   id="edit-name"
                   value={editingPage.name || ""}
                   onChange={(e) => setEditingPage({ ...editingPage, name: e.target.value })}
+                  className="w-full"
                 />
               </div>
 
@@ -842,7 +883,7 @@ export function RoleAccessSettings() {
               <div>
                 <Label htmlFor="edit-url">Page URL</Label>
                 <Select value={editingPage.url} onValueChange={handleEditRouteSelect}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a page URL" />
                   </SelectTrigger>
                   <SelectContent>
@@ -864,25 +905,33 @@ export function RoleAccessSettings() {
                   id="edit-description"
                   value={editingPage.description}
                   onChange={(e) => setEditingPage({ ...editingPage, description: e.target.value })}
+                  className="w-full"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Per-Role Permissions</Label>
-                <PermissionMatrix
-                  rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
-                  onToggle={toggleEditPageRolePermission}
-                  onSetAll={setAllEditPageRole}
-                  compact
-                />
+              <div className="space-y-2 -mx-3 sm:mx-0">
+                <Label className="text-sm font-medium px-3 sm:px-0 block">Per-Role Permissions</Label>
+                <div className="overflow-x-auto px-3 sm:px-0">
+                  <PermissionMatrix
+                    rolePermissions={ensureRoles(roleNames, editingPage.rolePermissions)}
+                    onToggle={toggleEditPageRolePermission}
+                    onSetAll={setAllEditPageRole}
+                    compact
+                  />
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPage(null)} disabled={isUpdatingPage}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditingPage(null)}
+              disabled={isUpdatingPage}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdatePage} disabled={isUpdatingPage}>
+            <Button onClick={handleUpdatePage} disabled={isUpdatingPage} className="w-full sm:w-auto">
               {isUpdatingPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isUpdatingPage ? "Updating..." : "Update Page"}
             </Button>
