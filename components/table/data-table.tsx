@@ -36,7 +36,6 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useSidebar } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTablePagination } from "./data-table-pagination"
@@ -210,8 +209,6 @@ export function DataTable<TData, TValue>({
     columns.map((column) => (typeof column.id === "string" ? column.id : (column as any).accessorKey)),
   )
 
-  const { isMobile } = useSidebar()
-
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
@@ -279,7 +276,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="min-w-0 space-y-4" style={{width: isMobile ? "95vw" : "calc(97vw - var(--sidebar-width))"}}>
+    <div className="min-w-0 space-y-4 w-full">
       <DataTableToolbar
         table={table}
         globalFilter={globalFilter}

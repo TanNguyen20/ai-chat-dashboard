@@ -319,7 +319,7 @@ export default function CrawlingPage() {
     <div className="bg-background">
       <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Web Crawling Dashboard</h1>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Web Crawling Dashboard</h2>
           <p className="text-sm sm:text-base text-muted-foreground">
             Configure and monitor your web crawling operations in real-time
           </p>

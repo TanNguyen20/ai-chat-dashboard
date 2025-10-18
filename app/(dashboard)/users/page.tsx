@@ -570,7 +570,7 @@ export default function UsersPage() {
                       </Select>
                     </div>
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="gap-2">
                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
@@ -594,15 +594,17 @@ export default function UsersPage() {
                   return (
                     <Card key={u.id} className="hover:shadow-sm transition-shadow">
                       <CardContent className="py-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between gap-2">
                             <div className="font-semibold break-words">{u.username}</div>
-                            <div className="mt-2 flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
-                            <div className="mt-2">
-                              <Badge variant={status.variant}>{status.label}</Badge>
-                            </div>
+                            <Badge variant={status.variant} className="shrink-0">
+                              {status.label}
+                            </Badge>
                           </div>
-                          <div className="flex shrink-0 gap-2 flex-wrap">
+
+                          <div className="flex flex-wrap gap-1">{getUserRoleBadges(u.roles)}</div>
+
+                          <div className="flex flex-wrap gap-2 pt-2 border-t">
                             <Button variant="outline" size="icon" onClick={() => openEditDialog(u)}>
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -791,7 +793,7 @@ export default function UsersPage() {
               action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
             </Button>
@@ -840,7 +842,7 @@ export default function UsersPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
@@ -874,7 +876,7 @@ export default function UsersPage() {
               </div>
             ))}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
               Cancel
             </Button>
@@ -940,7 +942,7 @@ export default function UsersPage() {
               </Label>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsResetInfoDialogOpen(false)}>
               Cancel
             </Button>
@@ -972,7 +974,7 @@ export default function UsersPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(false)}>
               Cancel
             </Button>

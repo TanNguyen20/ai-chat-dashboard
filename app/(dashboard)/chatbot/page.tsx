@@ -529,25 +529,28 @@ export default function ChatbotPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-wrap justify-between items-start sm:items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start lg:items-center">
             <div className="min-w-0 flex-1">
               <CardTitle>My Chatbots</CardTitle>
               <CardDescription>Manage your chatbots and their configurations</CardDescription>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="flex items-center space-x-2 bg-transparent"
+                className="flex items-center justify-center space-x-2 bg-transparent"
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span className="hidden xs:inline sm:inline">Refresh</span>
+                <span>Refresh</span>
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={openAddDialog} className="flex items-center space-x-2">
+                  <Button
+                    onClick={openAddDialog}
+                    className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                  >
                     <Plus className="h-4 w-4" />
                     <span>Add Chatbot</span>
                   </Button>
@@ -614,13 +617,9 @@ export default function ChatbotPage() {
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Creating Chatbot...
-
                           </>
                         ) : (
                           "Create Chatbot"
-
-
-
                         )}
                       </Button>
                     </div>
@@ -831,13 +830,9 @@ export default function ChatbotPage() {
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Updating Chatbot...
-
                   </>
                 ) : (
                   "Update Chatbot"
-
-
-
                 )}
               </Button>
             </div>

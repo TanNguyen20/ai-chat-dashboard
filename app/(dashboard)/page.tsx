@@ -98,7 +98,7 @@ export default function DashboardPage() {
     <div className="container space-y-8 p-3 sm:p-4">
       {/* Welcome */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.username}!</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome back, {user?.username}!</h1>
         <p className="text-muted-foreground">Here's an overview of your available services and recent activity.</p>
       </div>
 

@@ -281,7 +281,7 @@ export default function AnalyticsConfigPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight break-words">Analytics Configuration</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">Analytics Configuration</h1>
           <p className="text-muted-foreground">Manage analytics server configurations and credentials</p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -354,7 +354,7 @@ export default function AnalyticsConfigPage() {
                   </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="gap-2">
                   <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -679,7 +679,7 @@ export default function AnalyticsConfigPage() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Cancel
               </Button>

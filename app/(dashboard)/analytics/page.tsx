@@ -491,7 +491,7 @@ export default function AnalyticsListPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl" title="Analytics Dashboards">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" title="Analytics Dashboards">
             Analytics Dashboards
           </h1>
           <p
@@ -521,7 +521,7 @@ export default function AnalyticsListPage() {
                 <span className="xs:hidden sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
               <DialogHeader className="space-y-2">
                 <DialogTitle className="text-lg sm:text-xl">Create Analytics Dashboard</DialogTitle>
                 <DialogDescription className="text-sm">
@@ -868,7 +868,7 @@ export default function AnalyticsListPage() {
                                 )}
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-md sm:mx-auto sm:w-full">
+                            <AlertDialogContent className="w-[calc(100vw-1.5rem)] max-w-md sm:mx-auto sm:w-full">
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-base sm:text-lg">
                                   Delete Analytics Dashboard
@@ -952,7 +952,7 @@ export default function AnalyticsListPage() {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="mx-3 w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[600px] sm:mx-auto sm:w-full">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-lg sm:text-xl">Edit Analytics Dashboard</DialogTitle>
             <DialogDescription className="text-sm">Update the analytics dashboard configuration.</DialogDescription>

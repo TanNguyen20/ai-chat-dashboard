@@ -66,7 +66,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Profile Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Profile Settings</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 

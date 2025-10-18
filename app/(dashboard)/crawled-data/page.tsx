@@ -9,12 +9,14 @@ import type { FacetDef } from "@/components/table/data-table-toolbar"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StudentType } from "@/const/student"
+import { useSidebar } from "@/components/ui/sidebar"
 
 function toSpringSort(sorting: SortingState): string[] {
   return sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`).filter(Boolean)
 }
 
 export default function StudentsPage() {
+  const { isMobile } = useSidebar()
   const [studentType, setStudentType] = React.useState<StudentType>("DNC")
   const [rows, setRows] = React.useState<UiStudent[]>([])
   const [total, setTotal] = React.useState(0)
@@ -29,7 +31,7 @@ export default function StudentsPage() {
   ])
 
   React.useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const f = await StudentService.getFacets(studentType)
         setFacets((prev) =>
@@ -43,7 +45,7 @@ export default function StudentsPage() {
             return x
           })
         )
-      } catch {}
+      } catch { }
     })()
   }, [studentType])
 
@@ -83,36 +85,37 @@ export default function StudentsPage() {
   }, [handleFetch])
 
   return (
-    <div className="flex flex-col gap-4 p-3 sm:p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Crawled Data</h1>
-
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium">School name</span>
-          <Select
-            value={studentType.toString()}
-            onValueChange={(v) => setStudentType(v as unknown as StudentType)}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select school name" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="DNC">DNC</SelectItem>
-              <SelectItem value="USH">USH</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="flex flex-col gap-4 h-[calc(100vh-4rem)]" style={{ width: isMobile ? "100vw" : "calc(100vw - var(--sidebar-width))" }}>
+      <div className="mx-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium">School name</span>
+            <Select
+              value={studentType.toString()}
+              onValueChange={(v) => setStudentType(v as unknown as StudentType)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select school name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="DNC">DNC</SelectItem>
+                <SelectItem value="USH">USH</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      <DataTable
-        server
-        columns={columns}
-        data={rows}
-        total={total}
-        loading={loading}
-        onServerStateChange={handleFetch}
-        facets={facets}
-      />
+        <DataTable
+          server
+          columns={columns}
+          data={rows}
+          total={total}
+          loading={loading}
+          onServerStateChange={handleFetch}
+          facets={facets}
+        />
+      </div>
     </div>
   )
 }

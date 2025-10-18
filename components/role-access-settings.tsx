@@ -508,9 +508,9 @@ export function RoleAccessSettings() {
     <div>
       <Toaster />
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
         <div>
-          <h2 className="text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground text-balance">Role-Based Page Access</h2>
           <p className="text-muted-foreground text-pretty">
             Assign <span className="font-medium">CRUD permissions per role</span>
           </p>
@@ -521,32 +521,34 @@ export function RoleAccessSettings() {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleRefresh} disabled={loadingPages === true}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loadingPages === true ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="pageSize" className="text-sm">
+                Show:
+              </Label>
+              <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Label htmlFor="pageSize" className="text-sm">
-              Show:
-            </Label>
-            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="w-20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
+            <Button variant="outline" onClick={handleRefresh} disabled={loadingPages === true}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingPages === true ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
           </div>
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" disabled={!roles || roleNames.length === 0}>
+              <Button className="gap-2 w-full" disabled={!roles || roleNames.length === 0}>
                 <Plus className="h-4 w-4" />
                 Add Page
               </Button>
