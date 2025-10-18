@@ -145,7 +145,7 @@ export const columns: ColumnDef<Student>[] = [
   },
   {
     accessorKey: "coSo",
-    header: "Cơ sở",
+    header: "Campus",
     enableSorting: false,
     cell: ({ row }) => <div>{(row.getValue("coSo") as string) || "N/A"}</div>,
   },

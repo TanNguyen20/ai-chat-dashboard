@@ -23,7 +23,7 @@ export default function StudentsPage() {
   const [loading, setLoading] = React.useState(true)
   const [facets, setFacets] = React.useState<FacetDef[]>([
     { id: "gioiTinh", title: "Sex", options: [{ label: "Nam", value: "Nam" }, { label: "Nữ", value: "Nữ" }] },
-    { id: "coSo", title: "Cơ sở" },
+    { id: "coSo", title: "Campus" },
     { id: "bacDaoTao", title: "Education Level", options: [{ label: "Đại học", value: "Đại học" }, { label: "Thạc sĩ", value: "Thạc sĩ" }, { label: "Tiến sĩ", value: "Tiến sĩ" }] },
     { id: "loaiHinhDaoTao", title: "Loại hình đào tạo", options: [{ label: "Chính quy", value: "Chính quy" }, { label: "Liên thông", value: "Liên thông" }, { label: "Từ xa", value: "Từ xa" }] },
     { id: "khoa", title: "Faculty" },
@@ -85,36 +85,39 @@ export default function StudentsPage() {
   }, [handleFetch])
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-4rem)]" style={{ width: isMobile ? "100vw" : "calc(100vw - var(--sidebar-width))" }}>
-      <div className="mx-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-4">
-          <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">School name</span>
-            <Select
-              value={studentType.toString()}
-              onValueChange={(v) => setStudentType(v as unknown as StudentType)}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Select school name" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DNC">DNC</SelectItem>
-                <SelectItem value="USH">USH</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="absolute h-[calc(100vh-4rem)] right-0" style={{ width: "-webkit-fill-available" }}>
+      <div>
+        <div className="mx-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-4">
+            <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">School name</span>
+              <Select
+                value={studentType.toString()}
+                onValueChange={(v) => setStudentType(v as unknown as StudentType)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select school name" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DNC">DNC</SelectItem>
+                  <SelectItem value="USH">USH</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          <DataTable
+            server
+            columns={columns}
+            data={rows}
+            total={total}
+            loading={loading}
+            onServerStateChange={handleFetch}
+            facets={facets}
+          />
         </div>
 
-        <DataTable
-          server
-          columns={columns}
-          data={rows}
-          total={total}
-          loading={loading}
-          onServerStateChange={handleFetch}
-          facets={facets}
-        />
       </div>
     </div>
   )

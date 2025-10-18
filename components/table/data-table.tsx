@@ -143,7 +143,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
           </CardHeader>
           <CardContent className="space-y-2 px-3 pb-3">
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Cơ sở:</span>
+              <span className="text-xs font-medium text-muted-foreground">Campus:</span>
               <p className="text-sm break-words">{student.coSo || "N/A"}</p>
             </div>
             <div>
@@ -294,7 +294,7 @@ export function DataTable<TData, TValue>({
         {/* single horizontal scroll wrapper */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <Table className="min-w-full table-auto">
+            <Table className="min-w-full">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="border-b">

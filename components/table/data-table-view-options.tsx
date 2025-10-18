@@ -69,10 +69,10 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[220px]">
-        <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+        <DropdownMenuLabel>View columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        <div className="px-2 pb-2 flex gap-2">
+        <div className="px-2 pb-2 flex flex-col gap-2">
           <Button
             variant="outline"
             size="default"

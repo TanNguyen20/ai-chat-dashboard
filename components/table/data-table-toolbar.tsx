@@ -76,7 +76,7 @@ export function DataTableToolbar<TData>({
       mode: "multi",
       limit: 5,
     },
-    { id: "coSo", title: "Cơ sở", mode: "multi", limit: 30 },
+    { id: "coSo", title: "Campus", mode: "multi", limit: 30 },
     {
       id: "bacDaoTao",
       title: "Education Level",
@@ -107,7 +107,7 @@ export function DataTableToolbar<TData>({
 
   return (
     <div className="">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between md:flex-row flex-col">
         <div className="flex flex-1 items-center gap-2 flex-wrap">
           {/* Global search */}
           <div className="relative">
