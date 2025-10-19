@@ -276,7 +276,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="min-w-0 space-y-4 w-full">
+    <div className="min-w-0 space-y-4 w-full relative">
       <DataTableToolbar
         table={table}
         globalFilter={globalFilter}
@@ -284,7 +284,7 @@ export function DataTable<TData, TValue>({
         facets={facets}
       />
 
-      <div className="rounded-md border bg-background relative w-full">
+      <div className="rounded-md border bg-background w-full">
         {loading && (
           <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
             Loading data…
@@ -292,7 +292,7 @@ export function DataTable<TData, TValue>({
         )}
 
         {/* single horizontal scroll wrapper */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
+        <div className="overflow-auto relative max-h-[calc(100vh-20rem)] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <Table className="min-w-full">
               <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

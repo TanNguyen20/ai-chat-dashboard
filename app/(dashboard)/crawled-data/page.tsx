@@ -85,40 +85,35 @@ export default function StudentsPage() {
   }, [handleFetch])
 
   return (
-    <div className="absolute h-[calc(100vh-4rem)] right-0" style={{ width: "-webkit-fill-available" }}>
-      <div>
-        <div className="mx-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-4">
-            <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">School name</span>
-              <Select
-                value={studentType.toString()}
-                onValueChange={(v) => setStudentType(v as unknown as StudentType)}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Select school name" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DNC">DNC</SelectItem>
-                  <SelectItem value="USH">USH</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DataTable
-            server
-            columns={columns}
-            data={rows}
-            total={total}
-            loading={loading}
-            onServerStateChange={handleFetch}
-            facets={facets}
-          />
+    <div className="absolute right-4 left-4 top-20 bottom-4" style={{ width: "-webkit-fill-available" }}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
+        <div className="flex items-center gap-2 text-sm my-4">
+          <span className="font-medium">School name</span>
+          <Select
+            value={studentType.toString()}
+            onValueChange={(v) => setStudentType(v as unknown as StudentType)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Select school name" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="DNC">DNC</SelectItem>
+              <SelectItem value="USH">USH</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-
       </div>
+
+      <DataTable
+        server
+        columns={columns}
+        data={rows}
+        total={total}
+        loading={loading}
+        onServerStateChange={handleFetch}
+        facets={facets}
+      />
     </div>
   )
 }

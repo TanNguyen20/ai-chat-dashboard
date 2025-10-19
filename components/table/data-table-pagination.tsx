@@ -60,7 +60,7 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       {/* Rows per page selector and info */}
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
