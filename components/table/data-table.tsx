@@ -34,11 +34,10 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, Maximize2 } from "lucide-react"
+import { GripVertical } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar, type FacetDef } from "./data-table-toolbar"
 import type { Student } from "./columns"
@@ -209,7 +208,6 @@ export function DataTable<TData, TValue>({
   const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
     columns.map((column) => (typeof column.id === "string" ? column.id : (column as any).accessorKey)),
   )
-  const tableContainerRef = React.useRef<HTMLDivElement>(null)
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -225,21 +223,8 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     if (!server || !onServerStateChange) return
     onServerStateChange({ pagination, sorting, globalFilter, columnFilters })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [server, pagination.pageIndex, pagination.pageSize, sorting, globalFilter, columnFilters])
-
-  const handleFullscreen = async () => {
-    if (!tableContainerRef.current) return
-
-    try {
-      if (!document.fullscreenElement) {
-        await tableContainerRef.current.requestFullscreen()
-      } else {
-        await document.exitFullscreen()
-      }
-    } catch (error) {
-      console.error("Fullscreen request failed:", error)
-    }
-  }
 
   const pageCount = React.useMemo(() => {
     if (!server || total == null) return undefined
@@ -291,27 +276,13 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div ref={tableContainerRef} className="min-w-0 space-y-4 w-full relative">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex-1">
-          <DataTableToolbar
-            table={table}
-            globalFilter={globalFilter}
-            setGlobalFilter={setGlobalFilter}
-            facets={facets}
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleFullscreen}
-          className="gap-2 bg-transparent"
-          title="Enter fullscreen mode (ESC to exit)"
-        >
-          <Maximize2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Fullscreen</span>
-        </Button>
-      </div>
+    <div className="min-w-0 space-y-4 w-full relative">
+      <DataTableToolbar
+        table={table}
+        globalFilter={globalFilter}
+        setGlobalFilter={setGlobalFilter}
+        facets={facets}
+      />
 
       <div className="rounded-md border bg-background w-full">
         {loading && (
@@ -370,10 +341,7 @@ export function DataTable<TData, TValue>({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={table.getVisibleLeafColumns().length}
-                      className="h-24 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
                       No results found.
                     </TableCell>
                   </TableRow>
