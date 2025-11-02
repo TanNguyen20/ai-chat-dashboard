@@ -15,7 +15,7 @@ const convertUserAuthToProfileInfo = (userAuth: User): UserProfileInfo => {
     id: userAuth.id,
     fullName: userAuth.fullName || "",
     email: userAuth.email || "",
-    avatar: "/professional-avatar.jpg",
+    avatar: userAuth.avatarUrl ? userAuth.avatarUrl : "/professional-avatar.jpg",
     bio: `Permissons: ${getHighestRole(userAuth)}`,
     location: "Vietnam, Ho Chi Minh",
     joinedDate: userAuth.createdAt,

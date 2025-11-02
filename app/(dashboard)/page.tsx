@@ -51,7 +51,9 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !user) router.push("/login")
+    if (!isLoading && !user) {
+      router.push("/login")
+    }
   }, [user, isLoading, router])
 
   if (isLoading) {

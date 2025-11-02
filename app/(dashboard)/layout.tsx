@@ -4,58 +4,53 @@ import { AppSidebar, navigationItems } from "@/components/app-sidebar"
 import Loading from "@/components/loading"
 import { LogoutConfirmation } from "@/components/logout-confirmation"
 import { ThemeToggle } from "@/components/theme-toggle"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/Authentication"
+import { getUserInfoFromLocalStorage } from "@/utils/commons"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [logoutLoading, setLogoutLoading] = useState(false)
 
+  const hasToken = useMemo(() => {
+    try {
+      return !!getUserInfoFromLocalStorage()?.token
+    } catch {
+      return false
+    }
+  }, [])
+
   useEffect(() => {
-    if (!isLoading && !user) {
+    // Redirect only when we KNOW there’s no user and no token and not loading
+    if (!isLoading && !user && !hasToken) {
       router.push("/login")
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, hasToken, router])
 
   const handleLogout = async () => {
     try {
       setLogoutLoading(true)
       await logout()
-    } catch (error) {
-      console.error("Logout failed:", error)
     } finally {
       setLogoutLoading(false)
       setShowLogoutDialog(false)
     }
   }
 
-  const getBreadcrumbs = () => {
-    return (
-      navigationItems.find((item) => item.url === pathname)?.breadcrumb || [
-        { title: "Dashboard", href: "/" },
-        { title: "Page" },
-      ]
-    )
-  }
+  const breadcrumbs =
+    navigationItems.find((item) => item.url === pathname)?.breadcrumb || [
+      { title: "Dashboard", href: "/" },
+      { title: "Page" },
+    ]
 
   if (isLoading) {
     return (
@@ -65,11 +60,19 @@ export default function DashboardLayout({
     )
   }
 
-  if (!user) {
-    return null
+  // If no user but we DO have a token, let the page render a loader while the provider finishes /me
+  if (!user && hasToken) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loading />
+      </div>
+    )
   }
 
-  const breadcrumbs = getBreadcrumbs()
+  if (!user) {
+    // No user and no token; the effect above will navigate away
+    return null
+  }
 
   return (
     <SidebarProvider>
@@ -85,11 +88,7 @@ export default function DashboardLayout({
                   <div key={index} className="flex items-center">
                     {index > 0 && <BreadcrumbSeparator className="hidden md:block" />}
                     <BreadcrumbItem className={index === 0 ? "hidden md:block" : ""}>
-                      {crumb.href ? (
-                        <Link href={crumb.href}>{crumb.title}</Link>
-                      ) : (
-                        <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
-                      )}
+                      {crumb.href ? <Link href={crumb.href}>{crumb.title}</Link> : <BreadcrumbPage>{crumb.title}</BreadcrumbPage>}
                     </BreadcrumbItem>
                   </div>
                 ))}

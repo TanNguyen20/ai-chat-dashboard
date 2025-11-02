@@ -37,6 +37,10 @@ export default function LoginPage() {
     }
   }
 
+  const loginWithMicrosoft = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/azure"
+  }
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Left Column - Dashboard Info */}
@@ -142,6 +146,29 @@ export default function LoginPage() {
                   "Sign in"
                 )}
               </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full bg-transparent"
+                onClick={loginWithMicrosoft}
+                disabled={loading}
+              >
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
+                </svg>
+                Sign in with Microsoft
+              </Button>
+
               <p className="text-sm text-center text-muted-foreground">
                 Don't have an account?{" "}
                 <Link href="/register" className="font-medium text-primary hover:underline">

@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { AuthService } from "@/services/auth"
 import { UserService } from "@/services/user"
 import { saveUserInfoIntoLocalStorage, getUserInfoFromLocalStorage } from "@/utils/commons"
@@ -24,10 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
+  const pathname = usePathname()
 
   const checkAuthStatus = async () => {
     try {
@@ -35,38 +31,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userInfo?.token) {
         const currentUser = await UserService.getCurrentUser()
         setUser(currentUser)
+      } else {
+        setUser(null)
       }
-    } catch (error) {
-      // Token is invalid, clear it
-      localStorage.removeItem("userInfo")
+    } catch {
+      // Only clear if we’re not on the callback route
+      if (!pathname?.startsWith("/auth/callback")) {
+        localStorage.removeItem("userInfo")
+        setUser(null)
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await AuthService.login(username, password)
-      const userInfo: UserInfoLocalStorage = { token: response.token }
-      saveUserInfoIntoLocalStorage(userInfo)
-
-      const currentUser = await UserService.getCurrentUser()
-      setUser(currentUser)
-      router.push("/")
-    } catch (error) {
-      throw error
+  // On route change, run the check (but skip /auth/callback)
+  useEffect(() => {
+    if (pathname?.startsWith("/auth/callback")) {
+      setIsLoading(false)
+      return
     }
+    setIsLoading(true)           // <-- important: mark as loading before async check
+    checkAuthStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
+  // Listen for the callback page to announce token saved
+  useEffect(() => {
+    const onAuthUpdated = () => {
+      setIsLoading(true)
+      checkAuthStatus()
+    }
+    window.addEventListener("auth-updated", onAuthUpdated as EventListener)
+    return () => window.removeEventListener("auth-updated", onAuthUpdated as EventListener)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const login = async (username: string, password: string) => {
+    const response = await AuthService.login(username, password)
+    const userInfo: UserInfoLocalStorage = { token: response.token }
+    saveUserInfoIntoLocalStorage(userInfo)
+    setIsLoading(true)
+    const currentUser = await UserService.getCurrentUser()
+    setUser(currentUser)
+    setIsLoading(false)
+    router.push("/")
   }
 
   const register = async (username: string, password: string, email: string) => {
-    try {
-      await AuthService.register(username, password, email)
-
-      toast.success("User registered successfully")
-      router.push("/login")
-    } catch (error) {
-      throw error
-    }
+    await AuthService.register(username, password, email)
+    toast.success("User registered successfully")
+    router.push("/login")
   }
 
   const logout = async () => {
@@ -81,13 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider")
+  return ctx
 }

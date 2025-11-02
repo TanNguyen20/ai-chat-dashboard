@@ -14,6 +14,7 @@ class AxiosClient {
       const instance = axios.create({
         baseURL: baseURL,
         timeout: 60000,
+        withCredentials: true,
         headers: {
           "Content-Type": "application/json",
         },

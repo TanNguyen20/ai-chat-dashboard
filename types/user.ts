@@ -11,6 +11,7 @@ export interface User {
   fullName: string
   email: string
   createdAt: string
+  avatarUrl?: string
 }
 
 export interface UserInfoLocalStorage {
