@@ -38,7 +38,7 @@ export default function LoginPage() {
   }
 
   const loginWithMicrosoft = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/azure"
+    window.location.href = `${process.env.NEXT_PUBLIC_OAUTH2_BASE_URL}/oauth2/authorization/azure`
   }
 
   return (
