@@ -90,7 +90,7 @@ export function DataTableToolbar<TData>({
     },
     {
       id: "loaiHinhDaoTao",
-      title: "Loại hình đào tạo",
+      title: "Type of education",
       options: [
         { label: "Chính quy", value: "Chính quy" },
         { label: "Liên thông", value: "Liên thông" },

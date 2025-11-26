@@ -1,22 +1,20 @@
 "use client"
 
-import * as React from "react"
-import type { ColumnFiltersState, SortingState, PaginationState } from "@tanstack/react-table"
-import { DataTable } from "@/components/table/data-table"
 import { columns, type Student as UiStudent } from "@/components/table/columns"
-import { StudentService, type StudentDto, type PageRes } from "@/services/student"
+import { DataTable } from "@/components/table/data-table"
 import type { FacetDef } from "@/components/table/data-table-toolbar"
+import { StudentService, type PageRes, type StudentDto } from "@/services/student"
+import type { ColumnFiltersState, PaginationState, SortingState } from "@tanstack/react-table"
+import * as React from "react"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { StudentType } from "@/const/student"
-import { useSidebar } from "@/components/ui/sidebar"
+import { FPT_TYPE_LIST, STUDENT_TYPE_LIST, StudentType } from "@/const/common"
 
 function toSpringSort(sorting: SortingState): string[] {
   return sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`).filter(Boolean)
 }
 
 export default function StudentsPage() {
-  const { isMobile } = useSidebar()
   const [studentType, setStudentType] = React.useState<StudentType>("DNC")
   const [rows, setRows] = React.useState<UiStudent[]>([])
   const [total, setTotal] = React.useState(0)
@@ -25,7 +23,7 @@ export default function StudentsPage() {
     { id: "gioiTinh", title: "Sex", options: [{ label: "Nam", value: "Nam" }, { label: "Nữ", value: "Nữ" }] },
     { id: "coSo", title: "Campus" },
     { id: "bacDaoTao", title: "Education Level", options: [{ label: "Đại học", value: "Đại học" }, { label: "Thạc sĩ", value: "Thạc sĩ" }, { label: "Tiến sĩ", value: "Tiến sĩ" }] },
-    { id: "loaiHinhDaoTao", title: "Loại hình đào tạo", options: [{ label: "Chính quy", value: "Chính quy" }, { label: "Liên thông", value: "Liên thông" }, { label: "Từ xa", value: "Từ xa" }] },
+    { id: "loaiHinhDaoTao", title: "Type of education", options: [{ label: "Chính quy", value: "Chính quy" }, { label: "Liên thông", value: "Liên thông" }, { label: "Từ xa", value: "Từ xa" }] },
     { id: "khoa", title: "Faculty" },
     { id: "nganh", title: "Major" },
   ])
@@ -89,17 +87,16 @@ export default function StudentsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
         <div className="flex items-center gap-2 text-sm my-4">
-          <span className="font-medium">School name</span>
+          <span className="font-medium">Table name</span>
           <Select
             value={studentType.toString()}
-            onValueChange={(v) => setStudentType(v as unknown as StudentType)}
+            onValueChange={(v: StudentType) => setStudentType(v)}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select school name" />
+              <SelectValue placeholder="Select table" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="DNC">DNC</SelectItem>
-              <SelectItem value="USH">USH</SelectItem>
+              {[...FPT_TYPE_LIST, ...STUDENT_TYPE_LIST].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

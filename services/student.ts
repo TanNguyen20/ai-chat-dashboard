@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/const/api"
+import { StudentType } from "@/const/common"
 import AxiosClient from "./apiConfig"
-import { StudentType } from "@/const/student"
 
 // ----- DTOs matching Spring JSON (camelCase) -----
 export type StudentDto = {

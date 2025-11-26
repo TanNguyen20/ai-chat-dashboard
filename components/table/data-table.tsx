@@ -148,7 +148,7 @@ function ExpandedRowContent({ row }: { row: Row<Student> }) {
               <p className="text-sm break-words">{student.coSo || "N/A"}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Loại hình đào tạo:</span>
+              <span className="text-xs font-medium text-muted-foreground">Type of education:</span>
               <p className="text-sm text-muted-foreground">{student.loaiHinhDaoTao || "N/A"}</p>
             </div>
             <div>

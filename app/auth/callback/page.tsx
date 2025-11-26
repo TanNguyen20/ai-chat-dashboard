@@ -8,7 +8,7 @@ export default function OAuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const hash = window.location.hash || "";
+    const hash = globalThis.location.hash || "";
     const params = new URLSearchParams(hash.startsWith("#") ? hash.substring(1) : hash);
     const token = params.get("access_token");
 
@@ -16,11 +16,11 @@ export default function OAuthCallbackPage() {
       saveUserInfoIntoLocalStorage({ token });
 
       // Clean URL fragment
-      const cleanUrl = window.location.href.split("#")[0];
-      window.history.replaceState(null, "", cleanUrl);
+      const cleanUrl = globalThis.location.href.split("#")[0];
+      globalThis.history.replaceState(null, "", cleanUrl);
 
       // Notify the AuthProvider in this tab
-      window.dispatchEvent(new Event("auth-updated"));
+      globalThis.dispatchEvent(new Event("auth-updated"));
     }
 
     // Redirect to home (or a "post-login" page)
