@@ -167,7 +167,7 @@ export function DataTableToolbar<TData>({
       </div>
 
       {table.getFilteredSelectedRowModel().rows.length > 0 && (
-        <div className="flex items-center justify-between rounded-md border p-4 bg-muted/50">
+        <div className="flex items-center justify-between rounded-md border py-2 px-4 bg-muted/50 mt-2">
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>

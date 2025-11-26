@@ -86,7 +86,7 @@ export default function StudentsPage() {
     <div className="absolute right-4 left-4 top-20 bottom-4" style={{ width: "-webkit-fill-available" }}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
-        <div className="flex items-center gap-2 text-sm my-4">
+        <div className="flex items-center gap-2 text-sm my-2">
           <span className="font-medium">Table name</span>
           <Select
             value={studentType.toString()}

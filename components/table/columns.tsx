@@ -1,6 +1,6 @@
 "use client"
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -223,7 +223,10 @@ export const columns: ColumnDef<Student>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(student.mssv)}>Copy MSSV</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(student.mssv)}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy MSSV
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Eye className="mr-2 h-4 w-4" />
