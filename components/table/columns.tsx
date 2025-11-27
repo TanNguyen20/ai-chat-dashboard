@@ -222,7 +222,7 @@ export const columns: ColumnDef<Student>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuLabel>Action</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(student.mssv)}>
               <Copy className="mr-2 h-4 w-4" />
               Copy MSSV

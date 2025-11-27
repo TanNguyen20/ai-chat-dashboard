@@ -64,47 +64,6 @@ export function DataTableToolbar<TData>({
     return arr.length ? arr : fallback ?? []
   }
 
-  // Sensible default facets (camelCase ids)
-  const defaultFacets: FacetDef[] = [
-    {
-      id: "gioiTinh",
-      title: "Sex",
-      options: [
-        { label: "Nam", value: "Nam" },
-        { label: "Nữ", value: "Nữ" },
-      ],
-      mode: "multi",
-      limit: 5,
-    },
-    { id: "coSo", title: "Campus", mode: "multi", limit: 30 },
-    {
-      id: "bacDaoTao",
-      title: "Education Level",
-      options: [
-        { label: "Đại học", value: "Đại học" },
-        { label: "Thạc sĩ", value: "Thạc sĩ" },
-        { label: "Tiến sĩ", value: "Tiến sĩ" },
-      ],
-      mode: "multi",
-      limit: 10,
-    },
-    {
-      id: "loaiHinhDaoTao",
-      title: "Type of education",
-      options: [
-        { label: "Chính quy", value: "Chính quy" },
-        { label: "Liên thông", value: "Liên thông" },
-        { label: "Từ xa", value: "Từ xa" },
-      ],
-      mode: "multi",
-      limit: 10,
-    },
-    { id: "khoa", title: "Faculty", mode: "multi", limit: 30 },
-    { id: "nganh", title: "Major", mode: "multi", limit: 30 },
-  ]
-
-  const activeFacets = facets && facets.length ? facets : defaultFacets
-
   return (
     <div className="">
       <div className="flex items-center justify-between md:flex-row flex-col">
@@ -130,7 +89,7 @@ export function DataTableToolbar<TData>({
           </div>
 
           {/* Facets (parent-provided or derived) */}
-          {activeFacets.map((f) => {
+          {facets?.map((f) => {
             const column = col(f.id)
             const options = f.options?.length
               ? f.options

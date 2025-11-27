@@ -1,0 +1,107 @@
+[
+  {
+    "file": "app/(dashboard)/page.tsx",
+    "next": "/",
+    "pattern": "/"
+  },
+  {
+    "file": "app/(dashboard)/analytics/page.tsx",
+    "next": "/analytics",
+    "pattern": "/analytics"
+  },
+  {
+    "file": "app/(dashboard)/analytics-config/page.tsx",
+    "next": "/analytics-config",
+    "pattern": "/analytics-config"
+  },
+  {
+    "file": "app/auth/callback/page.tsx",
+    "next": "/auth/callback",
+    "pattern": "/auth/callback"
+  },
+  {
+    "file": "app/(dashboard)/chatbot/page.tsx",
+    "next": "/chatbot",
+    "pattern": "/chatbot"
+  },
+  {
+    "file": "app/(dashboard)/crawled-data/page.tsx",
+    "next": "/crawled-data",
+    "pattern": "/crawled-data"
+  },
+  {
+    "file": "app/(dashboard)/crawling/page.tsx",
+    "next": "/crawling",
+    "pattern": "/crawling"
+  },
+  {
+    "file": "app/error/default/page.tsx",
+    "next": "/error/default",
+    "pattern": "/error/default"
+  },
+  {
+    "file": "app/error/forbidden/page.tsx",
+    "next": "/error/forbidden",
+    "pattern": "/error/forbidden"
+  },
+  {
+    "file": "app/error/internal-server-error/page.tsx",
+    "next": "/error/internal-server-error",
+    "pattern": "/error/internal-server-error"
+  },
+  {
+    "file": "app/error/not-found/page.tsx",
+    "next": "/error/not-found",
+    "pattern": "/error/not-found"
+  },
+  {
+    "file": "app/error/service-unavailable/page.tsx",
+    "next": "/error/service-unavailable",
+    "pattern": "/error/service-unavailable"
+  },
+  {
+    "file": "app/error/unauthorized/page.tsx",
+    "next": "/error/unauthorized",
+    "pattern": "/error/unauthorized"
+  },
+  {
+    "file": "app/login/page.tsx",
+    "next": "/login",
+    "pattern": "/login"
+  },
+  {
+    "file": "app/(dashboard)/profile/page.tsx",
+    "next": "/profile",
+    "pattern": "/profile"
+  },
+  {
+    "file": "app/register/page.tsx",
+    "next": "/register",
+    "pattern": "/register"
+  },
+  {
+    "file": "app/(dashboard)/roles/page.tsx",
+    "next": "/roles",
+    "pattern": "/roles"
+  },
+  {
+    "file": "app/(dashboard)/settings/page.tsx",
+    "next": "/settings",
+    "pattern": "/settings"
+  },
+  {
+    "file": "app/(dashboard)/stock/page.tsx",
+    "next": "/stock",
+    "pattern": "/stock"
+  },
+  {
+    "file": "app/(dashboard)/users/page.tsx",
+    "next": "/users",
+    "pattern": "/users"
+  },
+  {
+    "file": "app/(dashboard)/analytics/[id]/page.tsx",
+    "next": "/analytics/[id]",
+    "pattern": "/analytics/:id"
+  }
+]
