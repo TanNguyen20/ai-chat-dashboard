@@ -32,7 +32,7 @@ const handleGet = (params: any, crawledDataType: CrawledDataType) => {
   return StudentService.getStudents(params)
 }
 
-export default function StudentsPage() {
+export default function CrawledDataPage() {
   const [crawledDataType, setCrawledDataType] = useState<CrawledDataType>("DNC")
   const [columns, setColumns] = useState<any[]>([])
   const [rows, setRows] = useState<Array<FPTDto | StudentResponseDTO>>([])

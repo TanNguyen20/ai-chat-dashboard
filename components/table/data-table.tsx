@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -34,11 +33,12 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, Maximize2, Minimize2 } from "lucide-react"
+import { GripVertical, Maximize2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar, type FacetDef } from "./data-table-toolbar"
+import { Fragment, ReactNode, useEffect, useMemo, useState } from "react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -59,7 +59,7 @@ interface DataTableProps<TData, TValue> {
   facets?: FacetDef[]
 
   // optional expanded row renderer
-  renderRowExpansion?: (row: Row<TData>) => React.ReactNode
+  renderRowExpansion?: (row: Row<TData>) => ReactNode
 }
 
 function DraggableTableHeader({ header }: { header: any }) {
@@ -116,16 +116,16 @@ export function DataTable<TData, TValue>({
   facets,
   renderRowExpansion,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
-  const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+  const [globalFilter, setGlobalFilter] = useState("")
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
+  const [columnOrder, setColumnOrder] = useState<string[]>(() =>
     columns.map((column) => (typeof column.id === "string" ? column.id : (column as any).accessorKey)),
   )
-  const [isFullscreen, setIsFullscreen] = React.useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -133,25 +133,25 @@ export function DataTable<TData, TValue>({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!server) return
     setPagination((p) => ({ ...p, pageIndex: 0 }))
   }, [server, sorting, globalFilter, columnFilters])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!server || !onServerStateChange) return
     onServerStateChange({ pagination, sorting, globalFilter, columnFilters })
   }, [server, pagination, sorting, globalFilter, columnFilters])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isFullscreen) setIsFullscreen(false)
     }
-    window.addEventListener("keydown", handleEscKey)
-    return () => window.removeEventListener("keydown", handleEscKey)
+    globalThis.addEventListener("keydown", handleEscKey)
+    return () => globalThis.removeEventListener("keydown", handleEscKey)
   }, [isFullscreen])
 
-  const pageCount = React.useMemo(() => {
+  const pageCount = useMemo(() => {
     if (!server || total == null) return undefined
     return Math.max(1, Math.ceil(total / pagination.pageSize))
   }, [server, total, pagination.pageSize])
@@ -202,7 +202,7 @@ export function DataTable<TData, TValue>({
 
   const renderRows = (rows: Row<TData>[]) =>
     rows.map((row) => (
-      <React.Fragment key={row.id}>
+      <Fragment key={row.id}>
         <TableRow
           data-state={row.getIsSelected() && "selected"}
           className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
@@ -224,7 +224,7 @@ export function DataTable<TData, TValue>({
             </TableCell>
           </TableRow>
         )}
-      </React.Fragment>
+      </Fragment>
     ))
 
   return (

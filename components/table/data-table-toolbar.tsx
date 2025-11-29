@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { useEffect, useState } from "react"
+import { Search, X } from "lucide-react"
 
 // Reusable facet types so parent can pass them in
 export type FacetOption = { label: string; value: string; icon?: React.ComponentType<{ className?: string }> }
@@ -45,7 +46,7 @@ export function DataTableToolbar<TData>({
 
   const isFiltered = table.getState().columnFilters.length > 0 || (globalFilter?.length ?? 0) > 0
 
-  const col = (id: string) => table.getColumn(id) as Column<TData, unknown> | undefined
+  const col = (id: string) => table.getColumn(id)
   const deriveOptions = (
     c?: Column<TData, unknown>,
     limit = 30,
@@ -67,7 +68,7 @@ export function DataTableToolbar<TData>({
         <div className="flex flex-1 items-center gap-2 flex-wrap">
           {/* Global search */}
           <div className="relative">
-            <SearchIconDecoration />
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search data"
               value={input}
@@ -80,7 +81,7 @@ export function DataTableToolbar<TData>({
                 onClick={() => setInput("")}
                 className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
               >
-                <XIcon />
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -140,15 +141,4 @@ export function DataTableToolbar<TData>({
       )}
     </div>
   )
-}
-
-function SearchIconDecoration() {
-  return <svg className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none">
-    <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-}
-function XIcon() {
-  return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-    <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
 }
