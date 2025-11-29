@@ -1,35 +1,28 @@
 "use client"
 
-import * as React from "react"
 import type { Table, Column } from "@tanstack/react-table"
 import { Cross2Icon } from "@radix-ui/react-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
+import { useEffect, useState } from "react"
 
 // Reusable facet types so parent can pass them in
 export type FacetOption = { label: string; value: string; icon?: React.ComponentType<{ className?: string }> }
 export type FacetDef = {
-  /** UI column id (camelCase), e.g. "gioiTinh" */
   id: string
-  /** Button label, e.g. "Giới tính" */
   title: string
-  /** Optional: pre-supplied options from parent; if omitted we'll try to derive from table */
   options?: FacetOption[]
-  /** Optional: "single" or "multi" (default) */
   mode?: "single" | "multi"
-  /** Optional: limit when auto-deriving from table */
   limit?: number
 }
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
-  globalFilter: string
-  setGlobalFilter: (value: string) => void
-
-  /** optional parent-provided facets */
-  facets?: FacetDef[]
+  readonly table: Table<TData>
+  readonly globalFilter: string
+  readonly setGlobalFilter: (value: string) => void
+  readonly facets?: FacetDef[]
 }
 
 export function DataTableToolbar<TData>({
@@ -39,9 +32,13 @@ export function DataTableToolbar<TData>({
   facets,
 }: DataTableToolbarProps<TData>) {
   // Debounced global search
-  const [input, setInput] = React.useState(globalFilter)
-  React.useEffect(() => setInput(globalFilter), [globalFilter])
-  React.useEffect(() => {
+  const [input, setInput] = useState(globalFilter)
+  const tableColumns = table.getAllLeafColumns().map(c => c.id)
+  const activeFacets = (facets ?? []).filter(f => tableColumns.includes(f.id))
+
+  useEffect(() => setInput(globalFilter), [globalFilter])
+
+  useEffect(() => {
     const t = setTimeout(() => setGlobalFilter(input), 400)
     return () => clearTimeout(t)
   }, [input, setGlobalFilter])
@@ -88,13 +85,14 @@ export function DataTableToolbar<TData>({
             )}
           </div>
 
-          {/* Facets (parent-provided or derived) */}
-          {facets?.map((f) => {
+          {activeFacets.map((f) => {
             const column = col(f.id)
             const options = f.options?.length
               ? f.options
               : deriveOptions(column, f.limit ?? 30)
+
             if (!options.length) return null
+
             return (
               <DataTableFacetedFilter
                 key={f.id}
@@ -146,11 +144,11 @@ export function DataTableToolbar<TData>({
 
 function SearchIconDecoration() {
   return <svg className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none">
-    <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 }
 function XIcon() {
   return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-    <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 }

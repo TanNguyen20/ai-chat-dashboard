@@ -1,7 +1,9 @@
-export type StudentType = "DNC" | "USH"
+export const STUDENT_TYPE_LIST = ["DNC", "USH"] as const;
 
-export type FPTType = "FPT" | "FPT_EXTEND" | "FIS" | "FIS_HCM"
+export const FPT_TYPE_LIST = ["FPT", "FPT_EXTEND", "FIS", "FIS_HCM"] as const;
 
-export const STUDENT_TYPE_LIST = ["DNC", "USH"]
+export type StudentType = typeof STUDENT_TYPE_LIST[number];
 
-export const FPT_TYPE_LIST = ["FPT", "FPT_EXTEND", "FIS", "FIS_HCM"]
+export type FPTType = typeof FPT_TYPE_LIST[number];
+
+export type CrawledDataType = StudentType | FPTType;

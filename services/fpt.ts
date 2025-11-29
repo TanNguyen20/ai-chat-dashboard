@@ -27,17 +27,39 @@ export type PageRes<T> = {
     totalPages: number
 }
 
-export type FacetsRes = {
+export type FPTFacetsRes = {
     odataType?: string[]
     jobTitle?: string[]
     officeLocation?: string[]
     preferredLanguage?: string[]
 }
 
-interface PagedQuery extends FacetsRes{
+interface PagedQuery extends FPTFacetsRes{
     page?: number
     size?: number
     sort?: string[]
+}
+
+export type FPTColumnDTO = {
+  id: string
+  label: string
+  type: "text" | "enum" | "date" | "array" | "email" | "phone"
+  sortable: boolean
+}
+
+export interface FPTResponseDTO {
+  id: string;
+  odataType: string;
+  displayName: string;
+  givenName: string | null;
+  surname: string | null;
+  jobTitle: string | null;
+  mail: string | null;
+  mobilePhone: string | null;
+  userPrincipalName: string | null;
+  officeLocation: string | null;
+  preferredLanguage: string | null;
+  businessPhones: string[];
 }
 
 const api = AxiosClient.getInstance(`${BASE_URL.CRAWLED_DATA_SERVICE}/fpt`)
@@ -71,8 +93,13 @@ export class FPTService {
         await api.delete<void>(`/${id}`)
     }
 
-    static async getFacets(fptType: FPTType): Promise<FacetsRes> {
-        const res = await api.get<FacetsRes>("/facets", { params: { fptType } })
+    static async getFacets(fptType: FPTType): Promise<FPTFacetsRes> {
+        const res = await api.get<FPTFacetsRes>("/facets", { params: { fptType } })
+        return res
+    }
+
+    static async getColumns(fptType: FPTType = "FPT"): Promise<FPTColumnDTO[]> {
+        const res = await api.get<FPTColumnDTO[]>("/columns", {params: { fptType }})
         return res
     }
 }

@@ -1,3 +1,4 @@
+import { CrawledDataType, FPT_TYPE_LIST, FPTType, STUDENT_TYPE_LIST, StudentType } from "@/const/common"
 import { Role } from "@/const/role"
 import type { User, UserInfoLocalStorage } from "@/types/user"
 
@@ -44,4 +45,13 @@ export function formatRoleName(roleName: string): string {
     .replace("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (l) => l.toUpperCase())
+}
+
+
+export const isFPTType = (value: CrawledDataType): value is FPTType => {
+  return FPT_TYPE_LIST.includes(value as FPTType);
+}
+
+export const isStudentType = (value: CrawledDataType): value is StudentType => {
+  return STUDENT_TYPE_LIST.includes(value as StudentType);
 }

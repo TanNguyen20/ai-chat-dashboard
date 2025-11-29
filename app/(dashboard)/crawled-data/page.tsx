@@ -1,102 +1,132 @@
 "use client"
 
-import { columns, type Student as UiStudent } from "@/components/table/columns"
 import { DataTable } from "@/components/table/data-table"
-import type { FacetDef } from "@/components/table/data-table-toolbar"
-import { StudentService, type PageRes, type StudentDto } from "@/services/student"
-import type { ColumnFiltersState, PaginationState, SortingState } from "@tanstack/react-table"
-import * as React from "react"
-
+import { buildDynamicColumns } from "@/components/table/columns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FPT_TYPE_LIST, STUDENT_TYPE_LIST, StudentType } from "@/const/common"
+import { StudentService, type StudentColumnDTO, StudentResponseDTO } from "@/services/student"
+import type { ColumnFiltersState, PaginationState, SortingState } from "@tanstack/react-table"
+
+import type { FacetDef } from "@/components/table/data-table-toolbar"
+import { FPT_TYPE_LIST, STUDENT_TYPE_LIST, type CrawledDataType } from "@/const/common"
+import { FPTColumnDTO, FPTDto, FPTResponseDTO, FPTService } from "@/services/fpt"
+import { isFPTType } from "@/utils/commons"
+import { ExpandedFPTRow } from "./ExpandedFPTRow"
+import { ExpandedStudentRow } from "./ExpandedStudentRow"
+import { useCallback, useEffect, useState } from "react"
 
 function toSpringSort(sorting: SortingState): string[] {
-  return sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`).filter(Boolean)
+  return sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`)
+}
+
+const handleSearch= (globalFilter: string, params: any, crawledDataType: CrawledDataType) => {
+  if (isFPTType(crawledDataType)) {
+    return FPTService.searchEmployees(globalFilter, params)
+  }
+  return StudentService.searchStudents(globalFilter, params)
+}
+
+const handleGet = (params: any, crawledDataType: CrawledDataType) => {
+  if (isFPTType(crawledDataType)) {
+    return FPTService.getEmployees(params)
+  }
+  return StudentService.getStudents(params)
 }
 
 export default function StudentsPage() {
-  const [studentType, setStudentType] = React.useState<StudentType>("DNC")
-  const [rows, setRows] = React.useState<UiStudent[]>([])
-  const [total, setTotal] = React.useState(0)
-  const [loading, setLoading] = React.useState(true)
-  const [facets, setFacets] = React.useState<FacetDef[]>([
-    { id: "gioiTinh", title: "Sex", options: [{ label: "Nam", value: "Nam" }, { label: "Nữ", value: "Nữ" }] },
-    { id: "coSo", title: "Campus" },
-    { id: "bacDaoTao", title: "Education Level", options: [{ label: "Đại học", value: "Đại học" }, { label: "Thạc sĩ", value: "Thạc sĩ" }, { label: "Tiến sĩ", value: "Tiến sĩ" }] },
-    { id: "loaiHinhDaoTao", title: "Type of education", options: [{ label: "Chính quy", value: "Chính quy" }, { label: "Liên thông", value: "Liên thông" }, { label: "Từ xa", value: "Từ xa" }] },
-    { id: "khoa", title: "Faculty" },
-    { id: "nganh", title: "Major" },
-  ])
+  const [crawledDataType, setCrawledDataType] = useState<CrawledDataType>("DNC")
+  const [columns, setColumns] = useState<any[]>([])
+  const [rows, setRows] = useState<Array<FPTDto | StudentResponseDTO>>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [facets, setFacets] = useState<FacetDef[]>([])
 
-  React.useEffect(() => {
+  useEffect(() => {
     ; (async () => {
-      try {
-        const f = await StudentService.getFacets(studentType)
-        setFacets((prev) =>
-          prev.map((x) => {
-            if (x.id === "coSo" && f.coSo?.length) return { ...x, options: f.coSo.map((v: string) => ({ label: v, value: v })) }
-            if (x.id === "khoa" && f.khoa?.length) return { ...x, options: f.khoa.map((v: string) => ({ label: v, value: v })) }
-            if (x.id === "nganh" && f.nganh?.length) return { ...x, options: f.nganh.map((v: string) => ({ label: v, value: v })) }
-            if (x.id === "gioiTinh" && f.gioiTinh?.length) return { ...x, options: f.gioiTinh.map((v: string) => ({ label: v, value: v })) }
-            if (x.id === "bacDaoTao" && f.bacDaoTao?.length) return { ...x, options: f.bacDaoTao.map((v: string) => ({ label: v, value: v })) }
-            if (x.id === "loaiHinhDaoTao" && f.loaiHinhDaoTao?.length) return { ...x, options: f.loaiHinhDaoTao.map((v: string) => ({ label: v, value: v })) }
-            return x
-          })
-        )
-      } catch { }
-    })()
-  }, [studentType])
+      if (isFPTType(crawledDataType)) {
+        const schema: FPTColumnDTO[] = await FPTService.getColumns(crawledDataType)
+        setColumns(buildDynamicColumns<FPTResponseDTO>(schema, "id"))
 
-  const handleFetch = React.useCallback(async (args: {
+        const f = await FPTService.getFacets(crawledDataType)
+        setFacets(
+          (Object.keys(f) as (keyof typeof f)[]).map((key) => ({
+            id: key,
+            title: key,
+            options: f[key]?.map((v: string) => ({ label: v, value: v })) || [],
+          }))
+        )
+      }
+      else {
+        const schema: StudentColumnDTO[] = await StudentService.getColumns(crawledDataType)
+        setColumns(buildDynamicColumns<StudentResponseDTO>(schema, "mssv"))
+
+        const f = await StudentService.getFacets(crawledDataType)
+        setFacets(
+          (Object.keys(f) as (keyof typeof f)[]).map((key) => ({
+            id: key,
+            title: key,
+            options: f[key]?.map((v: string) => ({ label: v, value: v })) || [],
+          }))
+        )
+      }
+    })()
+  }, [crawledDataType])
+
+  // 2) Fetch table data
+  const handleFetch = useCallback(async (args: {
     pagination: PaginationState
     sorting: SortingState
     globalFilter: string
     columnFilters: ColumnFiltersState
   }) => {
     const { pagination, sorting, globalFilter, columnFilters } = args
-    const { pageIndex, pageSize } = pagination
+    const params: any =  { page: pagination.pageIndex, size: pagination.pageSize }
 
-    const params: any = { studentType, page: pageIndex, size: pageSize }
+    if (isFPTType(crawledDataType)) {
+      params.fptType = crawledDataType
+    }
+    else {
+      params.studentType = crawledDataType
+    }
+
     const sorts = toSpringSort(sorting)
     if (sorts.length) params.sort = sorts
 
     columnFilters.forEach((f) => {
-      const id = f.id
-      const vals = Array.isArray(f.value) ? (f.value as string[]) : []
-      if (vals.length) params[id] = vals
+      if (Array.isArray(f.value) && f.value.length) params[f.id] = f.value
     })
 
     setLoading(true)
     try {
-      const pageRes: PageRes<StudentDto> = globalFilter?.trim()
-        ? await StudentService.searchStudents(globalFilter.trim(), params)
-        : await StudentService.getStudents(params)
-      setRows(pageRes.content as UiStudent[])
+      const pageRes = globalFilter
+        ? await handleSearch(globalFilter, params, crawledDataType)
+        : await handleGet(params, crawledDataType)
+
+      setRows(pageRes.content)
       setTotal(pageRes.totalElements)
     } finally {
       setLoading(false)
     }
-  }, [studentType])
+  }, [crawledDataType])
 
-  React.useEffect(() => {
+  useEffect(() => {
     handleFetch({ pagination: { pageIndex: 0, pageSize: 10 }, sorting: [], globalFilter: "", columnFilters: [] })
-  }, [handleFetch])
+  }, [columns])
 
   return (
-    <div className="absolute right-4 left-4 top-20 bottom-4" style={{ width: "-webkit-fill-available" }}>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">Crawled Data</h1>
-        <div className="flex items-center gap-2 text-sm my-2">
-          <span className="font-medium">Table name</span>
-          <Select
-            value={studentType.toString()}
-            onValueChange={(v: StudentType) => setStudentType(v)}
-          >
+    <div className="absolute right-4 left-4 top-20 bottom-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Crawled Data</h1> 
+
+        <div className="flex items-center gap-2 text-sm">
+          <span>Table name</span>
+          <Select value={crawledDataType} onValueChange={(v: CrawledDataType) => setCrawledDataType(v)}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select table" />
             </SelectTrigger>
             <SelectContent>
-              {[...FPT_TYPE_LIST, ...STUDENT_TYPE_LIST].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              {[...FPT_TYPE_LIST, ...STUDENT_TYPE_LIST].map((t) => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -110,6 +140,14 @@ export default function StudentsPage() {
         loading={loading}
         onServerStateChange={handleFetch}
         facets={facets}
+        renderRowExpansion={(row) => {
+          if (isFPTType(crawledDataType)) {
+            return <ExpandedFPTRow user={row.original as FPTResponseDTO} />
+          }
+          else {
+            return <ExpandedStudentRow student={row.original as StudentResponseDTO} />
+          }
+        }}
       />
     </div>
   )

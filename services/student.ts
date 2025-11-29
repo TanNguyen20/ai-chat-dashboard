@@ -3,7 +3,7 @@ import { StudentType } from "@/const/common"
 import AxiosClient from "./apiConfig"
 
 // ----- DTOs matching Spring JSON (camelCase) -----
-export type StudentDto = {
+export type StudentResponseDTO = {
   mssv: string
   hoTen?: string
   gioiTinh?: string
@@ -30,7 +30,7 @@ export type StudentDto = {
   maHoSo?: string
 }
 
-export type StudentRequest = Omit<StudentDto, "mssv"> & { mssv: string }
+export type StudentRequest = Omit<StudentResponseDTO, "mssv"> & { mssv: string }
 
 // Page<T> from Spring Data
 export type PageRes<T> = {
@@ -53,8 +53,7 @@ export type FacetsRes = {
 type PagedQuery = {
   page?: number
   size?: number
-  sort?: string[] // e.g. ["hoTen,asc","mssv,desc"]
-  // optional multi-value filters
+  sort?: string[]
   gioiTinh?: string[]
   coSo?: string[]
   bacDaoTao?: string[]
@@ -63,22 +62,29 @@ type PagedQuery = {
   nganh?: string[]
 }
 
+export type StudentColumnDTO = {
+  id: string
+  label: string
+  type: "text" | "enum" | "date"
+  sortable: boolean
+}
+
 const api = AxiosClient.getInstance(`${BASE_URL.CRAWLED_DATA_SERVICE}/students`)
 
 export class StudentService {
-  static async getStudents(params: PagedQuery): Promise<PageRes<StudentDto>> {
+  static async getStudents(params: PagedQuery): Promise<PageRes<StudentResponseDTO>> {
     // AxiosClient should serialize arrays as repeat (?sort=a&sort=b). If not, add qs in AxiosClient.
-    const res = await api.get<PageRes<StudentDto>>("", { params })
+    const res = await api.get<PageRes<StudentResponseDTO>>("", { params })
     return res
   }
 
-  static async searchStudents(name: string, params: PagedQuery): Promise<PageRes<StudentDto>> {
-    const res = await api.get<PageRes<StudentDto>>("/search", { params: { name, ...params } })
+  static async searchStudents(name: string, params: PagedQuery): Promise<PageRes<StudentResponseDTO>> {
+    const res = await api.get<PageRes<StudentResponseDTO>>("/search", { params: { name, ...params } })
     return res
   }
 
-  static async getStudent(mssv: string): Promise<StudentDto> {
-    const res = await api.get<StudentDto>(`/${mssv}`)
+  static async getStudent(mssv: string): Promise<StudentResponseDTO> {
+    const res = await api.get<StudentResponseDTO>(`/${mssv}`)
     return res
   }
 
@@ -98,4 +104,11 @@ export class StudentService {
     const res = await api.get<FacetsRes>("/facets", { params: { studentType } })
     return res
   }
+
+  static async getColumns(studentType: StudentType): Promise<StudentColumnDTO[]> {
+  const res = await api.get<StudentColumnDTO[]>("/columns", {
+    params: { studentType },
+  })
+  return res
+}
 }

@@ -36,18 +36,9 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical, Maximize2, Minimize2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar, type FacetDef } from "./data-table-toolbar"
-import type { Student } from "./columns"
-
-export interface FacetOption {
-  label: string
-  value: string
-  icon?: React.ComponentType<{ className?: string }>
-}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -66,6 +57,9 @@ interface DataTableProps<TData, TValue> {
 
   // facet definitions
   facets?: FacetDef[]
+
+  // optional expanded row renderer
+  renderRowExpansion?: (row: Row<TData>) => React.ReactNode
 }
 
 function DraggableTableHeader({ header }: { header: any }) {
@@ -79,10 +73,9 @@ function DraggableTableHeader({ header }: { header: any }) {
     transition,
   }
 
-  const isSelectColumn = header.column.id === "select"
-  const isExpandColumn = header.column.id === "expand"
+  const isSelectOrExpand = ["select", "expand"].includes(header.column.id)
 
-  if (isSelectColumn || isExpandColumn) {
+  if (isSelectOrExpand) {
     return (
       <TableHead key={header.id} className="whitespace-nowrap">
         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -113,84 +106,6 @@ function DraggableTableHeader({ header }: { header: any }) {
   )
 }
 
-function ExpandedRowContent({ row }: { row: Row<Student> }) {
-  const student = row.original
-  return (
-    <div className="p-3 sm:p-4 bg-muted/30 border-t">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Personal info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-3 pb-3">
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Phone number:</span>
-              <p className="text-sm break-all">{student.dienThoai || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Email:</span>
-              <p className="text-sm break-all">{student.emailDnc || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Address:</span>
-              <p className="text-sm text-muted-foreground break-words">{student.diaChiLienHe || "N/A"}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Studying info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-3 pb-3">
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Campus:</span>
-              <p className="text-sm break-words">{student.coSo || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Type of education:</span>
-              <p className="text-sm text-muted-foreground">{student.loaiHinhDaoTao || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Major:</span>
-              <p className="text-sm text-muted-foreground break-words">{student.chuyenNganh || "N/A"}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm sm:col-span-2 lg:col-span-1">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-medium">Personal info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-3 pb-3">
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Date of birth:</span>
-              <p className="text-sm">{student.ngaySinh || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Nơi sinh:</span>
-              <p className="text-sm">{student.noiSinh || "N/A"}</p>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Identity number:</span>
-              <p className="text-sm font-mono">{student.soCmnd || "N/A"}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Sex:</span>
-              <Badge
-                variant={student.gioiTinh === "Nam" ? "default" : student.gioiTinh === "Nữ" ? "secondary" : "outline"}
-                className="text-xs"
-              >
-                {student.gioiTinh || "N/A"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-}
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -199,6 +114,7 @@ export function DataTable<TData, TValue>({
   loading = false,
   onServerStateChange,
   facets,
+  renderRowExpansion,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -229,9 +145,7 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isFullscreen) {
-        setIsFullscreen(false)
-      }
+      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false)
     }
     window.addEventListener("keydown", handleEscKey)
     return () => window.removeEventListener("keydown", handleEscKey)
@@ -245,19 +159,6 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    globalFilterFn: "includesString",
-    onColumnOrderChange: setColumnOrder,
     state: {
       sorting,
       columnFilters,
@@ -267,12 +168,25 @@ export function DataTable<TData, TValue>({
       columnOrder,
       pagination,
     },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
+    onColumnOrderChange: setColumnOrder,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    globalFilterFn: "includesString",
     manualPagination: server,
     manualSorting: server,
     manualFiltering: server,
     pageCount,
     meta: { total },
-    initialState: { pagination: { pageSize: 10, pageIndex: 0 } },
+    initialState: { pagination: { pageIndex: 0, pageSize: 10 } },
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -286,202 +200,82 @@ export function DataTable<TData, TValue>({
     }
   }
 
+  const renderRows = (rows: Row<TData>[]) =>
+    rows.map((row) => (
+      <React.Fragment key={row.id}>
+        <TableRow
+          data-state={row.getIsSelected() && "selected"}
+          className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
+        >
+          {row.getVisibleCells().map((cell) => (
+            <TableCell
+              key={cell.id}
+              className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          ))}
+        </TableRow>
+
+        {row.getIsExpanded() && renderRowExpansion && (
+          <TableRow>
+            <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
+              {renderRowExpansion(row)}
+            </TableCell>
+          </TableRow>
+        )}
+      </React.Fragment>
+    ))
+
   return (
-    <>
-      {isFullscreen && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          {/* Fullscreen header with close button */}
-          <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <h2 className="text-lg font-semibold">Table Fullscreen View</h2>
-            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(false)} className="gap-2">
-              <Minimize2 className="h-4 w-4" />
-              Exit Fullscreen
-            </Button>
-          </div>
-
-          {/* Fullscreen table content */}
-          <div className="flex-1 overflow-auto p-4">
-            <div className="min-w-0 space-y-4 w-full relative">
-              <DataTableToolbar
-                table={table}
-                globalFilter={globalFilter}
-                setGlobalFilter={setGlobalFilter}
-                facets={facets}
-              />
-
-              <div className="rounded-md border bg-background w-full">
-                {loading && (
-                  <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
-                    Loading data…
-                  </div>
-                )}
-
-                {/* single horizontal scroll wrapper */}
-                <div className="overflow-auto relative scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <Table className="min-w-full">
-                      <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                        {table.getHeaderGroups().map((hg) => (
-                          <TableRow key={hg.id} className="border-b">
-                            <SortableContext
-                              items={hg.headers
-                                .filter((h) => h.column.id !== "select" && h.column.id !== "expand")
-                                .map((h) => h.column.id)}
-                              strategy={horizontalListSortingStrategy}
-                            >
-                              {hg.headers.map((header) => (
-                                <DraggableTableHeader key={header.id} header={header} />
-                              ))}
-                            </SortableContext>
-                          </TableRow>
-                        ))}
-                      </TableHeader>
-
-                      <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                          table.getRowModel().rows.map((row) => (
-                            <React.Fragment key={row.id}>
-                              <TableRow
-                                data-state={row.getIsSelected() && "selected"}
-                                className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
-                              >
-                                {row.getVisibleCells().map((cell) => (
-                                  <TableCell
-                                    key={cell.id}
-                                    className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
-                                  >
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                  </TableCell>
-                                ))}
-                              </TableRow>
-
-                              {row.getIsExpanded() && (
-                                <TableRow>
-                                  <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
-                                    <ExpandedRowContent row={row as Row<Student>} />
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </React.Fragment>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={table.getVisibleLeafColumns().length}
-                              className="h-24 text-center text-muted-foreground"
-                            >
-                              No results found.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </DndContext>
-                </div>
-              </div>
-
-              <DataTablePagination table={table} />
-            </div>
-          </div>
+    <div className="min-w-0 space-y-4 w-full relative">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1">
+          <DataTableToolbar table={table} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} facets={facets} />
         </div>
-      )}
-
-      {/* Normal view */}
-      <div className="min-w-0 space-y-4 w-full relative">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex-1">
-            <DataTableToolbar
-              table={table}
-              globalFilter={globalFilter}
-              setGlobalFilter={setGlobalFilter}
-              facets={facets}
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFullscreen(true)}
-            className="gap-2"
-            title="Enter fullscreen mode (ESC to exit)"
-          >
-            <Maximize2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Fullscreen</span>
-          </Button>
-        </div>
-
-        <div className="rounded-md border bg-background w-full">
-          {loading && (
-            <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
-              Loading data…
-            </div>
-          )}
-
-          {/* single horizontal scroll wrapper */}
-          <div className="overflow-auto relative max-h-[calc(100vh-20rem)] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <Table className="min-w-full">
-                <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  {table.getHeaderGroups().map((hg) => (
-                    <TableRow key={hg.id} className="border-b">
-                      <SortableContext
-                        items={hg.headers
-                          .filter((h) => h.column.id !== "select" && h.column.id !== "expand")
-                          .map((h) => h.column.id)}
-                        strategy={horizontalListSortingStrategy}
-                      >
-                        {hg.headers.map((header) => (
-                          <DraggableTableHeader key={header.id} header={header} />
-                        ))}
-                      </SortableContext>
-                    </TableRow>
-                  ))}
-                </TableHeader>
-
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <React.Fragment key={row.id}>
-                        <TableRow
-                          data-state={row.getIsSelected() && "selected"}
-                          className={`hover:bg-muted/50 transition-colors ${row.getIsExpanded() ? "border-b-0" : ""}`}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell
-                              key={cell.id}
-                              className="px-2 py-3 sm:px-4 whitespace-nowrap text-sm overflow-hidden text-ellipsis"
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-
-                        {row.getIsExpanded() && (
-                          <TableRow>
-                            <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
-                              <ExpandedRowContent row={row as Row<Student>} />
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={table.getVisibleLeafColumns().length}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No results found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </DndContext>
-          </div>
-        </div>
-
-        <DataTablePagination table={table} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsFullscreen(true)}
+          className="gap-2"
+          title="Enter fullscreen mode (ESC to exit)"
+        >
+          <Maximize2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Fullscreen</span>
+        </Button>
       </div>
-    </>
+
+      <div className="rounded-md border bg-background w-full">
+        {loading && (
+          <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center text-sm text-muted-foreground">
+            Loading data…
+          </div>
+        )}
+        <div className="overflow-auto relative max-h-[calc(100vh-20rem)] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/50 w-full">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <Table className="min-w-full">
+              <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id} className="border-b">
+                    <SortableContext
+                      items={hg.headers.filter((h) => !["select", "expand"].includes(h.column.id)).map((h) => h.column.id)}
+                      strategy={horizontalListSortingStrategy}
+                    >
+                      {hg.headers.map((header) => (
+                        <DraggableTableHeader key={header.id} header={header} />
+                      ))}
+                    </SortableContext>
+                  </TableRow>
+                ))}
+              </TableHeader>
+
+              <TableBody>{renderRows(table.getRowModel().rows)}</TableBody>
+            </Table>
+          </DndContext>
+        </div>
+      </div>
+
+      <DataTablePagination table={table} />
+    </div>
   )
 }
