@@ -55,3 +55,29 @@ export const isFPTType = (value: CrawledDataType): value is FPTType => {
 export const isStudentType = (value: CrawledDataType): value is StudentType => {
   return STUDENT_TYPE_LIST.includes(value as StudentType);
 }
+
+export function extractHeaderTitle(column: any): string {
+  const header = column?.columnDef?.header
+  if (!header) return column?.id ?? ""
+
+  // Case 1: simple string
+  if (typeof header === "string") return header
+
+  // Case 2: header is a ReactNode (e.g. <span>Major</span>)
+  if (typeof header === "object" && header?.props?.children) {
+    return header.props.children
+  }
+
+  // Case 3: header is a function -> call it
+  if (typeof header === "function") {
+    const rendered = header({ column })
+
+    // <span>Major</span>
+    if (rendered?.props?.children) return rendered.props.children
+
+    // direct string return
+    if (typeof rendered === "string") return rendered
+  }
+
+  return column.id
+}

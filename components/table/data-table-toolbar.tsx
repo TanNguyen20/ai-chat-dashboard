@@ -8,6 +8,7 @@ import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { useEffect, useState } from "react"
 import { Search, X } from "lucide-react"
+import { extractHeaderTitle } from "@/utils/commons"
 
 // Reusable facet types so parent can pass them in
 export type FacetOption = { label: string; value: string; icon?: React.ComponentType<{ className?: string }> }
@@ -97,7 +98,7 @@ export function DataTableToolbar<TData>({
             return (
               <DataTableFacetedFilter
                 key={f.id}
-                title={f.title}
+                title={extractHeaderTitle(column)}
                 column={column}
                 options={options}
                 mode={f.mode ?? "multi"}
